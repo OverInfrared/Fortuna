@@ -10,6 +10,7 @@ import net.minecraft.server.packs.repository.RepositorySource;
 import net.minecraft.server.packs.resources.IoSupplier;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import java.util.Optional;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -22,7 +23,6 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     private static final String PACK_ID = "fortuna_dynamic";
     private static final List<Material> materials = new ArrayList<>();
     private static final FortunaResourcePack INSTANCE = new FortunaResourcePack();
-
     public static FortunaResourcePack getInstance() { return INSTANCE; }
     public static void addMaterial(Material material) { materials.add(material); }
 
@@ -35,8 +35,6 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
         ));
     }
 
-    // ── RepositorySource ──────────────────────────────────────────────────────
-
     @Override
     public void loadPacks(@NonNull Consumer<Pack> consumer)
     {
@@ -46,7 +44,7 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
                         Component.literal("Fortuna Dynamic Resources"),
                         PackSource.BUILT_IN,
                         Optional.empty()
-                ),
+                        ),
                 new Pack.ResourcesSupplier() {
                     @Override
                     public @NonNull PackResources openPrimary(@NonNull PackLocationInfo info) {
@@ -64,14 +62,12 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
         if (pack != null) consumer.accept(pack);
     }
 
-    // ── PackResources ─────────────────────────────────────────────────────────
-
     @Override
     public @Nullable IoSupplier<InputStream> getRootResource(String... paths)
     {
         if (paths.length == 1 && paths[0].equals("pack.mcmeta")) {
             String mcmeta = """
-                    {"pack":{"pack_format":34,"description":"Fortuna dynamic resources"}}
+                    {"pack":{"pack_format":75,"min_format":75,"max_format":75,"description":"Fortuna dynamic resources"}}
                     """;
             return () -> new ByteArrayInputStream(mcmeta.getBytes(StandardCharsets.UTF_8));
         }
@@ -95,9 +91,6 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     public void listResources(@NonNull PackType packType, @NonNull String namespace, @NonNull String prefix,
                               @NonNull ResourceOutput resourceOutput)
     {
-        if (packType != PackType.CLIENT_RESOURCES) return;
-        if (!namespace.equals(Fortuna.MOD_ID)) return;
-
         for (Material mat : materials) {
             String name = mat.getName();
 
