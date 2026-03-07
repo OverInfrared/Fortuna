@@ -1,0 +1,62 @@
+package infrared.fortuna;
+
+import java.util.NavigableMap;
+import java.util.Random;
+import java.util.TreeMap;
+
+public class Utilities
+{
+
+    // Seed hashing.
+    public static long mixSeed(long worldSeed, int index)
+    {
+        long x = worldSeed;
+        x ^= 0x9E3779B97F4A7C15L;
+        x += index * 0xBF58476D1CE4E5B9L;
+        x ^= (x >>> 30);
+        x *= 0xBF58476D1CE4E5B9L;
+        x ^= (x >>> 27);
+        x *= 0x94D049BB133111EBL;
+        x ^= (x >>> 31);
+        return x;
+    }
+
+    public static class WeightedRandom<E>
+    {
+        private final NavigableMap<Double, E> map = new TreeMap<Double, E>();
+        private final Random random;
+        private double total = 0;
+
+        public WeightedRandom(long seed)
+        {
+            this(new Random(seed));
+        }
+
+        public WeightedRandom(Random random)
+        {
+            this.random = random;
+        }
+
+        public WeightedRandom<E> add(double weight, E result)
+        {
+            if (weight <= 0)
+                return this;
+
+            total += weight;
+            map.put(total, result);
+            return this;
+        }
+
+        public E next()
+        {
+            double value = random.nextDouble() * total;
+            return map.higherEntry(value).getValue();
+        }
+    }
+
+    public static String capitalize(String s)
+    {
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    }
+
+}
