@@ -3,13 +3,12 @@ package infrared.fortuna.resources;
 import infrared.fortuna.Fortuna;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.server.packs.AbstractPackResources;
-import net.minecraft.server.packs.PackLocationInfo;
-import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.repository.RepositorySource;
 import net.minecraft.server.packs.resources.IoSupplier;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
@@ -39,7 +38,8 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     // ── RepositorySource ──────────────────────────────────────────────────────
 
     @Override
-    public void loadPacks(Consumer<Pack> consumer) {
+    public void loadPacks(@NonNull Consumer<Pack> consumer)
+    {
         Pack pack = Pack.readMetaAndCreate(
                 new PackLocationInfo(
                         PACK_ID,
@@ -47,9 +47,19 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
                         PackSource.BUILT_IN,
                         Optional.empty()
                 ),
-                _ -> INSTANCE,
+                new Pack.ResourcesSupplier() {
+                    @Override
+                    public @NonNull PackResources openPrimary(@NonNull PackLocationInfo info) {
+                        return INSTANCE;
+                    }
+
+                    @Override
+                    public @NonNull PackResources openFull(@NonNull PackLocationInfo info, Pack.@NonNull Metadata metadata) {
+                        return INSTANCE;
+                    }
+                },
                 PackType.CLIENT_RESOURCES,
-                Pack.Position.TOP
+                new PackSelectionConfig(true, Pack.Position.TOP, false)
         );
         if (pack != null) consumer.accept(pack);
     }
@@ -57,8 +67,21 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     // ── PackResources ─────────────────────────────────────────────────────────
 
     @Override
-    public @Nullable IoSupplier<InputStream> getResource(PackType type, Identifier id) {
-        if (type != PackType.CLIENT_RESOURCES) return null;
+    public @Nullable IoSupplier<InputStream> getRootResource(String... paths)
+    {
+        if (paths.length == 1 && paths[0].equals("pack.mcmeta")) {
+            String mcmeta = """
+                    {"pack":{"pack_format":34,"description":"Fortuna dynamic resources"}}
+                    """;
+            return () -> new ByteArrayInputStream(mcmeta.getBytes(StandardCharsets.UTF_8));
+        }
+        return null;
+    }
+
+    @Override
+    public @Nullable IoSupplier<InputStream> getResource(@NonNull PackType packType, @NonNull Identifier id)
+    {
+        if (packType != PackType.CLIENT_RESOURCES) return null;
         if (!id.getNamespace().equals(Fortuna.MOD_ID)) return null;
 
         String json = generateJson(id.getPath());
@@ -69,43 +92,33 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     }
 
     @Override
-    public @Nullable IoSupplier<InputStream> getResource(PackType type, ResourceLocation id) {
-        if (type != PackType.CLIENT_RESOURCES) return null;
-        if (!id.getNamespace().equals(Fortuna.MOD_ID)) return null;
-
-        String json = generateJson(id.getPath());
-        if (json == null) return null;
-
-        byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
-        return () -> new ByteArrayInputStream(bytes);
-    }
-
-    @Override
-    public void listResources(PackType type, String namespace, String prefix,
-                              ResourceOutput output) {
-        if (type != PackType.CLIENT_RESOURCES) return;
+    public void listResources(@NonNull PackType packType, @NonNull String namespace, @NonNull String prefix,
+                              @NonNull ResourceOutput resourceOutput)
+    {
+        if (packType != PackType.CLIENT_RESOURCES) return;
         if (!namespace.equals(Fortuna.MOD_ID)) return;
 
         for (Material mat : materials) {
             String name = mat.getName();
 
-            emit(output, "blockstates/" + name + "_ore.json");
-            emit(output, "models/block/" + name + "_ore.json");
-            emit(output, "models/item/" + name + "_ore.json");
+            emitIfMatch(resourceOutput, prefix, "blockstates/" + name + "_ore.json");
+            emitIfMatch(resourceOutput, prefix, "models/block/" + name + "_ore.json");
+            emitIfMatch(resourceOutput, prefix, "models/item/" + name + "_ore.json");
 
             switch (mat.getMaterialRaw()) {
                 case Ingot -> {
-                    emit(output, "models/item/raw_" + name + ".json");
-                    emit(output, "models/item/" + name + "_ingot.json");
+                    emitIfMatch(resourceOutput, prefix, "models/item/raw_" + name + ".json");
+                    emitIfMatch(resourceOutput, prefix, "models/item/" + name + "_ingot.json");
                 }
-                case Gem, Special -> emit(output, "models/item/" + name + ".json");
+                case Gem, Special -> emitIfMatch(resourceOutput, prefix, "models/item/" + name + ".json");
             }
         }
     }
 
     @Override
-    public Set<String> getNamespaces(PackType type) {
-        return type == PackType.CLIENT_RESOURCES
+    public @NonNull Set<String> getNamespaces(@NonNull PackType packType)
+    {
+        return packType == PackType.CLIENT_RESOURCES
                 ? Set.of(Fortuna.MOD_ID)
                 : Set.of();
     }
@@ -115,7 +128,8 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
 
     // ── JSON generation ───────────────────────────────────────────────────────
 
-    private @Nullable String generateJson(String path) {
+    private @Nullable String generateJson(String path)
+    {
         for (Material mat : materials) {
             String name = mat.getName();
 
@@ -183,8 +197,10 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     private String ingotItemModelJson() { return layeredItemModelJson("ingot_overlay"); }
     private String gemItemModelJson()   { return layeredItemModelJson("gem_overlay"); }
 
-    private void emit(ResourceOutput output, String path) {
-        ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Fortuna.MOD_ID, path);
-        output.accept(id, () -> getResource(PackType.CLIENT_RESOURCES, id).get());
+    private void emitIfMatch(ResourceOutput resourceOutput, String prefix, String path) {
+        if (path.startsWith(prefix)) {
+            Identifier id = Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, path);
+            resourceOutput.accept(id, () -> Objects.requireNonNull(getResource(PackType.CLIENT_RESOURCES, id)).get());
+        }
     }
 }

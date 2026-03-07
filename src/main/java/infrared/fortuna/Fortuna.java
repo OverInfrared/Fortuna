@@ -2,6 +2,7 @@ package infrared.fortuna;
 
 import infrared.fortuna.blocks.ModBlock;
 import infrared.fortuna.items.ModItems;
+import infrared.fortuna.resources.FortunaResourcePack;
 import infrared.fortuna.resources.Material;
 import infrared.fortuna.resources.MaterialChain;
 import infrared.fortuna.resources.enums.MiningLevel;
@@ -22,8 +23,11 @@ public class Fortuna implements ModInitializer
 	{
 		long seed = 101L;
 
+		LOGGER.info("Starting generation for Overworld");
 		initializeOverworld(seed);
-		ModItems.initializeCreatureModeTab();
+
+		LOGGER.info("Initializing CreativeMoveTab");
+		ModItems.initializeCreativeModeTab();
 	}
 
 	private void initializeOverworld(long seed)
@@ -39,6 +43,7 @@ public class Fortuna implements ModInitializer
 			{
 				ModItems.initializeMaterial(material);
 				ModBlock.initializeMaterial(material);
+				FortunaResourcePack.addMaterial(material);
 			}
 		}
 	}

@@ -65,7 +65,7 @@ public class ModItems
         }
     }
 
-   public static void initializeCreatureModeTab()
+   public static void initializeCreativeModeTab()
    {
        CreativeModeTab creativeTab = FabricItemGroup.builder()
                .icon(() -> new ItemStack(ModItems.registeredItems.getFirst()))
