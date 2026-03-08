@@ -3,8 +3,8 @@ package infrared.fortuna;
 import infrared.fortuna.blocks.ModBlock;
 import infrared.fortuna.items.ModItems;
 import infrared.fortuna.resources.FortunaResourcePack;
-import infrared.fortuna.resources.Material;
-import infrared.fortuna.resources.MaterialChain;
+import infrared.fortuna.resources.materials.Material;
+import infrared.fortuna.resources.materials.MaterialChain;
 import infrared.fortuna.resources.enums.MiningLevel;
 import net.fabricmc.api.ModInitializer;
 
@@ -43,7 +43,7 @@ public class Fortuna implements ModInitializer
 			{
 				ModItems.initializeMaterial(material);
 				ModBlock.initializeMaterial(material);
-				FortunaResourcePack.addMaterial(material);
+				//FortunaResourcePack.addMaterial(material);
 			}
 		}
 	}

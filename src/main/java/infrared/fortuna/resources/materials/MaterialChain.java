@@ -1,4 +1,4 @@
-package infrared.fortuna.resources;
+package infrared.fortuna.resources.materials;
 
 import infrared.fortuna.Utilities.WeightedRandom;
 import infrared.fortuna.resources.enums.MiningLevel;
@@ -31,7 +31,7 @@ public class MaterialChain
             // Generate those materials.
             for (int i = 0; i < materialCount; i++)
             {
-                Material newMat = new Material(chainRNG.nextLong(), level);
+                Material newMat = new OreMaterial(chainRNG.nextLong(), level);
                 materials.add(newMat);
             }
 

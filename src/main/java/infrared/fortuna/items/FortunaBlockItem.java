@@ -1,5 +1,6 @@
 package infrared.fortuna.items;
 
+import infrared.fortuna.blocks.FortunaBlock;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
@@ -7,16 +8,12 @@ import net.minecraft.world.level.block.Block;
 
 public class FortunaBlockItem extends BlockItem
 {
-    private Component displayName = Component.literal("fortuna item");
+    private final Component displayName;
 
-    public FortunaBlockItem(Block block, Properties properties)
+    public FortunaBlockItem(Block block, Component displayName, Properties properties)
     {
         super(block, properties);
-    }
-
-    public void setDisplayComponent(String string)
-    {
-        displayName = Component.literal(string);
+        this.displayName = displayName;
     }
 
     @Override

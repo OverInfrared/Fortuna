@@ -98,21 +98,21 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     public void listResources(@NonNull PackType packType, @NonNull String namespace, @NonNull String prefix,
                               @NonNull ResourceOutput resourceOutput)
     {
-        for (Material mat : materials) {
-            String name = mat.getName();
-
-            emitIfMatch(resourceOutput, prefix, "blockstates/" + name + "_ore.json");
-            emitIfMatch(resourceOutput, prefix, "models/block/" + name + "_ore.json");
-            emitIfMatch(resourceOutput, prefix, "models/item/" + name + "_ore.json");
-
-            switch (mat.getMaterialRaw()) {
-                case Ingot -> {
-                    emitIfMatch(resourceOutput, prefix, "models/item/raw_" + name + ".json");
-                    emitIfMatch(resourceOutput, prefix, "models/item/" + name + "_ingot.json");
-                }
-                case Gem, Special -> emitIfMatch(resourceOutput, prefix, "models/item/" + name + ".json");
-            }
-        }
+//        for (Material mat : materials) {
+//            String name = mat.getName();
+//
+//            emitIfMatch(resourceOutput, prefix, "blockstates/" + name + "_ore.json");
+//            emitIfMatch(resourceOutput, prefix, "models/block/" + name + "_ore.json");
+//            emitIfMatch(resourceOutput, prefix, "models/item/" + name + "_ore.json");
+//
+//            switch (mat.getMaterialRaw()) {
+//                case Ingot -> {
+//                    emitIfMatch(resourceOutput, prefix, "models/item/raw_" + name + ".json");
+//                    emitIfMatch(resourceOutput, prefix, "models/item/" + name + "_ingot.json");
+//                }
+//                case Gem, Special -> emitIfMatch(resourceOutput, prefix, "models/item/" + name + ".json");
+//            }
+//        }
     }
 
     @Override
@@ -130,29 +130,29 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
 
     private @Nullable String generateJson(String path)
     {
-        for (Material mat : materials) {
-            String name = mat.getName();
-
-            if (path.equals("blockstates/" + name + "_ore.json"))
-                return blockstateJson(name);
-            if (path.equals("models/block/" + name + "_ore.json"))
-                return blockModelJson();
-            if (path.equals("models/item/" + name + "_ore.json"))
-                return oreItemModelJson(name);
-
-            switch (mat.getMaterialRaw()) {
-                case Ingot -> {
-                    if (path.equals("models/item/raw_" + name + ".json"))
-                        return rawItemModelJson();
-                    if (path.equals("models/item/" + name + "_ingot.json"))
-                        return ingotItemModelJson();
-                }
-                case Gem, Special -> {
-                    if (path.equals("models/item/" + name + ".json"))
-                        return gemItemModelJson();
-                }
-            }
-        }
+//        for (Material mat : materials) {
+//            String name = mat.getName();
+//
+//            if (path.equals("blockstates/" + name + "_ore.json"))
+//                return blockstateJson(name);
+//            if (path.equals("models/block/" + name + "_ore.json"))
+//                return blockModelJson();
+//            if (path.equals("models/item/" + name + "_ore.json"))
+//                return oreItemModelJson(name);
+//
+//            switch (mat.getMaterialRaw()) {
+//                case Ingot -> {
+//                    if (path.equals("models/item/raw_" + name + ".json"))
+//                        return rawItemModelJson();
+//                    if (path.equals("models/item/" + name + "_ingot.json"))
+//                        return ingotItemModelJson();
+//                }
+//                case Gem, Special -> {
+//                    if (path.equals("models/item/" + name + ".json"))
+//                        return gemItemModelJson();
+//                }
+//            }
+//        }
         return null;
     }
 
