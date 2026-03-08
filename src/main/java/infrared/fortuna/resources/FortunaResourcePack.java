@@ -18,13 +18,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
 
+import com.google.gson.JsonObject;
+
 public class FortunaResourcePack extends AbstractPackResources implements RepositorySource
 {
     private static final String PACK_ID = "fortuna_dynamic";
-    private static final List<Material> materials = new ArrayList<>();
     private static final FortunaResourcePack INSTANCE = new FortunaResourcePack();
+
     public static FortunaResourcePack getInstance() { return INSTANCE; }
-    public static void addMaterial(Material material) { materials.add(material); }
 
     private FortunaResourcePack() {
         super(new PackLocationInfo(
@@ -65,13 +66,19 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     @Override
     public @Nullable IoSupplier<InputStream> getRootResource(String... paths)
     {
-        if (paths.length == 1 && paths[0].equals("pack.mcmeta")) {
-            String mcmeta = """
-                    {"pack":{"pack_format":75,"min_format":75,"max_format":75,"description":"Fortuna dynamic resources"}}
-                    """;
-            return () -> new ByteArrayInputStream(mcmeta.getBytes(StandardCharsets.UTF_8));
-        }
-        return null;
+        if (paths.length != 1 || !paths[0].equals("pack.mcmeta"))
+            return null;
+
+        JsonObject pack = new JsonObject();
+        pack.addProperty("pack_format", 75);
+        pack.addProperty("min_format", 75);
+        pack.addProperty("max_format", 75);
+        pack.addProperty("description", "Fortuna dynamic resources");
+
+        JsonObject mcmeta = new JsonObject();
+        mcmeta.add("pack", pack);
+
+        return () -> new ByteArrayInputStream(mcmeta.toString().getBytes(StandardCharsets.UTF_8));
     }
 
     @Override
@@ -160,9 +167,9 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
                 {
                   "parent": "minecraft:block/cube_all",
                   "textures": {
-                    "layer0": "%s:block/ore_base",
-                    "layer1": "%s:block/ore_overlay",
-                    "all":    "%s:block/ore_base"
+                    "layer0": "%s:block/stone",
+                    "layer1": "%s:block/stone",
+                    "all":    "%s:block/stone"
                   }
                 }
                 """.formatted(Fortuna.MOD_ID, Fortuna.MOD_ID, Fortuna.MOD_ID);

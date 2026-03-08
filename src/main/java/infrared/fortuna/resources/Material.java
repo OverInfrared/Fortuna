@@ -1,5 +1,7 @@
 package infrared.fortuna.resources;
 
+import infrared.fortuna.resources.enums.MaterialOreBase;
+import infrared.fortuna.resources.enums.MaterialOreOverlay;
 import infrared.fortuna.resources.enums.MaterialRaw;
 import infrared.fortuna.resources.enums.MiningLevel;
 import infrared.fortuna.Utilities.WeightedRandom;
@@ -9,20 +11,14 @@ import java.util.Random;
 
 public class Material
 {
-    private final MiningLevel miningLevel;
-    private final MaterialRaw raw;
+    protected final String name;
+    protected final Item.Properties itemProperties = new Item.Properties();
 
-    private final Item.Properties itemProperties = new Item.Properties();
-
-    private final String name;
+    protected Random rng;
 
     public Material(long seed, MiningLevel level)
     {
-        Random materialRNG = new Random(seed);
-
-        miningLevel = level;
-        raw = generateMaterialRaw(level, materialRNG);
-        name = generateName(raw, materialRNG);
+        rng = new Random(seed);
     }
 
     public MiningLevel getMiningLevel()
@@ -35,6 +31,16 @@ public class Material
         return raw;
     }
 
+    public MaterialOreBase getMaterialOreBase()
+    {
+        return oreBase;
+    }
+
+    public MaterialOreOverlay getMaterialOreOverlay()
+    {
+        return oreOverlay;
+    }
+
     public Item.Properties getItemProperties()
     {
         return itemProperties;
@@ -45,32 +51,7 @@ public class Material
         return name;
     }
 
-    private MaterialRaw generateMaterialRaw(MiningLevel level, Random random)
-    {
-        return switch (level)
-        {
-            case Stone -> MaterialRaw.Stone;
-            case Iron ->
-            {
-                WeightedRandom<MaterialRaw> ironRandom = new WeightedRandom<MaterialRaw>(random.nextLong())
-                        .add(65, MaterialRaw.Ingot).add(35, MaterialRaw.Gem);
-                yield ironRandom.next();
-            }
-            case Diamond ->
-            {
-                WeightedRandom<MaterialRaw> diamondRandom = new WeightedRandom<MaterialRaw>(random.nextLong())
-                        .add(35, MaterialRaw.Ingot).add(60, MaterialRaw.Gem).add(5, MaterialRaw.Special);
-                yield diamondRandom.next();
-            }
-            case Netherite, Fortuna ->
-            {
-                WeightedRandom<MaterialRaw> netherRandom = new WeightedRandom<MaterialRaw>(random.nextLong())
-                        .add(33, MaterialRaw.Ingot).add(33, MaterialRaw.Gem).add(33, MaterialRaw.Special);
-                yield netherRandom.next();
-            }
-            default -> MaterialRaw.Ingot;
-        };
-    }
+    protected abstract String generateName();
 
     // Todo replace with more sophisticated naming system.
     private static final String[] PREFIX = {
