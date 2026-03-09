@@ -21,7 +21,7 @@ public class Fortuna implements ModInitializer
 	@Override
 	public void onInitialize()
 	{
-		long seed = 101L;
+		long seed = 102L;
 
 		LOGGER.info("Starting generation for Overworld");
 		initializeOverworld(seed);

@@ -2,7 +2,6 @@ package infrared.fortuna.resources.materials;
 
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.Utilities;
-import infrared.fortuna.blocks.FortunaBlock;
 import infrared.fortuna.blocks.OreBlock;
 import infrared.fortuna.items.FortunaItem;
 import infrared.fortuna.resources.FortunaProperties;
@@ -195,6 +194,7 @@ public class OreMaterial extends Material
         {
             case Gem:
             case Ingot:
+            case Special:
                 String registryName = name + "_ore";
                 ResourceKey<Block> oreKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, registryName));
                 FortunaProperties<Block> oreProperties = new FortunaProperties<>(registryName, Component.literal(Utilities.capitalize(name) + " Ore"), oreKey);

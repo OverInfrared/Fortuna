@@ -6,6 +6,7 @@ import infrared.fortuna.Fortuna;
 import infrared.fortuna.resources.FortunaProperties;
 import infrared.fortuna.resources.materials.OreMaterial;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,6 @@ public class OreBlock extends FortunaBlock
 
     public OreBlock(FortunaProperties<Block> fortunaProperties, Properties properties, OreMaterial oreMaterial) {
         super(fortunaProperties, properties);
-
         this.oreMaterial = oreMaterial;
     }
 
@@ -77,17 +77,38 @@ public class OreBlock extends FortunaBlock
         return model;
     }
 
+    @Override
+    protected JsonObject generateItemModel()
+    {
+        JsonObject model = new JsonObject();
+        model.addProperty("type", "minecraft:model");
+        model.addProperty("model", "%s:block/%s".formatted(Fortuna.MOD_ID, fortunaProperties.registryName()));
+
+        JsonObject itemModel = new JsonObject();
+        itemModel.add("model", model);
+        return itemModel;
+    }
+
     private JsonObject buildBaseCube() {
-        String[] faces = {"down", "up", "north", "south", "west", "east"};
         JsonObject faceObj = new JsonObject();
-        for (String face : faces) {
-            JsonObject f = new JsonObject();
-            f.add("uv", buildUVArray());
-            f.addProperty("texture", "#all");
-            f.addProperty("cullface", face);
-            faceObj.add(face, f);
-        }
+
+        faceObj.add("down", buildFaceJson("down", "bottom"));
+        faceObj.add("up", buildFaceJson("up", "top"));
+        faceObj.add("north", buildFaceJson("north", "side"));
+        faceObj.add("south", buildFaceJson("south", "side"));
+        faceObj.add("east", buildFaceJson("east", "side"));
+        faceObj.add("west", buildFaceJson("west", "side"));
+
         return buildElement(faceObj);
+    }
+
+    private JsonObject buildFaceJson(String direction, String texture)
+    {
+        JsonObject face = new JsonObject();
+        face.add("uv", buildUVArray());
+        face.addProperty("texture", "#" + texture);
+        face.addProperty("cullface", direction);
+        return face;
     }
 
     private JsonObject buildOverlayCube(String textureRef) {
@@ -98,6 +119,7 @@ public class OreBlock extends FortunaBlock
             JsonObject f = new JsonObject();
             f.add("uv", buildUVArray());
             f.addProperty("texture", "#" + textureRef);
+            f.addProperty("tintindex", 0);
             f.addProperty("cullface", face);
             faceObj.add(face, f);
         }

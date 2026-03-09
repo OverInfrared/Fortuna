@@ -11,14 +11,20 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ModBlock
 {
+    private static List<FortunaBlock> registeredBlocks = new ArrayList<>();
+
     private static void registerMaterial(Material material)
     {
         for (FortunaBlock block : material.getBlocks())
         {
             ModItems.registerBlock(block);
             Registry.register(BuiltInRegistries.BLOCK, block.getResourceKey(), block);
+            registeredBlocks.add(block);
         }
     }
 
@@ -36,6 +42,11 @@ public class ModBlock
     public static void initializeMaterial(Material material)
     {
         registerMaterial(material);
+    }
+
+    public static List<FortunaBlock> getRegisteredBlocks()
+    {
+        return registeredBlocks;
     }
 
 }

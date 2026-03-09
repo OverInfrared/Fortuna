@@ -115,6 +115,7 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
             {
                 emitIfMatch(resourceOutput, prefix, "blockstates/" + block.getRegistryName() + ".json");
                 emitIfMatch(resourceOutput, prefix, "models/block/" + block.getRegistryName() + ".json");
+                emitIfMatch(resourceOutput, prefix, "items/" + block.getRegistryName() + ".json");
             }
         }
     }
@@ -129,28 +130,6 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
 
     @Override
     public void close() {}
-
-    private String oreItemModelJson(String name) {
-        return """
-                {"parent":"%s:block/%s_ore"}
-                """.formatted(Fortuna.MOD_ID, name);
-    }
-
-    private String layeredItemModelJson(String overlay) {
-        return """
-                {
-                  "parent": "minecraft:item/generated",
-                  "textures": {
-                    "layer0": "%s:item/item_base",
-                    "layer1": "%s:item/%s"
-                  }
-                }
-                """.formatted(Fortuna.MOD_ID, Fortuna.MOD_ID, overlay);
-    }
-
-    private String rawItemModelJson()   { return layeredItemModelJson("raw_overlay"); }
-    private String ingotItemModelJson() { return layeredItemModelJson("ingot_overlay"); }
-    private String gemItemModelJson()   { return layeredItemModelJson("gem_overlay"); }
 
     private void emitIfMatch(ResourceOutput resourceOutput, String prefix, String path) {
         if (path.startsWith(prefix)) {
@@ -177,19 +156,20 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
             return block != null ? block.getModelString() : null;
         }
 
-//        // models/item/<registryName>.json  (block items + standalone items)
-//        if (path.startsWith("models/item/") && path.endsWith(".json"))
-//        {
-//            String registryName = path.substring("models/item/".length(), path.length() - ".json".length());
-//
-//            // Check block items first
-//            FortunaBlock block = findBlock(registryName);
-//            if (block != null) return block.getItemModelJson();
-//
+        // models/item/<registryName>.json  (block items + standalone items)
+        if (path.startsWith("items/") && path.endsWith(".json"))
+        {
+            Fortuna.LOGGER.info(path);
+            String registryName = path.substring("items/".length(), path.length() - ".json".length());
+
+            // Check block items first
+            FortunaBlock block = findBlock(registryName);
+            if (block != null) return block.getItemString();
+
 //            // Then standalone items
 //            FortunaItem item = findItem(registryName);
 //            return item != null ? item.getItemModelJson() : null;
-//        }
+        }
 
         return null;
     }

@@ -1,11 +1,8 @@
 package infrared.fortuna.blocks;
 
 import com.google.gson.JsonObject;
-import infrared.fortuna.Fortuna;
 import infrared.fortuna.resources.FortunaProperties;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.block.Block;
 
@@ -15,10 +12,11 @@ public abstract class FortunaBlock extends Block
 
     private JsonObject blockStateJson = null;
     private JsonObject modelJson = null;
+    private JsonObject itemJson = null;
 
     public FortunaBlock(FortunaProperties<Block> fortunaProps, Properties properties)
     {
-        super(properties.setId(fortunaProps.resourceKey()));
+        super(properties.setId(fortunaProps.resourceKey()).noOcclusion());
         fortunaProperties = fortunaProps;
     }
 
@@ -51,7 +49,16 @@ public abstract class FortunaBlock extends Block
         return modelJson.toString();
     }
 
+    public String getItemString()
+    {
+        if (itemJson == null)
+            itemJson = generateItemModel();
+        return itemJson.toString();
+    }
+
     protected abstract JsonObject generateBlockState();
 
     protected abstract JsonObject generateModel();
+
+    protected abstract JsonObject generateItemModel();
 }
