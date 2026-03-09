@@ -2,66 +2,56 @@ package infrared.fortuna.blocks;
 
 import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
+import infrared.fortuna.resources.FortunaProperties;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.block.Block;
 
-public class FortunaBlock extends Block
+public abstract class FortunaBlock extends Block
 {
-    private final String registryName;
-    private final Component displayName;
-    private final ResourceKey<Block> resourceKey;
+    protected final FortunaProperties<Block> fortunaProperties;
 
-    private final JsonObject blockStateJson;
-    private final JsonObject modelJson;
+    private JsonObject blockStateJson = null;
+    private JsonObject modelJson = null;
 
-    public FortunaBlock(String name, String display, ResourceKey<Block> key, Properties properties)
+    public FortunaBlock(FortunaProperties<Block> fortunaProps, Properties properties)
     {
-        super(properties.setId(key));
-        registryName = name;
-        displayName = Component.literal(display);
-        resourceKey = key;
-
-        blockStateJson = generateBlockState();
-        modelJson = generateModel();
+        super(properties.setId(fortunaProps.resourceKey()));
+        fortunaProperties = fortunaProps;
     }
 
     public Component getDisplayName()
     {
-        return displayName;
+        return fortunaProperties.displayName();
     }
 
     public String getRegistryName()
     {
-        return registryName;
+        return fortunaProperties.registryName();
     }
 
     public ResourceKey<Block> getResourceKey()
     {
-        return resourceKey;
+        return fortunaProperties.resourceKey();
     }
 
     public String getBlockStateString()
     {
+        if (blockStateJson == null)
+            blockStateJson = generateBlockState();
         return blockStateJson.toString();
     }
 
     public String getModelString()
     {
+        if (modelJson == null)
+            modelJson = generateModel();
         return modelJson.toString();
     }
 
-    private JsonObject generateBlockState()
-    {
+    protected abstract JsonObject generateBlockState();
 
-    }
-
-    private  JsonObject generateModel()
-    {
-        
-    }
-
-
+    protected abstract JsonObject generateModel();
 }

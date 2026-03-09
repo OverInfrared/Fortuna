@@ -1,6 +1,9 @@
 package infrared.fortuna.resources;
 
 import infrared.fortuna.Fortuna;
+import infrared.fortuna.blocks.FortunaBlock;
+import infrared.fortuna.items.FortunaItem;
+import infrared.fortuna.resources.materials.Material;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.*;
@@ -27,6 +30,8 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
 
     public static FortunaResourcePack getInstance() { return INSTANCE; }
 
+    private static final List<Material> loadedMaterials = new ArrayList<>();
+
     private FortunaResourcePack() {
         super(new PackLocationInfo(
                 PACK_ID,
@@ -34,6 +39,11 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
                 PackSource.BUILT_IN,
                 Optional.empty()
         ));
+    }
+
+    public static void initializeMaterial(Material material)
+    {
+        loadedMaterials.add(material);
     }
 
     @Override
@@ -87,7 +97,8 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
         if (packType != PackType.CLIENT_RESOURCES) return null;
         if (!id.getNamespace().equals(Fortuna.MOD_ID)) return null;
 
-        String json = generateJson(id.getPath());
+        String path = id.getPath(); // e.g. "blockstates/copper_ore.json"
+        String json = resolveResource(path);
         if (json == null) return null;
 
         byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
@@ -98,21 +109,14 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     public void listResources(@NonNull PackType packType, @NonNull String namespace, @NonNull String prefix,
                               @NonNull ResourceOutput resourceOutput)
     {
-//        for (Material mat : materials) {
-//            String name = mat.getName();
-//
-//            emitIfMatch(resourceOutput, prefix, "blockstates/" + name + "_ore.json");
-//            emitIfMatch(resourceOutput, prefix, "models/block/" + name + "_ore.json");
-//            emitIfMatch(resourceOutput, prefix, "models/item/" + name + "_ore.json");
-//
-//            switch (mat.getMaterialRaw()) {
-//                case Ingot -> {
-//                    emitIfMatch(resourceOutput, prefix, "models/item/raw_" + name + ".json");
-//                    emitIfMatch(resourceOutput, prefix, "models/item/" + name + "_ingot.json");
-//                }
-//                case Gem, Special -> emitIfMatch(resourceOutput, prefix, "models/item/" + name + ".json");
-//            }
-//        }
+        for (Material material : loadedMaterials)
+        {
+            for (FortunaBlock block : material.getBlocks())
+            {
+                emitIfMatch(resourceOutput, prefix, "blockstates/" + block.getRegistryName() + ".json");
+                emitIfMatch(resourceOutput, prefix, "models/block/" + block.getRegistryName() + ".json");
+            }
+        }
     }
 
     @Override
@@ -125,55 +129,6 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
 
     @Override
     public void close() {}
-
-    // ── JSON generation ───────────────────────────────────────────────────────
-
-    private @Nullable String generateJson(String path)
-    {
-//        for (Material mat : materials) {
-//            String name = mat.getName();
-//
-//            if (path.equals("blockstates/" + name + "_ore.json"))
-//                return blockstateJson(name);
-//            if (path.equals("models/block/" + name + "_ore.json"))
-//                return blockModelJson();
-//            if (path.equals("models/item/" + name + "_ore.json"))
-//                return oreItemModelJson(name);
-//
-//            switch (mat.getMaterialRaw()) {
-//                case Ingot -> {
-//                    if (path.equals("models/item/raw_" + name + ".json"))
-//                        return rawItemModelJson();
-//                    if (path.equals("models/item/" + name + "_ingot.json"))
-//                        return ingotItemModelJson();
-//                }
-//                case Gem, Special -> {
-//                    if (path.equals("models/item/" + name + ".json"))
-//                        return gemItemModelJson();
-//                }
-//            }
-//        }
-        return null;
-    }
-
-    private String blockstateJson(String name) {
-        return """
-                {"variants":{"":{"model":"%s:block/%s_ore"}}}
-                """.formatted(Fortuna.MOD_ID, name);
-    }
-
-    private String blockModelJson() {
-        return """
-                {
-                  "parent": "minecraft:block/cube_all",
-                  "textures": {
-                    "layer0": "%s:block/stone",
-                    "layer1": "%s:block/stone",
-                    "all":    "%s:block/stone"
-                  }
-                }
-                """.formatted(Fortuna.MOD_ID, Fortuna.MOD_ID, Fortuna.MOD_ID);
-    }
 
     private String oreItemModelJson(String name) {
         return """
@@ -202,5 +157,58 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
             Identifier id = Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, path);
             resourceOutput.accept(id, () -> Objects.requireNonNull(getResource(PackType.CLIENT_RESOURCES, id)).get());
         }
+    }
+
+    private @Nullable String resolveResource(String path)
+    {
+        // blockstates/<registryName>.json
+        if (path.startsWith("blockstates/") && path.endsWith(".json"))
+        {
+            String registryName = path.substring("blockstates/".length(), path.length() - ".json".length());
+            FortunaBlock block = findBlock(registryName);
+            return block != null ? block.getBlockStateString() : null;
+        }
+
+        // models/block/<registryName>.json
+        if (path.startsWith("models/block/") && path.endsWith(".json"))
+        {
+            String registryName = path.substring("models/block/".length(), path.length() - ".json".length());
+            FortunaBlock block = findBlock(registryName);
+            return block != null ? block.getModelString() : null;
+        }
+
+//        // models/item/<registryName>.json  (block items + standalone items)
+//        if (path.startsWith("models/item/") && path.endsWith(".json"))
+//        {
+//            String registryName = path.substring("models/item/".length(), path.length() - ".json".length());
+//
+//            // Check block items first
+//            FortunaBlock block = findBlock(registryName);
+//            if (block != null) return block.getItemModelJson();
+//
+//            // Then standalone items
+//            FortunaItem item = findItem(registryName);
+//            return item != null ? item.getItemModelJson() : null;
+//        }
+
+        return null;
+    }
+
+    private @Nullable FortunaBlock findBlock(String registryName)
+    {
+        for (Material material : loadedMaterials)
+            for (FortunaBlock block : material.getBlocks())
+                if (block.getRegistryName().equals(registryName))
+                    return block;
+        return null;
+    }
+
+    private @Nullable FortunaItem findItem(String registryName)
+    {
+        for (Material material : loadedMaterials)
+            for (FortunaItem item : material.getItems())
+                if (item.getRegistryName().equals(registryName))
+                    return item;
+        return null;
     }
 }

@@ -1,0 +1,125 @@
+package infrared.fortuna.blocks;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import infrared.fortuna.Fortuna;
+import infrared.fortuna.resources.FortunaProperties;
+import infrared.fortuna.resources.materials.OreMaterial;
+import net.minecraft.world.level.block.Block;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class OreBlock extends FortunaBlock
+{
+    private final OreMaterial oreMaterial;
+
+    public OreBlock(FortunaProperties<Block> fortunaProperties, Properties properties, OreMaterial oreMaterial) {
+        super(fortunaProperties, properties);
+
+        this.oreMaterial = oreMaterial;
+    }
+
+    @Override
+    protected JsonObject generateBlockState()
+    {
+        JsonObject empty = new JsonObject();
+        empty.addProperty("model", "%s:block/%s".formatted(Fortuna.MOD_ID, fortunaProperties.registryName()));
+
+        JsonObject variants = new JsonObject();
+        variants.add("", empty);
+
+        JsonObject blockstate = new JsonObject();
+        blockstate.add("variants", variants);
+
+        return blockstate;
+    }
+
+    @Override
+    protected JsonObject generateModel() {
+        String base = oreMaterial.getMaterialOreBase().name().toLowerCase();
+
+        JsonObject textures = new JsonObject();
+        textures.addProperty("particle", "%s:block/bases/%s".formatted(Fortuna.MOD_ID, base));
+        textures.addProperty("top", "%s:block/bases/%s".formatted(Fortuna.MOD_ID, base));
+        textures.addProperty("bottom", "%s:block/bases/%s".formatted(Fortuna.MOD_ID, base));
+        textures.addProperty("side", "%s:block/bases/%s".formatted(Fortuna.MOD_ID, base));
+
+        List<String> overlayLayers = new ArrayList<>();
+        switch (oreMaterial.getMaterialOreOverlay()) {
+            case Coal     -> overlayLayers.add("%s:block/overlay/ore_coal".formatted(Fortuna.MOD_ID));
+            case Iron     -> overlayLayers.add("%s:block/overlay/ore_iron".formatted(Fortuna.MOD_ID));
+            case Diamond  -> overlayLayers.add("%s:block/overlay/ore_diamond".formatted(Fortuna.MOD_ID));
+            case Emerald  -> overlayLayers.add("%s:block/overlay/ore_emerald".formatted(Fortuna.MOD_ID));
+            case Gold     -> overlayLayers.add("%s:block/overlay/ore_gold".formatted(Fortuna.MOD_ID));
+            case Lapis    -> overlayLayers.add("%s:block/overlay/ore_lapis".formatted(Fortuna.MOD_ID));
+            case Redstone -> overlayLayers.add("%s:block/overlay/ore_redstone".formatted(Fortuna.MOD_ID));
+            case Copper   -> {
+                overlayLayers.add("%s:block/overlay/ore_copper_base".formatted(Fortuna.MOD_ID));
+                overlayLayers.add("%s:block/overlay/ore_copper_oxidized".formatted(Fortuna.MOD_ID));
+                overlayLayers.add("%s:block/overlay/ore_copper_transition".formatted(Fortuna.MOD_ID));
+            }
+        }
+
+        for (int i = 0; i < overlayLayers.size(); i++)
+            textures.addProperty("overlay" + i, overlayLayers.get(i));
+
+        JsonObject model = new JsonObject();
+        model.addProperty("parent", "block/block");
+        model.add("textures", textures);
+
+        JsonArray elements = new JsonArray();
+        elements.add(buildBaseCube());
+        for (int i = 0; i < overlayLayers.size(); i++)
+            elements.add(buildOverlayCube("overlay" + i));
+
+        model.add("elements", elements);
+        return model;
+    }
+
+    private JsonObject buildBaseCube() {
+        String[] faces = {"down", "up", "north", "south", "west", "east"};
+        JsonObject faceObj = new JsonObject();
+        for (String face : faces) {
+            JsonObject f = new JsonObject();
+            f.add("uv", buildUVArray());
+            f.addProperty("texture", "#all");
+            f.addProperty("cullface", face);
+            faceObj.add(face, f);
+        }
+        return buildElement(faceObj);
+    }
+
+    private JsonObject buildOverlayCube(String textureRef) {
+        // Grass only overlays the sides, but for ore we want all faces
+        String[] faces = {"down", "up", "north", "south", "west", "east"};
+        JsonObject faceObj = new JsonObject();
+        for (String face : faces) {
+            JsonObject f = new JsonObject();
+            f.add("uv", buildUVArray());
+            f.addProperty("texture", "#" + textureRef);
+            f.addProperty("cullface", face);
+            faceObj.add(face, f);
+        }
+        return buildElement(faceObj);
+    }
+
+    private JsonObject buildElement(JsonObject faces) {
+        JsonArray from = new JsonArray();
+        from.add(0); from.add(0); from.add(0);
+        JsonArray to = new JsonArray();
+        to.add(16); to.add(16); to.add(16);
+
+        JsonObject element = new JsonObject();
+        element.add("from", from);
+        element.add("to", to);
+        element.add("faces", faces);
+        return element;
+    }
+
+    private JsonArray buildUVArray() {
+        JsonArray uv = new JsonArray();
+        uv.add(0); uv.add(0); uv.add(16); uv.add(16);
+        return uv;
+    }
+}

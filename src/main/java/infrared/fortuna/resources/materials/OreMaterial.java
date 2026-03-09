@@ -3,12 +3,15 @@ package infrared.fortuna.resources.materials;
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.Utilities;
 import infrared.fortuna.blocks.FortunaBlock;
+import infrared.fortuna.blocks.OreBlock;
 import infrared.fortuna.items.FortunaItem;
+import infrared.fortuna.resources.FortunaProperties;
 import infrared.fortuna.resources.enums.MaterialOreBase;
 import infrared.fortuna.resources.enums.MaterialOreOverlay;
 import infrared.fortuna.resources.enums.MaterialRaw;
 import infrared.fortuna.resources.enums.MiningLevel;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
@@ -193,9 +196,9 @@ public class OreMaterial extends Material
             case Gem:
             case Ingot:
                 String registryName = name + "_ore";
-                String displayName = Utilities.capitalize(name) + " Ore";
                 ResourceKey<Block> oreKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, registryName));
-                materialBlocks.add(new FortunaBlock(registryName, displayName, oreKey, BlockBehaviour.Properties.of().sound(SoundType.STONE)));
+                FortunaProperties<Block> oreProperties = new FortunaProperties<>(registryName, Component.literal(Utilities.capitalize(name) + " Ore"), oreKey);
+                materialBlocks.add(new OreBlock(oreProperties, BlockBehaviour.Properties.of().sound(SoundType.STONE), this));
                 break;
         }
     }
@@ -208,24 +211,24 @@ public class OreMaterial extends Material
             case Gem:
             case Special:
             {
-                String displayName = Utilities.capitalize(name);
                 ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, name));
-                materialItems.add(new FortunaItem(name, displayName, key, new Item.Properties()));
+                FortunaProperties<Item> itemProperties = new FortunaProperties<>(name, Component.literal(Utilities.capitalize(name)), key);
+                materialItems.add(new FortunaItem(itemProperties, new Item.Properties()));
                 break;
             }
             case Ingot:
             {
                 // Raw Ore Item
                 String rawName = "raw_" + name;
-                String rawDisplayName = Utilities.capitalize(name);
                 ResourceKey<Item> rawKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, rawName));
-                materialItems.add(new FortunaItem(rawName, rawDisplayName, rawKey, new Item.Properties()));
+                FortunaProperties<Item> rawProps = new FortunaProperties<>(rawName, Component.literal("Raw " + Utilities.capitalize(name)), rawKey);
+                materialItems.add(new FortunaItem(rawProps, new Item.Properties()));
 
                 // Refined Ore Item
                 String refinedName = name + "_ingot";
-                String refinedDisplayName = Utilities.capitalize(name) + " Ingot";
                 ResourceKey<Item> refinedKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, refinedName));
-                materialItems.add(new FortunaItem(refinedName, refinedDisplayName, refinedKey, new Item.Properties()));
+                FortunaProperties<Item> refinedProps = new FortunaProperties<>(refinedName, Component.literal(Utilities.capitalize(name) + " Ingot"), refinedKey);
+                materialItems.add(new FortunaItem(refinedProps, new Item.Properties()));
                 break;
             }
         }

@@ -1,6 +1,7 @@
 package infrared.fortuna.items;
 
 import infrared.fortuna.Fortuna;
+import infrared.fortuna.resources.FortunaProperties;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -11,36 +12,32 @@ import net.minecraft.world.level.block.Block;
 
 public class FortunaItem extends Item
 {
-    private final String registryName;
-    private final Component displayName;
-    private final ResourceKey<Item> resourceKey;
+    private final FortunaProperties<Item> fortunaProperties;
 
-    public FortunaItem(String name, String displayName, ResourceKey<Item> key, Properties properties)
+    public FortunaItem(FortunaProperties<Item> fortunaProps, Properties properties)
     {
-        super(properties.setId(key));
-        this.registryName = name;
-        this.displayName = Component.literal(displayName);
-        this.resourceKey = key;
+        super(properties.setId(fortunaProps.resourceKey()));
+        fortunaProperties = fortunaProps;
     }
 
     @Override
     public Component getName(ItemStack itemStack)
     {
-        return displayName;
+        return fortunaProperties.displayName();
     }
 
     public Component getDisplayName()
     {
-        return displayName;
+        return fortunaProperties.displayName();
     }
 
     public String getRegistryName()
     {
-        return registryName;
+        return fortunaProperties.registryName();
     }
 
     public ResourceKey<Item> getResourceKey()
     {
-        return resourceKey;
+        return fortunaProperties.resourceKey();
     }
 }
