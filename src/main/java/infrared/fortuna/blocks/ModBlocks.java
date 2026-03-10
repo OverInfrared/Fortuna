@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.Block;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ModBlock
+public class ModBlocks
 {
     private static List<FortunaBlock> registeredBlocks = new ArrayList<>();
 

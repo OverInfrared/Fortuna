@@ -1,6 +1,6 @@
 package infrared.fortuna;
 
-import infrared.fortuna.blocks.ModBlock;
+import infrared.fortuna.blocks.ModBlocks;
 import infrared.fortuna.items.ModItems;
 import infrared.fortuna.resources.FortunaResourcePack;
 import infrared.fortuna.resources.materials.Material;
@@ -11,6 +11,7 @@ import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Fortuna implements ModInitializer
@@ -18,10 +19,12 @@ public class Fortuna implements ModInitializer
 	public static final String MOD_ID = "fortuna";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
+	public static final List<Material> initializedMaterials = new ArrayList<>();
+
 	@Override
 	public void onInitialize()
 	{
-		long seed = 102L;
+		long seed = 5432543;
 
 		LOGGER.info("Starting generation for Overworld");
 		initializeOverworld(seed);
@@ -42,8 +45,10 @@ public class Fortuna implements ModInitializer
 			for (Material material : materials)
 			{
 				ModItems.initializeMaterial(material);
-				ModBlock.initializeMaterial(material);
+				ModBlocks.initializeMaterial(material);
 				FortunaResourcePack.initializeMaterial(material);
+
+				initializedMaterials.add(material);
 			}
 		}
 	}

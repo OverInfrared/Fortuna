@@ -3,12 +3,11 @@ package infrared.fortuna.resources.materials;
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.Utilities;
 import infrared.fortuna.blocks.OreBlock;
-import infrared.fortuna.items.FortunaItem;
+import infrared.fortuna.items.GemItem;
+import infrared.fortuna.items.IngotItem;
+import infrared.fortuna.items.RawItem;
 import infrared.fortuna.resources.FortunaProperties;
-import infrared.fortuna.resources.enums.MaterialOreBase;
-import infrared.fortuna.resources.enums.MaterialOreOverlay;
-import infrared.fortuna.resources.enums.MaterialRaw;
-import infrared.fortuna.resources.enums.MiningLevel;
+import infrared.fortuna.resources.enums.*;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -18,12 +17,18 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
+import java.awt.*;
+
 public class OreMaterial extends Material
 {
     private final MiningLevel miningLevel;
     private final MaterialRaw raw;
     private final MaterialOreBase oreBase;
     private final MaterialOreOverlay oreOverlay;
+
+    private final MaterialOreIngot oreIngot;
+    private final MaterialOreRaw oreRaw;
+    private final MaterialOreGem oreGem;
 
     public OreMaterial(long seed, MiningLevel level)
     {
@@ -36,7 +41,13 @@ public class OreMaterial extends Material
         oreBase = chooseOreBase();
         oreOverlay = chooseOreOverlay();
 
+        oreIngot = chooseOreIngot();
+        oreRaw = chooseOreRaw();
+        oreGem = chooseOreGem();
+
         name = chooseName();
+
+        generateOreColors();
 
         createOreBlocks();
         createOreItems();
@@ -60,6 +71,21 @@ public class OreMaterial extends Material
     public MaterialOreOverlay getMaterialOreOverlay()
     {
         return oreOverlay;
+    }
+
+    public MaterialOreIngot getMaterialOreIngot()
+    {
+        return oreIngot;
+    }
+
+    public MaterialOreRaw getMaterialOreRaw()
+    {
+        return oreRaw;
+    }
+
+    public MaterialOreGem getMaterialOreGem()
+    {
+        return oreGem;
     }
 
     private MaterialRaw chooseMaterialRaw(MiningLevel level)
@@ -92,8 +118,8 @@ public class OreMaterial extends Material
     private MaterialOreBase chooseOreBase()
     {
         Utilities.WeightedRandom<MaterialOreBase> baseRandom = new Utilities.WeightedRandom<MaterialOreBase>(rng.nextLong())
-                .add(50, MaterialOreBase.Stone).add(10, MaterialOreBase.Andesite).add(10, MaterialOreBase.Diorite)
-                .add(10, MaterialOreBase.Granite).add(10, MaterialOreBase.Tuff).add(7, MaterialOreBase.Sand).add(7, MaterialOreBase.Gravel);
+                .add(70, MaterialOreBase.Stone).add(6, MaterialOreBase.Andesite).add(6, MaterialOreBase.Diorite)
+                .add(6, MaterialOreBase.Granite).add(6, MaterialOreBase.Tuff).add(3, MaterialOreBase.Sand).add(3, MaterialOreBase.Gravel);
         return baseRandom.next();
     }
 
@@ -106,6 +132,30 @@ public class OreMaterial extends Material
         return overlayRandom.next();
     }
 
+    private MaterialOreIngot chooseOreIngot()
+    {
+        MaterialOreIngot[] values = MaterialOreIngot.values();
+        return values[rng.nextInt(values.length)];
+    }
+
+    private MaterialOreRaw chooseOreRaw()
+    {
+        if (oreOverlay == null)
+            return MaterialOreRaw.Iron;
+
+        if (oreOverlay == MaterialOreOverlay.Copper)
+            return MaterialOreRaw.Copper;
+
+        MaterialOreRaw[] values = new MaterialOreRaw[] { MaterialOreRaw.Iron, MaterialOreRaw.Gold };
+        return values[rng.nextInt(values.length)];
+    }
+
+    private MaterialOreGem chooseOreGem()
+    {
+        MaterialOreGem[] values = MaterialOreGem.values();
+        return values[rng.nextInt(values.length)];
+    }
+
     // Todo replace with more sophisticated naming system.
     private static final String[] PREFIX = {
             "fer", "aur", "vel", "zar", "thal", "kor", "lum", "myr", "dra", "vor",
@@ -116,7 +166,11 @@ public class OreMaterial extends Material
     };
 
     private static final String[] VOWELS = {
-            "a", "e", "i", "o", "u", "ae", "ai", "ea", "ei", "ia", "io", "oa", "oi", "ou", "ui"
+            "a", "e", "i", "o", "u",
+    };
+
+    private static final String[] RARE_VOWELS = {
+            "ae", "ai", "ea", "ei", "ia", "io", "oa", "oi", "ou", "ui"
     };
 
     private static final String[] INFIX = {
@@ -160,6 +214,12 @@ public class OreMaterial extends Material
         return name;
     }
 
+    private String chooseVowel()
+    {
+        Utilities.WeightedRandom<String[]> vowelPick = new Utilities.WeightedRandom<String[]>(rng.nextLong()).add(10, VOWELS).add(4, RARE_VOWELS);
+        return pick(vowelPick.next(), rng);
+    }
+
     @Override
     protected String chooseName()
     {
@@ -171,7 +231,9 @@ public class OreMaterial extends Material
         };
 
         String name;
-        int pattern = rng.nextInt(3);
+
+        Utilities.WeightedRandom<Integer> patternRNG = new Utilities.WeightedRandom<Integer>(rng.nextLong()).add(7, 0).add(2, 1).add(5, 2);
+        int pattern = patternRNG.next();
 
         String prefix = rng.nextInt(10) == 0
                 ? pick(RARE_PREFIX, rng)
@@ -179,8 +241,8 @@ public class OreMaterial extends Material
 
         switch (pattern)
         {
-            case 0 -> name = prefix + pick(VOWELS, rng) + end;
-            case 1 -> name = prefix + pick(VOWELS, rng) + pick(INFIX, rng) + pick(VOWELS, rng) + end;
+            case 0 -> name = prefix + chooseVowel() + end;
+            case 1 -> name = prefix + chooseVowel() + pick(INFIX, rng) + chooseVowel() + end;
             default -> name = prefix + pick(CORE, rng) + end;
         }
 
@@ -213,7 +275,7 @@ public class OreMaterial extends Material
             {
                 ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, name));
                 FortunaProperties<Item> itemProperties = new FortunaProperties<>(name, Component.literal(Utilities.capitalize(name)), key);
-                materialItems.add(new FortunaItem(itemProperties, new Item.Properties()));
+                materialItems.add(new GemItem(itemProperties, new Item.Properties(), this));
                 break;
             }
             case Ingot:
@@ -222,14 +284,83 @@ public class OreMaterial extends Material
                 String rawName = "raw_" + name;
                 ResourceKey<Item> rawKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, rawName));
                 FortunaProperties<Item> rawProps = new FortunaProperties<>(rawName, Component.literal("Raw " + Utilities.capitalize(name)), rawKey);
-                materialItems.add(new FortunaItem(rawProps, new Item.Properties()));
+                materialItems.add(new RawItem(rawProps, new Item.Properties(), this));
 
                 // Refined Ore Item
                 String refinedName = name + "_ingot";
                 ResourceKey<Item> refinedKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, refinedName));
                 FortunaProperties<Item> refinedProps = new FortunaProperties<>(refinedName, Component.literal(Utilities.capitalize(name) + " Ingot"), refinedKey);
-                materialItems.add(new FortunaItem(refinedProps, new Item.Properties()));
+                materialItems.add(new IngotItem(refinedProps, new Item.Properties(), this));
                 break;
+            }
+        }
+    }
+
+    private void generateOreColors()
+    {
+        switch (raw)
+        {
+            case Ingot -> {
+                float raw = rng.nextFloat();
+                float hue = raw < 0.75f ? raw : 0.85f + (raw - 0.75f) * (1.0f / 0.25f);
+                float saturation = 0.25f + rng.nextFloat() * 0.4f;
+                float brightness = 0.55f + rng.nextFloat() * 0.45f;
+                mainColor = Color.getHSBColor(hue % 1.0f, saturation, brightness);
+
+                if (oreOverlay == MaterialOreOverlay.Copper) {
+                    float oxidizedShift = 0.4f + rng.nextFloat() * 0.2f;
+                    float oxidizedHue = (hue + oxidizedShift) % 1.0f;
+                    // Keep saturation close to main with small variance
+                    float oxidizedSaturation = saturation + (rng.nextFloat() * 0.2f - 0.1f); // ±0.1
+                    float oxidizedBrightness = brightness + (rng.nextFloat() * 0.2f - 0.1f); // ±0.1
+                    oxidizedSaturation = Math.clamp(oxidizedSaturation, 0.1f, 0.9f);
+                    oxidizedBrightness = Math.clamp(oxidizedBrightness, 0.4f, 1.0f);
+                    secondaryColor = Color.getHSBColor(oxidizedHue, oxidizedSaturation, oxidizedBrightness);
+
+                    float transitionHue = (hue + oxidizedShift * 0.5f) % 1.0f;
+                    float transitionSaturation = (saturation + oxidizedSaturation) / 2.0f;
+                    float transitionBrightness = (brightness + oxidizedBrightness) / 2.0f;
+                    tertiaryColor = Color.getHSBColor(transitionHue, transitionSaturation, transitionBrightness);
+                }
+            }
+            case Gem, Special -> {
+                float raw = rng.nextFloat();
+                float hue = raw < 0.75f ? raw : 0.85f + (raw - 0.75f) * (1.0f / 0.25f);
+                float saturation = 0.4f + rng.nextFloat() * 0.4f;
+                float brightness = 0.6f + rng.nextFloat() * 0.35f;
+                mainColor = Color.getHSBColor(hue % 1.0f, saturation, brightness);
+            }
+        }
+
+        switch (oreBase)
+        {
+            case Sand -> {
+                borderColor = new Color(209, 186,138);
+                bottomBorderColor = new Color(231, 228, 187);
+            }
+            case Stone -> {
+                borderColor = new Color(110, 110, 110);
+                bottomBorderColor = new Color(150, 150, 150);
+            }
+            case Granite -> {
+                borderColor = new Color(127, 86, 70);
+                bottomBorderColor = new Color(169, 119, 100);
+            }
+            case Gravel -> {
+                borderColor = new Color(114, 107, 105);
+                bottomBorderColor = new Color(150, 142, 142);
+            }
+            case Andesite -> {
+                borderColor = new Color(116, 116, 116);
+                bottomBorderColor = new Color(156, 156, 156);
+            }
+            case Diorite -> {
+                borderColor = new Color(139, 139, 139);
+                bottomBorderColor = new Color(233, 233, 233);
+            }
+            case Tuff -> {
+                borderColor = new Color(93, 93, 80);
+                bottomBorderColor = new Color(133, 131, 123);
             }
         }
     }

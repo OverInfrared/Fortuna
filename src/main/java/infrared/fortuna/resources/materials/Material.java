@@ -5,6 +5,7 @@ import infrared.fortuna.items.FortunaBlockItem;
 import infrared.fortuna.items.FortunaItem;
 import net.minecraft.world.level.block.Block;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -13,6 +14,12 @@ public abstract class Material
 {
     protected String name = null;
     protected Random rng;
+
+    protected Color mainColor = Color.white;
+    protected Color secondaryColor = Color.white;
+    protected Color tertiaryColor = Color.white;
+    protected Color borderColor = Color.white;
+    protected Color bottomBorderColor = Color.white;
 
     protected final List<FortunaItem>  materialItems  = new ArrayList<>();
     protected final List<FortunaBlock> materialBlocks = new ArrayList<>();
@@ -25,6 +32,31 @@ public abstract class Material
     public String getName()
     {
         return name;
+    }
+
+    public int getColor()
+    {
+        return mainColor.getRGB();
+    }
+
+    public int getSecondaryColor()
+    {
+        return secondaryColor.getRGB();
+    }
+
+    public int getTertiaryColor()
+    {
+        return tertiaryColor.getRGB();
+    }
+
+    public int getBorderColor()
+    {
+        return borderColor.getRGB();
+    }
+
+    public int getBottomBorderColor()
+    {
+        return bottomBorderColor.getRGB();
     }
 
     public List<FortunaItem> getItems()

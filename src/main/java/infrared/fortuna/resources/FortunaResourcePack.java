@@ -117,6 +117,12 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
                 emitIfMatch(resourceOutput, prefix, "models/block/" + block.getRegistryName() + ".json");
                 emitIfMatch(resourceOutput, prefix, "items/" + block.getRegistryName() + ".json");
             }
+
+            for (FortunaItem item : material.getItems())
+            {
+                emitIfMatch(resourceOutput, prefix, "models/item/" + item.getRegistryName() + ".json");
+                emitIfMatch(resourceOutput, prefix, "items/" + item.getRegistryName() + ".json");
+            }
         }
     }
 
@@ -156,6 +162,13 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
             return block != null ? block.getModelString() : null;
         }
 
+        if (path.startsWith("models/item/") && path.endsWith(".json"))
+        {
+            String registryName = path.substring("models/item/".length(), path.length() - ".json".length());
+            FortunaItem item = findItem(registryName);
+            return item != null ? item.getModelString() : null;
+        }
+
         // models/item/<registryName>.json  (block items + standalone items)
         if (path.startsWith("items/") && path.endsWith(".json"))
         {
@@ -166,9 +179,9 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
             FortunaBlock block = findBlock(registryName);
             if (block != null) return block.getItemString();
 
-//            // Then standalone items
-//            FortunaItem item = findItem(registryName);
-//            return item != null ? item.getItemModelJson() : null;
+            // Then standalone items
+            FortunaItem item = findItem(registryName);
+            return item != null ? item.getItemString() : null;
         }
 
         return null;

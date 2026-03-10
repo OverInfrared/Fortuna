@@ -16,7 +16,7 @@ public abstract class FortunaBlock extends Block
 
     public FortunaBlock(FortunaProperties<Block> fortunaProps, Properties properties)
     {
-        super(properties.setId(fortunaProps.resourceKey()).noOcclusion());
+        super(properties.setId(fortunaProps.resourceKey()));
         fortunaProperties = fortunaProps;
     }
 

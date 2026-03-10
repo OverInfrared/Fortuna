@@ -61,6 +61,30 @@ public class OreBlock extends FortunaBlock
             }
         }
 
+        textures.addProperty("borderbottom", "%s:block/overlay/%s".formatted(Fortuna.MOD_ID, switch (oreMaterial.getMaterialOreOverlay())
+            {
+                case Iron -> "ore_iron_border_bottom";
+                case Copper -> "ore_copper_border_bottom";
+                case Coal -> "ore_coal_border_bottom";
+                case Diamond -> "ore_diamond_border_bottom";
+                case Emerald -> "ore_emerald_border_bottom";
+                case Gold -> "ore_gold_border_bottom";
+                case Lapis -> "ore_lapis_border_bottom";
+                case Redstone -> "ore_redstone_border_bottom";
+            }));
+
+        textures.addProperty("bordertop", "%s:block/overlay/%s".formatted(Fortuna.MOD_ID, switch (oreMaterial.getMaterialOreOverlay())
+        {
+            case Iron -> "ore_iron_border_top";
+            case Copper -> "ore_copper_border_top";
+            case Coal -> "ore_coal_border_top";
+            case Diamond -> "ore_diamond_border_top";
+            case Emerald -> "ore_emerald_border_top";
+            case Gold -> "ore_gold_border_top";
+            case Lapis -> "ore_lapis_border_top";
+            case Redstone -> "ore_redstone_border_top";
+        }));
+
         for (int i = 0; i < overlayLayers.size(); i++)
             textures.addProperty("overlay" + i, overlayLayers.get(i));
 
@@ -70,8 +94,11 @@ public class OreBlock extends FortunaBlock
 
         JsonArray elements = new JsonArray();
         elements.add(buildBaseCube());
+        elements.add(buildOverlayCube("bordertop", 0));
+        elements.add(buildOverlayCube("borderbottom", 1));
+
         for (int i = 0; i < overlayLayers.size(); i++)
-            elements.add(buildOverlayCube("overlay" + i));
+            elements.add(buildOverlayCube("overlay" + i, i + 2));
 
         model.add("elements", elements);
         return model;
@@ -84,9 +111,26 @@ public class OreBlock extends FortunaBlock
         model.addProperty("type", "minecraft:model");
         model.addProperty("model", "%s:block/%s".formatted(Fortuna.MOD_ID, fortunaProperties.registryName()));
 
+        JsonArray tints = new JsonArray();
+        tints.add(buildTint(oreMaterial.getBorderColor()));
+        tints.add(buildTint(oreMaterial.getBottomBorderColor()));
+        tints.add(buildTint(oreMaterial.getColor()));
+        tints.add(buildTint(oreMaterial.getSecondaryColor()));
+        tints.add(buildTint(oreMaterial.getTertiaryColor()));
+
+        model.add("tints", tints);
+
         JsonObject itemModel = new JsonObject();
         itemModel.add("model", model);
         return itemModel;
+    }
+
+    private JsonObject buildTint(int color)
+    {
+        JsonObject border = new JsonObject();
+        border.addProperty("type", "minecraft:constant");
+        border.addProperty("value", color);
+        return border;
     }
 
     private JsonObject buildBaseCube() {
@@ -111,7 +155,7 @@ public class OreBlock extends FortunaBlock
         return face;
     }
 
-    private JsonObject buildOverlayCube(String textureRef) {
+    private JsonObject buildOverlayCube(String textureRef, int tintIndex) {
         // Grass only overlays the sides, but for ore we want all faces
         String[] faces = {"down", "up", "north", "south", "west", "east"};
         JsonObject faceObj = new JsonObject();
@@ -119,7 +163,8 @@ public class OreBlock extends FortunaBlock
             JsonObject f = new JsonObject();
             f.add("uv", buildUVArray());
             f.addProperty("texture", "#" + textureRef);
-            f.addProperty("tintindex", 0);
+            if (tintIndex != -1)
+                f.addProperty("tintindex", tintIndex);
             f.addProperty("cullface", face);
             faceObj.add(face, f);
         }
