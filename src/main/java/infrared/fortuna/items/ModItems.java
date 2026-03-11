@@ -1,8 +1,8 @@
 package infrared.fortuna.items;
 
 import infrared.fortuna.Fortuna;
-import infrared.fortuna.Utilities;
-import infrared.fortuna.blocks.FortunaBlock;
+
+import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.resources.materials.Material;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.minecraft.core.Registry;
@@ -16,7 +16,6 @@ import net.minecraft.world.level.block.Block;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 public class ModItems
 {
@@ -28,10 +27,10 @@ public class ModItems
         }
     }
 
-    public static void registerBlock(FortunaBlock block)
+    public static void registerBlock(IFortunaBlock block)
     {
         ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, block.getRegistryName()));
-        FortunaBlockItem blockItem = new FortunaBlockItem(block, block.getDisplayName(), new Item.Properties().setId(itemKey).useBlockDescriptionPrefix());
+        FortunaBlockItem blockItem = new FortunaBlockItem((Block) block, block.getDisplayName(), new Item.Properties().setId(itemKey).useBlockDescriptionPrefix());
         Registry.register(BuiltInRegistries.ITEM, itemKey, blockItem);
         registeredItems.add(blockItem);
     }

@@ -16,14 +16,14 @@ import java.util.List;
 
 public class ModBlocks
 {
-    private static List<FortunaBlock> registeredBlocks = new ArrayList<>();
+    private static final List<IFortunaBlock> registeredBlocks = new ArrayList<>();
 
     private static void registerMaterial(Material material)
     {
-        for (FortunaBlock block : material.getBlocks())
+        for (IFortunaBlock block : material.getBlocks())
         {
             ModItems.registerBlock(block);
-            Registry.register(BuiltInRegistries.BLOCK, block.getResourceKey(), block);
+            Registry.register(BuiltInRegistries.BLOCK, block.getResourceKey(), (Block) block);
             registeredBlocks.add(block);
         }
     }
@@ -44,7 +44,7 @@ public class ModBlocks
         registerMaterial(material);
     }
 
-    public static List<FortunaBlock> getRegisteredBlocks()
+    public static List<IFortunaBlock> getRegisteredBlocks()
     {
         return registeredBlocks;
     }

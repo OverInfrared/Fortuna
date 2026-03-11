@@ -56,6 +56,9 @@ public class Utilities
 
     public static String capitalize(String s)
     {
+        if (s.isEmpty())
+            return "";
+
         return Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 

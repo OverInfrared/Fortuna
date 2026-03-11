@@ -1,9 +1,11 @@
 package infrared.fortuna.resources.materials;
 
 import infrared.fortuna.blocks.FortunaBlock;
+import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.items.FortunaBlockItem;
 import infrared.fortuna.items.FortunaItem;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.util.ColorRGBA;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -22,7 +24,7 @@ public abstract class Material
     protected Color bottomBorderColor = Color.white;
 
     protected final List<FortunaItem>  materialItems  = new ArrayList<>();
-    protected final List<FortunaBlock> materialBlocks = new ArrayList<>();
+    protected final List<IFortunaBlock> materialBlocks = new ArrayList<>();
 
     public Material(long seed)
     {
@@ -37,6 +39,11 @@ public abstract class Material
     public int getColor()
     {
         return mainColor.getRGB();
+    }
+
+    public ColorRGBA getColorRGBA()
+    {
+        return new ColorRGBA(mainColor.getRGB());
     }
 
     public int getSecondaryColor()
@@ -64,7 +71,7 @@ public abstract class Material
         return materialItems;
     }
 
-    public List<FortunaBlock> getBlocks()
+    public List<IFortunaBlock> getBlocks()
     {
         return materialBlocks;
     }

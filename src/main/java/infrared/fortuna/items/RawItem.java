@@ -1,7 +1,7 @@
 package infrared.fortuna.items;
 
 import infrared.fortuna.resources.FortunaProperties;
-import infrared.fortuna.resources.enums.MaterialOreRaw;
+import infrared.fortuna.resources.enums.ore.MaterialOreRaw;
 import infrared.fortuna.resources.materials.OreMaterial;
 import net.minecraft.world.item.Item;
 
@@ -13,17 +13,14 @@ public class RawItem extends FortunaItem
 
         MaterialOreRaw rawOre = oreMaterial.getMaterialOreRaw();
 
-        addRequiredTexture(rawOre.getTexture());
+        addRequiredTexture(rawOre.isOxidizable() ? rawOre.getTexture() + "_base" : rawOre.getTexture());
         addRequiredTint(oreMaterial.getColor());
 
-        if (!rawOre.getSecondary().isEmpty())
+        if (rawOre.isOxidizable())
         {
-            addRequiredTexture(rawOre.getSecondary());
+            addRequiredTexture(rawOre.getTexture() + "_oxidized");
             addRequiredTint(oreMaterial.getSecondaryColor());
-        }
-        if (!rawOre.getTertiary().isEmpty())
-        {
-            addRequiredTexture(rawOre.getTertiary());
+            addRequiredTexture(rawOre.getTexture() + "_transition");
             addRequiredTint(oreMaterial.getTertiaryColor());
         }
     }

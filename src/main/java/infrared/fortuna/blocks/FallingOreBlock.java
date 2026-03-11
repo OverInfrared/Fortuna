@@ -5,10 +5,11 @@ import infrared.fortuna.resources.enums.ore.MaterialOreOverlay;
 import infrared.fortuna.resources.materials.OreMaterial;
 import net.minecraft.world.level.block.Block;
 
-public class OreBlock extends FortunaBlock
+public class FallingOreBlock extends FallingFortunaBlock
 {
-    public OreBlock(FortunaProperties<Block> fortunaProperties, Properties properties, OreMaterial oreMaterial) {
-        super(fortunaProperties, properties);
+    public FallingOreBlock(FortunaProperties<Block> fortunaProps, Properties properties, OreMaterial oreMaterial)
+    {
+        super(fortunaProps, oreMaterial.getColorRGBA(), properties);
 
         addBaseTextures(oreMaterial.getMaterialOreBase().getTexture());
 
@@ -27,6 +28,6 @@ public class OreBlock extends FortunaBlock
         addRequiredTint(oreMaterial.getColor());
         addRequiredTint(oreMaterial.getSecondaryColor());
         addRequiredTint(oreMaterial.getTertiaryColor());
-    }
 
+    }
 }

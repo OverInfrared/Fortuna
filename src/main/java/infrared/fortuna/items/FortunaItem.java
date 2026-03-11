@@ -79,9 +79,7 @@ public abstract class FortunaItem extends Item
 
         JsonArray tints = new JsonArray();
         for (int color : requiredTints)
-        {
             tints.add(buildTint(color));
-        }
 
         model.add("tints", tints);
 

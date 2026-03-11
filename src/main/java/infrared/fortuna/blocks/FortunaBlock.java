@@ -1,64 +1,26 @@
 package infrared.fortuna.blocks;
 
-import com.google.gson.JsonObject;
+import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
 import infrared.fortuna.resources.FortunaProperties;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.block.Block;
 
-public abstract class FortunaBlock extends Block
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class FortunaBlock extends Block implements IFortunaBlock
 {
     protected final FortunaProperties<Block> fortunaProperties;
+    private final List<Pair<String, String>> requiredTextures = new ArrayList<>();
+    private final List<IFortunaBlock.RequiredElement> requiredElements = new ArrayList<>();
+    private final List<Integer> requiredTints = new ArrayList<>();
 
-    private JsonObject blockStateJson = null;
-    private JsonObject modelJson = null;
-    private JsonObject itemJson = null;
-
-    public FortunaBlock(FortunaProperties<Block> fortunaProps, Properties properties)
-    {
+    public FortunaBlock(FortunaProperties<Block> fortunaProps, Properties properties) {
         super(properties.setId(fortunaProps.resourceKey()));
         fortunaProperties = fortunaProps;
     }
 
-    public Component getDisplayName()
-    {
-        return fortunaProperties.displayName();
-    }
-
-    public String getRegistryName()
-    {
-        return fortunaProperties.registryName();
-    }
-
-    public ResourceKey<Block> getResourceKey()
-    {
-        return fortunaProperties.resourceKey();
-    }
-
-    public String getBlockStateString()
-    {
-        if (blockStateJson == null)
-            blockStateJson = generateBlockState();
-        return blockStateJson.toString();
-    }
-
-    public String getModelString()
-    {
-        if (modelJson == null)
-            modelJson = generateModel();
-        return modelJson.toString();
-    }
-
-    public String getItemString()
-    {
-        if (itemJson == null)
-            itemJson = generateItemModel();
-        return itemJson.toString();
-    }
-
-    protected abstract JsonObject generateBlockState();
-
-    protected abstract JsonObject generateModel();
-
-    protected abstract JsonObject generateItemModel();
+    @Override public List<Pair<String, String>> getRequiredTextures() { return requiredTextures; }
+    @Override public List<IFortunaBlock.RequiredElement> getRequiredElements() { return requiredElements; }
+    @Override public List<Integer> getRequiredTints() { return requiredTints; }
+    @Override public FortunaProperties<Block> getFortunaProperties() { return fortunaProperties; }
 }

@@ -1,17 +1,17 @@
-package infrared.fortuna.resources.enums;
+package infrared.fortuna.resources.enums.ore;
 
 public enum MaterialOreGem
 {
     Diamond("diamond"),
     Lapis("lapis_lazuli"),
     Emerald("emerald"),
-    Prismarine("prismarine_crystal"),
+    Prismarine("prismarine_crystals"),
     Amethyst("amethyst_shard"),
     Resin("resin_clump");
 
     private final String texture;
 
-    private MaterialOreGem(String texture)
+    MaterialOreGem(String texture)
     {
         this.texture = texture;
     }

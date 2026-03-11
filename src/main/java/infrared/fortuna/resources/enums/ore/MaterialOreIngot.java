@@ -1,4 +1,4 @@
-package infrared.fortuna.resources.enums;
+package infrared.fortuna.resources.enums.ore;
 
 public enum MaterialOreIngot
 {
@@ -10,7 +10,7 @@ public enum MaterialOreIngot
 
     private final String texture;
 
-    private MaterialOreIngot(String texture)
+    MaterialOreIngot(String texture)
     {
         this.texture = texture;
     }

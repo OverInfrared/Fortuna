@@ -2,6 +2,7 @@ package infrared.fortuna.resources;
 
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.blocks.FortunaBlock;
+import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.items.FortunaItem;
 import infrared.fortuna.resources.materials.Material;
 import net.minecraft.network.chat.Component;
@@ -111,7 +112,7 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     {
         for (Material material : loadedMaterials)
         {
-            for (FortunaBlock block : material.getBlocks())
+            for (IFortunaBlock block : material.getBlocks())
             {
                 emitIfMatch(resourceOutput, prefix, "blockstates/" + block.getRegistryName() + ".json");
                 emitIfMatch(resourceOutput, prefix, "models/block/" + block.getRegistryName() + ".json");
@@ -150,7 +151,7 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
         if (path.startsWith("blockstates/") && path.endsWith(".json"))
         {
             String registryName = path.substring("blockstates/".length(), path.length() - ".json".length());
-            FortunaBlock block = findBlock(registryName);
+            IFortunaBlock block = findBlock(registryName);
             return block != null ? block.getBlockStateString() : null;
         }
 
@@ -158,7 +159,7 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
         if (path.startsWith("models/block/") && path.endsWith(".json"))
         {
             String registryName = path.substring("models/block/".length(), path.length() - ".json".length());
-            FortunaBlock block = findBlock(registryName);
+            IFortunaBlock block = findBlock(registryName);
             return block != null ? block.getModelString() : null;
         }
 
@@ -176,7 +177,7 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
             String registryName = path.substring("items/".length(), path.length() - ".json".length());
 
             // Check block items first
-            FortunaBlock block = findBlock(registryName);
+            IFortunaBlock block = findBlock(registryName);
             if (block != null) return block.getItemString();
 
             // Then standalone items
@@ -187,10 +188,10 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
         return null;
     }
 
-    private @Nullable FortunaBlock findBlock(String registryName)
+    private @Nullable IFortunaBlock findBlock(String registryName)
     {
         for (Material material : loadedMaterials)
-            for (FortunaBlock block : material.getBlocks())
+            for (IFortunaBlock block : material.getBlocks())
                 if (block.getRegistryName().equals(registryName))
                     return block;
         return null;
