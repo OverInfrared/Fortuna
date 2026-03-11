@@ -2,14 +2,20 @@ package infrared.fortuna;
 
 import infrared.fortuna.blocks.ModBlocks;
 import infrared.fortuna.items.ModItems;
-import infrared.fortuna.resources.FortunaTags;
+import infrared.fortuna.resources.FortunaDataPack;
 import infrared.fortuna.resources.FortunaResourcePack;
 import infrared.fortuna.resources.materials.Material;
 import infrared.fortuna.resources.materials.MaterialChain;
 import infrared.fortuna.resources.enums.MiningLevel;
 import net.fabricmc.api.ModInitializer;
 
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
+import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
+import net.fabricmc.fabric.api.resource.v1.pack.PackActivationType;
 import net.fabricmc.fabric.impl.resource.PackSourceTracker;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -54,6 +60,8 @@ public class Fortuna implements ModInitializer
 				ModItems.initializeMaterial(material);
 				ModBlocks.initializeMaterial(material);
 				FortunaResourcePack.initializeMaterial(material);
+				FortunaDataPack.initializeMaterial(material);
+
 				initializedMaterials.add(material);
 			}
 		}
