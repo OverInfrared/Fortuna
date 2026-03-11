@@ -21,18 +21,18 @@ public class PackRepositoryMixin {
 
 	@Inject(method = "reload", at = @At("RETURN"))
 	private void onReload(CallbackInfo ci) {
-		// Add to available
-		Map<String, Pack> mutable = new java.util.HashMap<>(this.available);
-		FortunaDataPack.getInstance().loadPacks(pack -> mutable.put(pack.getId(), pack));
-		this.available = ImmutableMap.copyOf(mutable);
-
-		// Add to selected at the FRONT (index 0 = lowest priority, vanilla loads after and wins)
-		List<Pack> mutableSelected = new java.util.ArrayList<>(this.selected);
-		FortunaDataPack.getInstance().loadPacks(pack -> {
-			if (!mutableSelected.contains(pack)) {
-				mutableSelected.addFirst(pack); // insert at front = bottom priority
-			}
-		});
-		this.selected = ImmutableList.copyOf(mutableSelected);
+//		// Add to available
+//		Map<String, Pack> mutable = new java.util.HashMap<>(this.available);
+//		FortunaDataPack.getInstance().loadPacks(pack -> mutable.put(pack.getId(), pack));
+//		this.available = ImmutableMap.copyOf(mutable);
+//
+//		// Add to selected at the FRONT (index 0 = lowest priority, vanilla loads after and wins)
+//		List<Pack> mutableSelected = new java.util.ArrayList<>(this.selected);
+//		FortunaDataPack.getInstance().loadPacks(pack -> {
+//			if (!mutableSelected.contains(pack)) {
+//				mutableSelected.addFirst(pack); // insert at front = bottom priority
+//			}
+//		});
+//		this.selected = ImmutableList.copyOf(mutableSelected);
 	}
 }

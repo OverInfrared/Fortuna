@@ -13,7 +13,6 @@ public class FortunaColorProvider
     public static void initializeBlock(IFortunaBlock block, Material material)
     {
         BlockColor color = (state, world, pos, tintIndex) -> {
-            Fortuna.LOGGER.info("Color requested tintIndex={}", tintIndex);
             return block.getRegisteredTint(tintIndex);
         };
 

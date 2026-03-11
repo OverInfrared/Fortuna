@@ -6,12 +6,15 @@ import infrared.fortuna.Fortuna;
 import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.resources.enums.MiningLevel;
 import infrared.fortuna.resources.materials.Material;
+import net.fabricmc.fabric.api.resource.v1.pack.ModPackResources;
+import net.fabricmc.fabric.impl.resource.pack.ModResourcePackCreator;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.*;
-import net.minecraft.server.packs.repository.Pack;
-import net.minecraft.server.packs.repository.PackSource;
-import net.minecraft.server.packs.repository.RepositorySource;
+import net.minecraft.server.packs.metadata.MetadataSectionType;
+import net.minecraft.server.packs.repository.KnownPack;
 import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
@@ -20,75 +23,69 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.function.Consumer;
 
-public class FortunaDataPack extends AbstractPackResources implements RepositorySource
+public class FortunaDataPack implements PackResources, ModPackResources
 {
     private static final String PACK_ID = "fortuna_dynamic_data";
     private static final FortunaDataPack INSTANCE = new FortunaDataPack();
-
     public static FortunaDataPack getInstance() { return INSTANCE; }
 
     private static final List<Material> loadedMaterials = new ArrayList<>();
 
-    private FortunaDataPack() {
-        super(new PackLocationInfo(
-                PACK_ID,
-                Component.literal("Fortuna Dynamic Data"),
-                PackSource.BUILT_IN,
-                Optional.empty()
-        ));
-    }
+    private final PackLocationInfo locationInfo = new PackLocationInfo(
+            PACK_ID,
+            Component.literal("Fortuna Dynamic Data"),
+            ModResourcePackCreator.RESOURCE_PACK_SOURCE,
+            Optional.of(new KnownPack(ModResourcePackCreator.VANILLA, PACK_ID, "1.0.0"))
+    );
 
-    public static void initializeMaterial(Material material)
-    {
+    private FortunaDataPack() {}
+
+    public static void initializeMaterial(Material material) {
         loadedMaterials.add(material);
     }
 
     @Override
-    public void loadPacks(@NonNull Consumer<Pack> consumer)
-    {
-        Pack.ResourcesSupplier supplier = new Pack.ResourcesSupplier() {
-            @Override
-            public @NonNull PackResources openPrimary(@NonNull PackLocationInfo info) { return INSTANCE; }
-            @Override
-            public @NonNull PackResources openFull(@NonNull PackLocationInfo info, Pack.@NonNull Metadata metadata) { return INSTANCE; }
-        };
-
-        Pack pack = Pack.readMetaAndCreate(
-                new PackLocationInfo(PACK_ID, Component.literal("Fortuna Dynamic Data"), PackSource.BUILT_IN, Optional.empty()),
-                supplier,
-                PackType.SERVER_DATA,
-                new PackSelectionConfig(true, Pack.Position.TOP, false)
-        );
-        if (pack != null) consumer.accept(pack);
+    public PackLocationInfo location() {
+        return locationInfo;
     }
 
     @Override
-    public @Nullable IoSupplier<InputStream> getRootResource(String... paths)
-    {
-        if (paths.length != 1 || !paths[0].equals("pack.mcmeta")) return null;
-
-        JsonObject pack = new JsonObject();
-        pack.addProperty("pack_format", 94);
-        pack.addProperty("min_format", 94);
-        pack.addProperty("max_format", 95);
-        pack.addProperty("description", "Fortuna dynamic data");
-
-        JsonObject mcmeta = new JsonObject();
-        mcmeta.add("pack", pack);
-
-        return () -> new ByteArrayInputStream(mcmeta.toString().getBytes(StandardCharsets.UTF_8));
+    public @Nullable IoSupplier<InputStream> getRootResource(String... paths) {
+        if (paths.length == 1 && paths[0].equals("pack.mcmeta")) {
+            JsonObject pack = new JsonObject();
+            pack.addProperty("pack_format", 94);
+            pack.addProperty("description", "Fortuna Dynamic Data");
+            JsonObject mcmeta = new JsonObject();
+            mcmeta.add("pack", pack);
+            byte[] bytes = mcmeta.toString().getBytes(StandardCharsets.UTF_8);
+            return () -> new ByteArrayInputStream(bytes);
+        }
+        return null;
     }
 
     @Override
-    public @Nullable IoSupplier<InputStream> getResource(@NonNull PackType packType, @NonNull Identifier id)
-    {
+    public @Nullable <T> T getMetadataSection(MetadataSectionType<T> type) throws IOException {
+        IoSupplier<InputStream> mcmeta = getRootResource("pack.mcmeta");
+        if (mcmeta == null) return null;
+        try (InputStream is = mcmeta.get()) {
+            return AbstractPackResources.getMetadataFromStream(type, is, locationInfo);
+        }
+    }
+
+    @Override
+    public @NonNull Set<String> getNamespaces(@NonNull PackType packType) {
+        return packType == PackType.SERVER_DATA ? Set.of("minecraft") : Set.of();
+    }
+
+    @Override
+    public @Nullable IoSupplier<InputStream> getResource(@NonNull PackType packType, @NonNull Identifier id) {
         if (packType != PackType.SERVER_DATA) return null;
-        if (!id.getNamespace().equals(Fortuna.MOD_ID)) return null;
+        if (!id.getNamespace().equals("minecraft")) return null;
 
         String json = resolveResource(id.getPath());
         if (json == null) return null;
@@ -98,10 +95,10 @@ public class FortunaDataPack extends AbstractPackResources implements Repository
     }
 
     @Override
-    public void listResources(@NonNull PackType packType, @NonNull String namespace, @NonNull String prefix,
-                              @NonNull ResourceOutput resourceOutput)
-    {
+    public void listResources(@NonNull PackType packType, @NonNull String namespace,
+                              @NonNull String prefix, @NonNull ResourceOutput resourceOutput) {
         if (packType != PackType.SERVER_DATA) return;
+        if (!namespace.equals("minecraft")) return; // only emit for minecraft namespace
 
         emitTag(resourceOutput, prefix, "tags/block/mineable/pickaxe.json");
         emitTag(resourceOutput, prefix, "tags/block/mineable/axe.json");
@@ -112,40 +109,41 @@ public class FortunaDataPack extends AbstractPackResources implements Repository
     }
 
     @Override
-    public @NonNull Set<String> getNamespaces(@NonNull PackType packType)
-    {
-        return packType == PackType.SERVER_DATA ? Set.of(Fortuna.MOD_ID) : Set.of();
+    public void close() {}
+
+    @Override
+    public ModMetadata getFabricModMetadata() {
+        return FabricLoader.getInstance()
+                .getModContainer(Fortuna.MOD_ID)
+                .orElseThrow()
+                .getMetadata();
     }
 
     @Override
-    public void close() {}
+    public ModPackResources createOverlay(String overlay) {
+        return this;
+    }
 
-    private void emitIfMatch(ResourceOutput resourceOutput, String prefix, String path) {
+    private void emitTag(ResourceOutput resourceOutput, String prefix, String path) {
         if (path.startsWith(prefix)) {
-            Identifier id = Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, path);
+            Identifier id = Identifier.fromNamespaceAndPath("minecraft", path);
             resourceOutput.accept(id, () -> Objects.requireNonNull(getResource(PackType.SERVER_DATA, id)).get());
         }
     }
 
-    private @Nullable String resolveResource(String path)
-    {
+    private @Nullable String resolveResource(String path) {
         return switch (path) {
-            case "tags/block/mineable/pickaxe.json" -> {
-                Fortuna.LOGGER.info("(fortuna) pickaxe tag JSON: {}",
-                        generateToolTag(BlockTags.MINEABLE_WITH_PICKAXE));
-                yield generateToolTag(BlockTags.MINEABLE_WITH_PICKAXE);
-            }
-            case "tags/block/mineable/axe.json"     -> generateToolTag(BlockTags.MINEABLE_WITH_AXE);
-            case "tags/block/mineable/shovel.json"  -> generateToolTag(BlockTags.MINEABLE_WITH_SHOVEL);
-            case "tags/block/needs_stone_tool.json"   -> generateMiningLevelTag(MiningLevel.Stone);
-            case "tags/block/needs_iron_tool.json"    -> generateMiningLevelTag(MiningLevel.Iron);
-            case "tags/block/needs_diamond_tool.json" -> generateMiningLevelTag(MiningLevel.Diamond);
+            case "tags/block/mineable/pickaxe.json"   -> generateToolTag(BlockTags.MINEABLE_WITH_PICKAXE);
+            case "tags/block/mineable/axe.json"       -> generateToolTag(BlockTags.MINEABLE_WITH_AXE);
+            case "tags/block/mineable/shovel.json"    -> generateToolTag(BlockTags.MINEABLE_WITH_SHOVEL);
+            case "tags/block/needs_stone_tool.json"   -> generateMiningLevelTag(MiningLevel.Iron);
+            case "tags/block/needs_iron_tool.json"    -> generateMiningLevelTag(MiningLevel.Diamond);
+            case "tags/block/needs_diamond_tool.json" -> generateMiningLevelTag(MiningLevel.Netherite);
             default -> null;
         };
     }
 
-    private String generateToolTag(TagKey<Block> toolTag)
-    {
+    private String generateToolTag(TagKey<Block> toolTag) {
         JsonArray values = new JsonArray();
         for (Material material : loadedMaterials)
             for (IFortunaBlock block : material.getBlocks())
@@ -158,8 +156,7 @@ public class FortunaDataPack extends AbstractPackResources implements Repository
         return tag.toString();
     }
 
-    private String generateMiningLevelTag(MiningLevel requiredLevel)
-    {
+    private String generateMiningLevelTag(MiningLevel requiredLevel) {
         JsonArray values = new JsonArray();
         for (Material material : loadedMaterials)
             for (IFortunaBlock block : material.getBlocks())
@@ -170,21 +167,5 @@ public class FortunaDataPack extends AbstractPackResources implements Repository
         tag.addProperty("replace", false);
         tag.add("values", values);
         return tag.toString();
-    }
-
-    private void emitTag(ResourceOutput resourceOutput, String prefix, String path) {
-        if (path.startsWith(prefix)) {
-            Identifier id = Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, path);
-            resourceOutput.accept(id, () -> Objects.requireNonNull(getResource(PackType.SERVER_DATA, id)).get());
-        }
-    }
-
-    private @Nullable IFortunaBlock findBlock(String registryName)
-    {
-        for (Material material : loadedMaterials)
-            for (IFortunaBlock block : material.getBlocks())
-                if (block.getRegistryName().equals(registryName))
-                    return block;
-        return null;
     }
 }

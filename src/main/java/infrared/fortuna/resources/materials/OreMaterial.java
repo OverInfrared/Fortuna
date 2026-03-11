@@ -146,7 +146,6 @@ public class OreMaterial extends Material
     {
         return switch (level)
         {
-            case Stone -> MaterialRaw.Stone;
             case Iron ->
             {
                 Utilities.WeightedRandom<MaterialRaw> ironRandom = new Utilities.WeightedRandom<MaterialRaw>(rng.nextLong())
@@ -159,7 +158,7 @@ public class OreMaterial extends Material
                         .add(35, MaterialRaw.Ingot).add(60, MaterialRaw.Gem).add(5, MaterialRaw.Special);
                 yield diamondRandom.next();
             }
-            case Netherite, Fortuna ->
+            case Netherite ->
             {
                 Utilities.WeightedRandom<MaterialRaw> netherRandom = new Utilities.WeightedRandom<MaterialRaw>(rng.nextLong())
                         .add(33, MaterialRaw.Ingot).add(33, MaterialRaw.Gem).add(33, MaterialRaw.Special);

@@ -3,7 +3,7 @@
 	"package": "infrared.fortuna.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"PackRepositoryMixin"
+		"ModPackResourcesUtilMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

@@ -19,7 +19,7 @@ public abstract class FortunaBlock extends Block implements IFortunaBlock
     private final List<Integer> requiredTints = new ArrayList<>();
 
     protected TagKey<Block> requiredTool = BlockTags.MINEABLE_WITH_PICKAXE;
-    protected MiningLevel requiredMiningLevel = MiningLevel.Fortuna;
+    protected MiningLevel requiredMiningLevel = MiningLevel.Iron;
     protected IntProvider xpRange;
 
     public FortunaBlock(FortunaProperties<Block> fortunaProps, Properties properties) {

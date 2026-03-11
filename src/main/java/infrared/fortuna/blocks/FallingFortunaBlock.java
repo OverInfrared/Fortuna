@@ -30,7 +30,7 @@ public abstract class FallingFortunaBlock extends ColoredFallingBlock implements
     private final List<Integer> requiredTints = new ArrayList<>();
 
     protected TagKey<Block> requiredTool = BlockTags.MINEABLE_WITH_PICKAXE;
-    protected MiningLevel requiredMiningLevel = MiningLevel.Fortuna;
+    protected MiningLevel requiredMiningLevel = MiningLevel.Iron;
     protected IntProvider xpRange;
 
     public FallingFortunaBlock(FortunaProperties<Block> fortunaProps, ColorRGBA colorRGBA, BlockBehaviour.Properties properties) {
