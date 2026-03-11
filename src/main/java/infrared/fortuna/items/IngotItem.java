@@ -11,6 +11,6 @@ public class IngotItem extends FortunaItem
         super(fortunaProps, properties);
 
         addRequiredTexture(oreMaterial.getMaterialOreIngot().getTexture());
-        addRequiredTint(oreMaterial.getColor());
+        addRequiredTint(oreMaterial.getColor().getRGB());
     }
 }

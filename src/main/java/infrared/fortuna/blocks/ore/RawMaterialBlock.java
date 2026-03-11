@@ -1,5 +1,6 @@
-package infrared.fortuna.blocks;
+package infrared.fortuna.blocks.ore;
 
+import infrared.fortuna.blocks.FortunaBlock;
 import infrared.fortuna.resources.FortunaProperties;
 import infrared.fortuna.resources.enums.ore.MaterialOreRaw;
 import infrared.fortuna.resources.materials.OreMaterial;
@@ -10,6 +11,8 @@ public class RawMaterialBlock extends FortunaBlock
     public RawMaterialBlock(FortunaProperties<Block> fortunaProps, Properties properties, OreMaterial oreMaterial)
     {
         super(fortunaProps, properties);
+
+        this.requiredMiningLevel = oreMaterial.getMiningLevel();
 
         MaterialOreRaw oreRaw = oreMaterial.getMaterialOreRaw();
         boolean oxidizable = oreRaw.isOxidizable();
@@ -25,8 +28,8 @@ public class RawMaterialBlock extends FortunaBlock
             addOverlayTexture("overlaytransition", blockTexture + "_transition", 2);
         }
 
-        addRequiredTint(oreMaterial.getColor());
-        addRequiredTint(oreMaterial.getSecondaryColor());
-        addRequiredTint(oreMaterial.getTertiaryColor());
+        addRequiredTint(oreMaterial.getColor().getRGB());
+        addRequiredTint(oreMaterial.getSecondaryColor().getRGB());
+        addRequiredTint(oreMaterial.getTransitionColor(0.5f, 0.5f, 1f).getRGB());
     }
 }

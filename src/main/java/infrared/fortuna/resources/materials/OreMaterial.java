@@ -2,7 +2,7 @@ package infrared.fortuna.resources.materials;
 
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.Utilities;
-import infrared.fortuna.blocks.*;
+import infrared.fortuna.blocks.ore.*;
 import infrared.fortuna.items.GemItem;
 import infrared.fortuna.items.IngotItem;
 import infrared.fortuna.items.RawItem;
@@ -14,25 +14,47 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.valueproviders.IntProvider;
+import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 
 import java.awt.*;
 
 public class OreMaterial extends Material
 {
+    // The level required to mine the material
     private final MiningLevel miningLevel;
+
+    // What the material is
     private final MaterialRaw raw;
+
+    // The background base for the ore, i.e. stone, diorite, sand.
     private final MaterialOreBase oreBase;
+
+    // The ore textures to overlay on the base, i.e. copper, diamond, lapis.
     private final MaterialOreOverlay oreOverlay;
 
+    // If the material supports an ingot, which texture to use.
     private final MaterialOreIngot oreIngot;
+
+    // If the material supports an ingot, which raw material texture to use.
     private final MaterialOreRaw oreRaw;
+
+    // If the material is a gem, which texture
     private final MaterialOreGem oreGem;
+
+    // Textures for the materials refined block.
     private final MaterialOreBlock materialBlock;
+
+    private final float materialMineTime;
+    private final float materialHardness;
+
+    private final IntProvider xpRange;
 
     public OreMaterial(long seed, MiningLevel level)
     {
@@ -49,6 +71,13 @@ public class OreMaterial extends Material
         oreRaw = chooseOreRaw();
         oreGem = chooseOreGem();
         materialBlock = chooseOreBlock();
+
+        materialMineTime = chooseMiningTime();
+        materialHardness = chooseHardness();
+
+        int minXp = 1 + miningLevel.ordinal();
+        int maxXp = minXp + 1 + rng.nextInt(4); // max is min+1 to min+4
+        xpRange = UniformInt.of(minXp, maxXp);
 
         name = chooseName();
 
@@ -96,6 +125,21 @@ public class OreMaterial extends Material
     public MaterialOreBlock getMaterialBlock()
     {
         return materialBlock;
+    }
+
+    public float getMaterialMineTime()
+    {
+        return materialMineTime;
+    }
+
+    public float getMaterialHardness()
+    {
+        return materialHardness;
+    }
+
+    public IntProvider getXpRange()
+    {
+        return xpRange;
     }
 
     private MaterialRaw chooseMaterialRaw(MiningLevel level)
@@ -193,6 +237,25 @@ public class OreMaterial extends Material
                 yield MaterialOreBlock.Lapis;
             }
         };
+    }
+
+    private float chooseMiningTime()
+    {
+        float hardnessAddition = rng.nextFloat() * 2.5f;
+
+        return switch (oreBase) {
+            case Sand, Gravel   -> 0.5f + hardnessAddition;   // 0.5 - 1.0, soft
+            case Stone, Andesite,
+                 Diorite, Granite -> 1.5f + hardnessAddition; // 1.5 - 3.0, normal stone
+            case Tuff            -> 0.5f + hardnessAddition;  // 2.0 - 3.5, slightly harder
+            case Deepslate       -> 3.0f + hardnessAddition;  // 3.0 - 5.0, hard
+            case Netherrack      -> hardnessAddition;         // 1.0 - 2.0, medium
+        };
+    }
+
+    private float chooseHardness()
+    {
+        return 1f + rng.nextFloat() * 5.0f;
     }
 
     // Todo replace with more sophisticated naming system.
@@ -298,17 +361,32 @@ public class OreMaterial extends Material
                 String rawRegistryName = name + "_raw_block";
                 ResourceKey<Block> rawBlockKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, rawRegistryName));
                 FortunaProperties<Block> rawBlockProperties = new FortunaProperties<>(rawRegistryName, Component.literal("Block of Raw " + Utilities.capitalize(name)), rawBlockKey);
-                materialBlocks.add(new RawMaterialBlock(rawBlockProperties, BlockBehaviour.Properties.of().sound(SoundType.STONE), this));
+                materialBlocks.add(new RawMaterialBlock(rawBlockProperties, BlockBehaviour.Properties.of().instrument(NoteBlockInstrument.BASEDRUM).requiresCorrectToolForDrops().strength(5.0F, 6.0F), this));
             case Gem:
             case Special:
                 // Ore block
                 String registryName = name + "_ore";
                 ResourceKey<Block> oreKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, registryName));
-                FortunaProperties<Block> oreProperties = new FortunaProperties<>(registryName, Component.literal(Utilities.capitalize(name) + " Ore"), oreKey);
+
+                FortunaProperties<Block> oreFortuna = new FortunaProperties<>(registryName, Component.literal(Utilities.capitalize(name) + " Ore"), oreKey);
+                BlockBehaviour.Properties oreProperties = BlockBehaviour.Properties.of().strength(materialMineTime, materialHardness).requiresCorrectToolForDrops();
+
                 if (oreBase == MaterialOreBase.Sand || oreBase == MaterialOreBase.Gravel)
-                    materialBlocks.add(new FallingOreBlock(oreProperties, BlockBehaviour.Properties.of().sound(SoundType.STONE), this));
+                {
+                    // Create falling sand ore block
+                    materialBlocks.add(new FallingOreBlock(oreFortuna, oreProperties, this));
+                }
                 else
-                    materialBlocks.add(new OreBlock(oreProperties, BlockBehaviour.Properties.of().sound(SoundType.STONE), this));
+                {
+                    materialBlocks.add(new OreBlock(oreFortuna, oreProperties, this));
+                    if (oreBase == MaterialOreBase.Stone)
+                    {
+                        String deepslateRegistryName = "deepslate_" + name + "_ore";
+                        ResourceKey<Block> deepslateOreKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, deepslateRegistryName));
+                        FortunaProperties<Block> deepslateOreProperties = new FortunaProperties<>(deepslateRegistryName, Component.literal("Deepslate " + Utilities.capitalize(name) + " Ore"), deepslateOreKey);
+                        materialBlocks.add(new OreBlock(deepslateOreProperties, BlockBehaviour.Properties.of().sound(SoundType.STONE), this, MaterialOreBase.Deepslate));
+                    }
+                }
 
                 // The main material block
                 if (oreOverlay == MaterialOreOverlay.Copper) {
@@ -432,11 +510,6 @@ public class OreMaterial extends Material
                     float oxidizedSaturation = Math.clamp(saturation + (rng.nextFloat() * 0.2f - 0.1f), 0.1f, 0.9f);
                     float oxidizedBrightness = Math.clamp(brightness + (rng.nextFloat() * 0.2f - 0.1f), 0.4f, 1.0f);
                     secondaryColor = Color.getHSBColor(oxidizedHue, oxidizedSaturation, oxidizedBrightness);
-
-                    float transitionHue = (hue + oxidizedShift * 0.5f) % 1.0f;
-                    tertiaryColor = Color.getHSBColor(transitionHue,
-                            (saturation + oxidizedSaturation) / 4.0f,
-                            (brightness + oxidizedBrightness) / 2.0f);
                 }
             }
             case Gem, Special -> {
@@ -451,36 +524,7 @@ public class OreMaterial extends Material
             }
         }
 
-        switch (oreBase)
-        {
-            case Sand -> {
-                borderColor = new Color(209, 186,138);
-                bottomBorderColor = new Color(231, 228, 187);
-            }
-            case Stone -> {
-                borderColor = new Color(110, 110, 110);
-                bottomBorderColor = new Color(150, 150, 150);
-            }
-            case Granite -> {
-                borderColor = new Color(127, 86, 70);
-                bottomBorderColor = new Color(169, 119, 100);
-            }
-            case Gravel -> {
-                borderColor = new Color(114, 107, 105);
-                bottomBorderColor = new Color(150, 142, 142);
-            }
-            case Andesite -> {
-                borderColor = new Color(116, 116, 116);
-                bottomBorderColor = new Color(156, 156, 156);
-            }
-            case Diorite -> {
-                borderColor = new Color(139, 139, 139);
-                bottomBorderColor = new Color(233, 233, 233);
-            }
-            case Tuff -> {
-                borderColor = new Color(93, 93, 80);
-                bottomBorderColor = new Color(133, 131, 123);
-            }
-        }
+        borderColor = oreBase.getBorderColor();
+        bottomBorderColor = oreBase.getBottomBorderColor();
     }
 }

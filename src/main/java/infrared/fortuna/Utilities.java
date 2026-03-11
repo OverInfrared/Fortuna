@@ -1,5 +1,6 @@
 package infrared.fortuna;
 
+import java.awt.*;
 import java.util.NavigableMap;
 import java.util.Random;
 import java.util.TreeMap;
@@ -60,6 +61,15 @@ public class Utilities
             return "";
 
         return Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    }
+
+    public static Color lerpColor(Color a, Color b, float t)
+    {
+        t = Math.clamp(t, 0.0f, 1.0f);
+        int r = (int) (a.getRed()   + (b.getRed()   - a.getRed())   * t);
+        int g = (int) (a.getGreen() + (b.getGreen() - a.getGreen()) * t);
+        int b2 = (int) (a.getBlue() + (b.getBlue()  - a.getBlue())  * t);
+        return new Color(r, g, b2);
     }
 
 }

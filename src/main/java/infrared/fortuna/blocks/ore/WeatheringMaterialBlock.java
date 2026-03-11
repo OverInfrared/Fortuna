@@ -1,5 +1,6 @@
-package infrared.fortuna.blocks;
+package infrared.fortuna.blocks.ore;
 
+import infrared.fortuna.blocks.FortunaBlock;
 import infrared.fortuna.resources.FortunaProperties;
 import infrared.fortuna.resources.enums.ore.MaterialOreBlock;
 import infrared.fortuna.resources.materials.OreMaterial;
@@ -19,6 +20,8 @@ public class WeatheringMaterialBlock extends FortunaBlock implements WeatheringC
         super(fortunaProps, properties);
         this.weatherState = weatherState;
 
+        this.requiredMiningLevel = oreMaterial.getMiningLevel();
+
         MaterialOreBlock block = oreMaterial.getMaterialBlock();
         String blockTexture = block.getTexture();
 
@@ -27,7 +30,7 @@ public class WeatheringMaterialBlock extends FortunaBlock implements WeatheringC
             case UNAFFECTED -> {
                 addRequiredTexture("particle",blockTexture);
                 addOverlayTexture("overlay", blockTexture, 0);
-                addRequiredTint(oreMaterial.getColor());
+                addRequiredTint(oreMaterial.getColor().getRGB());
             }
             case EXPOSED -> {
                 String aloneName = blockTexture.substring(0, "_block".length());
@@ -38,9 +41,9 @@ public class WeatheringMaterialBlock extends FortunaBlock implements WeatheringC
                 addOverlayTexture("overlayoxidized", "exposed_" + aloneName + "_oxidized", 1);
                 addOverlayTexture("overlaytransition", "exposed_" + aloneName + "_transition", 2);
 
-                addRequiredTint(oreMaterial.getColor());
-                addRequiredTint(oreMaterial.getSecondaryColor());
-                addRequiredTint(oreMaterial.getTertiaryColor());
+                addRequiredTint(oreMaterial.getTransitionColor(0.2f, 0.5f, 1f).getRGB());
+                addRequiredTint(oreMaterial.getTransitionColor(0.8f, 0.5f, 1f).getRGB());
+                addRequiredTint(oreMaterial.getTransitionColor(0.5f, 0.5f, 1f).getRGB());
             }
             case WEATHERED -> {
                 String aloneName = blockTexture.substring(0, "_block".length());
@@ -50,15 +53,15 @@ public class WeatheringMaterialBlock extends FortunaBlock implements WeatheringC
                 addOverlayTexture("overlayoxidized", "weathered_" + aloneName + "_oxidized", 0);
                 addOverlayTexture("overlaytransition", "weathered_" + aloneName + "_transition", 1);
 
-                addRequiredTint(oreMaterial.getSecondaryColor());
-                addRequiredTint(oreMaterial.getTertiaryColor());
+                addRequiredTint(oreMaterial.getTransitionColor(0.8f, 0.5f, 1f).getRGB());
+                addRequiredTint(oreMaterial.getTransitionColor(0.5f, 0.5f, 1f).getRGB());
             }
             case OXIDIZED -> {
                 String aloneName = blockTexture.substring(0, "_block".length());
 
                 addRequiredTexture("particle", "oxidized_" + aloneName);
-                addOverlayTexture("overlay", blockTexture, 0);
-                addRequiredTint(oreMaterial.getSecondaryColor());
+                addOverlayTexture("overlay", "oxidized_" + aloneName, 0);
+                addRequiredTint(oreMaterial.getSecondaryColor().getRGB());
             }
         }
     }

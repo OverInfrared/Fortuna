@@ -4,8 +4,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
 import infrared.fortuna.Fortuna;
+import infrared.fortuna.resources.FortunaProperties;
+import infrared.fortuna.resources.enums.MiningLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 
 import java.util.List;
@@ -23,7 +27,9 @@ public interface IFortunaBlock
     List<Pair<String, String>> getRequiredTextures();
     List<RequiredElement> getRequiredElements();
     List<Integer> getRequiredTints();
-    infrared.fortuna.resources.FortunaProperties<Block> getFortunaProperties();
+    FortunaProperties<Block> getFortunaProperties();
+
+    MiningLevel getMiningLevel();
 
     default Component getDisplayName() {
         return getFortunaProperties().displayName();
@@ -40,6 +46,8 @@ public interface IFortunaBlock
     default Integer getRegisteredTint(int index) {
         return getRequiredTints().get(index);
     }
+
+    default TagKey<Block> getRequiredTool() { return BlockTags.MINEABLE_WITH_PICKAXE; }
 
     default void addRequiredTexture(String label, String texture) {
         getRequiredTextures().add(Pair.of(label, texture));

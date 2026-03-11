@@ -14,14 +14,14 @@ public class RawItem extends FortunaItem
         MaterialOreRaw rawOre = oreMaterial.getMaterialOreRaw();
 
         addRequiredTexture(rawOre.isOxidizable() ? rawOre.getTexture() + "_base" : rawOre.getTexture());
-        addRequiredTint(oreMaterial.getColor());
+        addRequiredTint(oreMaterial.getColor().getRGB());
 
         if (rawOre.isOxidizable())
         {
             addRequiredTexture(rawOre.getTexture() + "_oxidized");
-            addRequiredTint(oreMaterial.getSecondaryColor());
+            addRequiredTint(oreMaterial.getSecondaryColor().getRGB());
             addRequiredTexture(rawOre.getTexture() + "_transition");
-            addRequiredTint(oreMaterial.getTertiaryColor());
+            addRequiredTint(oreMaterial.getTransitionColor(0.5f, 0.5f, 1f).getRGB());
         }
     }
 }

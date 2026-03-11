@@ -11,6 +11,6 @@ public class GemItem extends FortunaItem
         super(fortunaProps, properties);
 
         addRequiredTexture(oreMaterial.getMaterialOreGem().getTexture());
-        addRequiredTint(oreMaterial.getColor());
+        addRequiredTint(oreMaterial.getColor().getRGB());
     }
 }

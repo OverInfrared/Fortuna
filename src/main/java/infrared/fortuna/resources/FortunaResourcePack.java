@@ -1,7 +1,7 @@
 package infrared.fortuna.resources;
 
+import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
-import infrared.fortuna.blocks.FortunaBlock;
 import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.items.FortunaItem;
 import infrared.fortuna.resources.materials.Material;
@@ -14,15 +14,12 @@ import net.minecraft.server.packs.repository.RepositorySource;
 import net.minecraft.server.packs.resources.IoSupplier;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import java.util.Optional;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
-
-import com.google.gson.JsonObject;
 
 public class FortunaResourcePack extends AbstractPackResources implements RepositorySource
 {
@@ -50,24 +47,16 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     @Override
     public void loadPacks(@NonNull Consumer<Pack> consumer)
     {
-        Pack pack = Pack.readMetaAndCreate(
-                new PackLocationInfo(
-                        PACK_ID,
-                        Component.literal("Fortuna Dynamic Resources"),
-                        PackSource.BUILT_IN,
-                        Optional.empty()
-                        ),
-                new Pack.ResourcesSupplier() {
-                    @Override
-                    public @NonNull PackResources openPrimary(@NonNull PackLocationInfo info) {
-                        return INSTANCE;
-                    }
+        Pack.ResourcesSupplier supplier = new Pack.ResourcesSupplier() {
+            @Override
+            public @NonNull PackResources openPrimary(@NonNull PackLocationInfo info) { return INSTANCE; }
+            @Override
+            public @NonNull PackResources openFull(@NonNull PackLocationInfo info, Pack.@NonNull Metadata metadata) { return INSTANCE; }
+        };
 
-                    @Override
-                    public @NonNull PackResources openFull(@NonNull PackLocationInfo info, Pack.@NonNull Metadata metadata) {
-                        return INSTANCE;
-                    }
-                },
+        Pack pack = Pack.readMetaAndCreate(
+                new PackLocationInfo(PACK_ID, Component.literal("Fortuna Dynamic Resources"), PackSource.BUILT_IN, Optional.empty()),
+                supplier,
                 PackType.CLIENT_RESOURCES,
                 new PackSelectionConfig(true, Pack.Position.TOP, false)
         );
@@ -77,8 +66,7 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     @Override
     public @Nullable IoSupplier<InputStream> getRootResource(String... paths)
     {
-        if (paths.length != 1 || !paths[0].equals("pack.mcmeta"))
-            return null;
+        if (paths.length != 1 || !paths[0].equals("pack.mcmeta")) return null;
 
         JsonObject pack = new JsonObject();
         pack.addProperty("pack_format", 75);
@@ -98,8 +86,7 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
         if (packType != PackType.CLIENT_RESOURCES) return null;
         if (!id.getNamespace().equals(Fortuna.MOD_ID)) return null;
 
-        String path = id.getPath(); // e.g. "blockstates/copper_ore.json"
-        String json = resolveResource(path);
+        String json = resolveResource(id.getPath());
         if (json == null) return null;
 
         byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
@@ -110,6 +97,8 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     public void listResources(@NonNull PackType packType, @NonNull String namespace, @NonNull String prefix,
                               @NonNull ResourceOutput resourceOutput)
     {
+        if (packType != PackType.CLIENT_RESOURCES) return;
+
         for (Material material : loadedMaterials)
         {
             for (IFortunaBlock block : material.getBlocks())
@@ -130,9 +119,7 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     @Override
     public @NonNull Set<String> getNamespaces(@NonNull PackType packType)
     {
-        return packType == PackType.CLIENT_RESOURCES
-                ? Set.of(Fortuna.MOD_ID)
-                : Set.of();
+        return packType == PackType.CLIENT_RESOURCES ? Set.of(Fortuna.MOD_ID) : Set.of();
     }
 
     @Override
@@ -147,7 +134,6 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
 
     private @Nullable String resolveResource(String path)
     {
-        // blockstates/<registryName>.json
         if (path.startsWith("blockstates/") && path.endsWith(".json"))
         {
             String registryName = path.substring("blockstates/".length(), path.length() - ".json".length());
@@ -155,7 +141,6 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
             return block != null ? block.getBlockStateString() : null;
         }
 
-        // models/block/<registryName>.json
         if (path.startsWith("models/block/") && path.endsWith(".json"))
         {
             String registryName = path.substring("models/block/".length(), path.length() - ".json".length());
@@ -170,17 +155,11 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
             return item != null ? item.getModelString() : null;
         }
 
-        // models/item/<registryName>.json  (block items + standalone items)
         if (path.startsWith("items/") && path.endsWith(".json"))
         {
-            Fortuna.LOGGER.info(path);
             String registryName = path.substring("items/".length(), path.length() - ".json".length());
-
-            // Check block items first
             IFortunaBlock block = findBlock(registryName);
             if (block != null) return block.getItemString();
-
-            // Then standalone items
             FortunaItem item = findItem(registryName);
             return item != null ? item.getItemString() : null;
         }

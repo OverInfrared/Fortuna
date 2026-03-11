@@ -1,5 +1,6 @@
 package infrared.fortuna.resources.materials;
 
+import infrared.fortuna.Utilities;
 import infrared.fortuna.blocks.FortunaBlock;
 import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.items.FortunaBlockItem;
@@ -19,7 +20,6 @@ public abstract class Material
 
     protected Color mainColor = Color.white;
     protected Color secondaryColor = Color.white;
-    protected Color tertiaryColor = Color.white;
     protected Color borderColor = Color.white;
     protected Color bottomBorderColor = Color.white;
 
@@ -36,9 +36,9 @@ public abstract class Material
         return name;
     }
 
-    public int getColor()
+    public Color getColor()
     {
-        return mainColor.getRGB();
+        return mainColor;
     }
 
     public ColorRGBA getColorRGBA()
@@ -46,24 +46,26 @@ public abstract class Material
         return new ColorRGBA(mainColor.getRGB());
     }
 
-    public int getSecondaryColor()
+    public Color getSecondaryColor()
     {
-        return secondaryColor.getRGB();
+        return secondaryColor;
     }
 
-    public int getTertiaryColor()
+    public Color getBorderColor()
     {
-        return tertiaryColor.getRGB();
+        return borderColor;
     }
 
-    public int getBorderColor()
+    public Color getBottomBorderColor()
     {
-        return borderColor.getRGB();
+        return bottomBorderColor;
     }
 
-    public int getBottomBorderColor()
+    public Color getTransitionColor(float transition, float saturation, float brightness)
     {
-        return bottomBorderColor.getRGB();
+        Color color = Utilities.lerpColor(mainColor, secondaryColor, transition);
+        float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
+        return Color.getHSBColor(hsb[0], hsb[1] * saturation, hsb[2] * brightness);
     }
 
     public List<FortunaItem> getItems()
