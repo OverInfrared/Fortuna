@@ -28,7 +28,7 @@ public class Fortuna implements ModInitializer
 	{
 		// cool seed 321312312
 		// cool copper seed 453294812
-		long seed = 3125435435423452312L;
+		long seed = 375671235465452312L;
 
 		LOGGER.info("Starting generation for Overworld");
 		initializeOverworld(seed);

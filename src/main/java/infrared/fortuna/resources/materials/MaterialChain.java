@@ -21,6 +21,9 @@ public class MaterialChain
         WeightedRandom<Integer> countRNG = new WeightedRandom<Integer>(chainRNG.nextLong())
                 .add(20, 1).add(40, 2).add(15, 3).add(7, 4).add(3, 5);
 
+        WeightedRandom<Integer> fuelsRNG = new WeightedRandom<Integer>(chainRNG.nextLong())
+                .add(10, 1).add(50, 2).add(30, 3).add(3, 4).add(1, 5);
+
         // Create materials for that mining level.
         for (MiningLevel level : MiningLevel.values())
         {

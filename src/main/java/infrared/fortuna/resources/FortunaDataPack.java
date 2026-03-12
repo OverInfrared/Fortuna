@@ -6,11 +6,15 @@ import infrared.fortuna.Fortuna;
 import infrared.fortuna.Utilities;
 import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.blocks.ModBlocks;
+import infrared.fortuna.items.FortunaItem;
+import infrared.fortuna.items.ModItems;
+import infrared.fortuna.recipes.IFortunaRecipe;
 import infrared.fortuna.resources.enums.MiningLevel;
 import net.fabricmc.fabric.api.resource.v1.pack.ModPackResources;
 import net.fabricmc.fabric.impl.resource.pack.ModResourcePackCreator;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.metadata.ModMetadata;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.*;
@@ -19,6 +23,7 @@ import net.minecraft.server.packs.repository.KnownPack;
 import net.minecraft.server.packs.resources.IoSupplier;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -36,6 +41,8 @@ public class FortunaDataPack implements PackResources, ModPackResources
     public static FortunaDataPack getInstance() { return INSTANCE; }
 
     private static final Set<String> namespaces = Set.of("minecraft", Fortuna.MOD_ID);
+
+    private static HolderLookup.Provider registryLookup;
 
     private final PackLocationInfo locationInfo = new PackLocationInfo(
             PACK_ID,
@@ -123,6 +130,21 @@ public class FortunaDataPack implements PackResources, ModPackResources
         if (prefix.contains("loot_table"))
             for (IFortunaBlock block : ModBlocks.getRegisteredBlocks())
                 emitData(resourceOutput, prefix, "loot_table/blocks/" + block.getRegistryName() + ".json", namespace);
+
+        if (prefix.contains("recipe"))
+        {
+            for (IFortunaBlock block : ModBlocks.getRegisteredBlocks())
+                if (block instanceof IFortunaRecipe recipeSource)
+                    for (String name : recipeSource.getRecipeNames())
+                        emitData(resourceOutput, prefix, "recipe/" + name + ".json", namespace);
+
+            for (Item item : ModItems.getRegisteredItem())
+                if (item instanceof FortunaItem fortunaItem &&
+                    fortunaItem instanceof IFortunaRecipe recipeSource)
+                        for (String name : recipeSource.getRecipeNames())
+                            emitData(resourceOutput, prefix, "recipe/" + name + ".json", namespace);
+        }
+
     }
 
     @Override
@@ -171,7 +193,36 @@ public class FortunaDataPack implements PackResources, ModPackResources
             String blockName = entry.replace(".json", "");
             IFortunaBlock block = Utilities.findBlock(blockName);
             if (block == null) return null;
-            return block.getLoot().toString();
+            return block.getLoot(registryLookup).toString();
+        }
+
+        if (prefix.startsWith("recipe/"))
+        {
+            // Dodo speed up lookup by making registered blocks and items a map with a registry name for faster lookup. Because this is bad.
+            String recipeName = entry.replace(".json", "");
+            for (IFortunaBlock block : ModBlocks.getRegisteredBlocks())
+            {
+                if (block instanceof IFortunaRecipe recipeSource)
+                {
+                    Map<String, JsonObject> recipes = recipeSource.getRecipes(registryLookup);
+                    JsonObject json = recipes.get(recipeName);
+                    if (json != null)
+                        return json.toString();
+                }
+            }
+
+            for (Item item : ModItems.getRegisteredItem())
+            {
+                if (item instanceof FortunaItem fortunaItem &&
+                    fortunaItem instanceof IFortunaRecipe recipeSource)
+                {
+                    Map<String, JsonObject> recipes = recipeSource.getRecipes(registryLookup);
+                    JsonObject json = recipes.get(recipeName);
+                    if (json != null)
+                        return json.toString();
+                }
+            }
+            return null;
         }
 
         return null;
@@ -201,5 +252,15 @@ public class FortunaDataPack implements PackResources, ModPackResources
         tag.addProperty("replace", false);
         tag.add("values", values);
         return tag.toString();
+    }
+
+    public static void setRegistryLookup(HolderLookup.Provider lookup)
+    {
+        registryLookup = lookup;
+    }
+
+    public static HolderLookup.Provider getRegistryLookup()
+    {
+        return registryLookup;
     }
 }

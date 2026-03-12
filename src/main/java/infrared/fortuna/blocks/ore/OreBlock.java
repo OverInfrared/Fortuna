@@ -1,19 +1,28 @@
 package infrared.fortuna.blocks.ore;
 
 import com.google.gson.JsonObject;
+import com.mojang.serialization.JsonOps;
+import infrared.fortuna.Fortuna;
 import infrared.fortuna.Utilities;
 import infrared.fortuna.blocks.FortunaBlock;
+import infrared.fortuna.blocks.FortunaBlockLootProvider;
 import infrared.fortuna.resources.DynamicProperties;
-import infrared.fortuna.resources.LootBuilder;
 import infrared.fortuna.resources.enums.ore.MaterialOreBase;
 import infrared.fortuna.resources.enums.ore.MaterialOreOverlay;
 import infrared.fortuna.resources.materials.OreMaterial;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.valueproviders.IntProvider;
+import net.minecraft.util.valueproviders.UniformFloat;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount;
 
 import java.awt.*;
 
@@ -76,12 +85,26 @@ public class OreBlock extends FortunaBlock
     }
 
     @Override
-    public JsonObject getLoot()
+    public JsonObject getLoot(HolderLookup.Provider registries)
     {
-        return new LootBuilder(getDynamicProperties().registryName())
-                .withSilkTouch(getDynamicProperties().registryName())
-                .dropByName(getDynamicProperties().material().getRawRegistryName())
-                .withFortune()
-                .build();
+        FortunaBlockLootProvider helper = new FortunaBlockLootProvider(registries);
+
+        Block oreBlock = this;
+        Item rawItem = BuiltInRegistries.ITEM
+                .get(Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, dynamicProperties.material().getRawRegistryName()))
+                .orElseThrow().value();
+
+        LootTable table = switch (dynamicProperties.material().getDropType())
+        {
+            case Single -> helper.createOreDrop(oreBlock, rawItem).build();
+            case Copper -> helper.createMultiOreDrop(oreBlock, rawItem, UniformFloat.of(2.0f, 5.0f), ApplyBonusCount::addOreBonusCount).build();
+            case Lapis -> helper.createMultiOreDrop(oreBlock, rawItem, UniformFloat.of(4.0f, 9.0f), ApplyBonusCount::addOreBonusCount).build();
+            case Redstone -> helper.createMultiOreDrop(oreBlock, rawItem, UniformFloat.of(4.0f, 5.0f), ApplyBonusCount::addUniformBonusCount).build();
+        };
+
+        return LootTable.DIRECT_CODEC
+                .encodeStart(registries.createSerializationContext(JsonOps.INSTANCE), table)
+                .getOrThrow()
+                .getAsJsonObject();
     }
 }

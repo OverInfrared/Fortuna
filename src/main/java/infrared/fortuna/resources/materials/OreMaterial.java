@@ -39,6 +39,8 @@ public class OreMaterial extends Material
 
     private final IntProvider xpRange;
 
+    private final MaterialOreDrops drops;
+
     public OreMaterial(long seed, MiningLevel level)
     {
         super(seed);
@@ -61,6 +63,8 @@ public class OreMaterial extends Material
         int minXp = 1 + miningLevel.ordinal();
         int maxXp = minXp + 1 + rng.nextInt(4); // max is min+1 to min+4
         xpRange = UniformInt.of(minXp, maxXp);
+
+        drops = chooseDropCountType();
 
         name = chooseName();
 
@@ -122,10 +126,17 @@ public class OreMaterial extends Material
         return xpRange;
     }
 
+    public MaterialOreDrops getDropType() { return drops; }
+
     // This is a soft connection and is pretty dangerous, ohh well. I'll fix it when I have to.
     public String getRawRegistryName()
     {
         return materialType == MaterialType.Ingot ? "raw_%s".formatted(name) : name;
+    }
+
+    public String getRefinedRegistryName()
+    {
+        return materialType == MaterialType.Ingot ? "%s_ingot".formatted(name) : name;
     }
 
     private MaterialType chooseMaterialRaw(MiningLevel level)
@@ -214,7 +225,7 @@ public class OreMaterial extends Material
                 yield values[rng.nextInt(values.length)];
             }
             case Special -> {
-                MaterialOreBlock[] values = new MaterialOreBlock[] { MaterialOreBlock.Iron, MaterialOreBlock.Gold, MaterialOreBlock.Netherite, MaterialOreBlock.Amethyst,
+                MaterialOreBlock[] values = new MaterialOreBlock[] { MaterialOreBlock.Gold, MaterialOreBlock.Netherite, MaterialOreBlock.Amethyst,
                                                                      MaterialOreBlock.Diamond, MaterialOreBlock.Amethyst, MaterialOreBlock.Emerald, MaterialOreBlock.Lapis, };
                 yield values[rng.nextInt(values.length)];
             }
@@ -241,6 +252,26 @@ public class OreMaterial extends Material
     private float chooseHardness()
     {
         return 1f + rng.nextFloat() * 5.0f;
+    }
+
+    private MaterialOreDrops chooseDropCountType()
+    {
+        return switch (materialType)
+        {
+            case Ingot -> {
+                Utilities.WeightedRandom<MaterialOreDrops> dropRNG = new Utilities.WeightedRandom<MaterialOreDrops>(rng.nextLong())
+                        .add(90, MaterialOreDrops.Single).add(10, MaterialOreDrops.Copper);
+
+                yield dropRNG.next();
+            }
+            case Gem -> {
+                Utilities.WeightedRandom<MaterialOreDrops> dropRNG = new Utilities.WeightedRandom<MaterialOreDrops>(rng.nextLong())
+                        .add(90, MaterialOreDrops.Single).add(7, MaterialOreDrops.Lapis).add(7, MaterialOreDrops.Redstone);
+
+                yield dropRNG.next();
+            }
+            default -> MaterialOreDrops.Single;
+        };
     }
 
     // Todo replace with more sophisticated naming system.

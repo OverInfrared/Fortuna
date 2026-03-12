@@ -3,16 +3,26 @@ package infrared.fortuna.blocks;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
+import com.mojang.serialization.JsonOps;
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.resources.DynamicProperties;
-import infrared.fortuna.resources.LootBuilder;
 import infrared.fortuna.resources.enums.MiningLevel;
 import infrared.fortuna.resources.materials.OreMaterial;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.storage.loot.LootPool;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.entries.LootItem;
+import net.minecraft.world.level.storage.loot.functions.ApplyExplosionDecay;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 
 import java.util.List;
 
@@ -203,10 +213,20 @@ public interface IFortunaBlock
         return tint;
     }
 
-    default JsonObject getLoot()
+    default JsonObject getLoot(HolderLookup.Provider registries)
     {
-        return new LootBuilder(getDynamicProperties().registryName())
-                .dropSelf()
+        Item selfItem = BuiltInRegistries.ITEM
+                .get(Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, getDynamicProperties().registryName()))
+                .orElseThrow()
+                .value();
+
+        LootTable table = new FortunaBlockLootProvider(registries)
+                .createSingleItemTable(selfItem)
                 .build();
+
+        return LootTable.DIRECT_CODEC
+                .encodeStart(registries.createSerializationContext(JsonOps.INSTANCE), table)
+                .getOrThrow()
+                .getAsJsonObject();
     }
 }

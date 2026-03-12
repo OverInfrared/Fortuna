@@ -131,7 +131,7 @@ public class ModBlocks
         Component displayName = Component.literal("%sBlock of %s".formatted(displayPrefix, Utilities.capitalize(material.getName())));
 
         DynamicProperties<Block, OreMaterial> blockDynamicProperties = new DynamicProperties<>(blockRegistryName, displayName, blockKey, material);
-        Properties                            blockProperties        = BlockBehaviour.Properties.of().strength(5f, 6f).sound(SoundType.METAL);
+        Properties                            blockProperties        = BlockBehaviour.Properties.of().strength(5f, 6f).sound(SoundType.METAL).requiresCorrectToolForDrops();
 
         if (oxidizable)
             return new WeatheringMaterialBlock(blockDynamicProperties, blockProperties, weatherState);
