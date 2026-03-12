@@ -1,20 +1,10 @@
 package infrared.fortuna.resources.materials;
 
-import infrared.fortuna.Fortuna;
 import infrared.fortuna.Utilities;
-import infrared.fortuna.items.GemItem;
-import infrared.fortuna.items.IngotItem;
-import infrared.fortuna.items.RawItem;
-import infrared.fortuna.resources.DynamicProperties;
 import infrared.fortuna.resources.enums.*;
 import infrared.fortuna.resources.enums.ore.*;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.util.valueproviders.UniformInt;
-import net.minecraft.world.item.Item;
 
 import java.awt.*;
 
@@ -365,14 +355,25 @@ public class OreMaterial extends Material
             case Ingot -> {
                 float hue = getHue();
 
-                float t1 = rng.nextFloat();
-                float t2 = rng.nextFloat();
-                float t = Math.abs(t1 - 0.5f) > Math.abs(t2 - 0.5f) ? t1 : t2;
-                float saturation = t * 0.8f;
+                Utilities.WeightedRandom<Integer> modeRNG = new Utilities.WeightedRandom<Integer>(rng.nextLong())
+                        .add(1, 0).add(2, 1).add(3, 2);
 
-                float brightness = 0.3f + (float) Math.pow(rng.nextFloat(), 1.5f) * 0.7f;
+                int mode = modeRNG.next();
+                float saturation = switch (mode)
+                {
+                    case 0  ->        rng.nextFloat() * 0.15f;
+                    case 1  -> 0.1f + rng.nextFloat() * 0.3f;
+                    default -> 0.4f + rng.nextFloat() * 0.5f;
+                };
+
+                float brightness = switch (mode)
+                {
+                    case 0 -> 0.2f + (float) Math.pow(rng.nextFloat(), 1.5f) * 0.75f;
+                    case 1 -> 0.6f + rng.nextFloat() * 0.4f;
+                    default -> 0.4f + (float) Math.pow(rng.nextFloat(), 1.5f) * 0.6f;
+                };
+
                 mainColor = Color.getHSBColor(hue, saturation, brightness);
-
                 if (oreOverlay == MaterialOreOverlay.Copper) {
                     float oxidizedShift = 0.4f + rng.nextFloat() * 0.2f;
                     float oxidizedHue = (hue + oxidizedShift) % 1.0f;
@@ -384,8 +385,8 @@ public class OreMaterial extends Material
             case Gem, Special -> {
                 float hue = getHue();
                 float saturation = rng.nextFloat() < 0.2f
-                        ? rng.nextFloat() * 0.2f                     // 0.0 - 0.2, near white/crystal
-                        : 0.4f + rng.nextFloat() * 0.4f;             // normal gem range
+                        ? 0.05f + rng.nextFloat() * 0.2f             // 0.0 - 0.2, near white/crystal
+                        : 0.4f + rng.nextFloat() * 0.5f;             // normal gem range
                 float brightness = rng.nextFloat() < 0.2f
                         ? 0.85f + rng.nextFloat() * 0.15f            // 0.85 - 1.0, extra bright for pale gems
                         : 0.6f + rng.nextFloat() * 0.35f;
