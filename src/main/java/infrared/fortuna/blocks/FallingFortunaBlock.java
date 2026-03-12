@@ -8,14 +8,12 @@ import infrared.fortuna.resources.materials.OreMaterial;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
-import net.minecraft.util.ColorRGBA;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ColoredFallingBlock;
 import net.minecraft.world.level.block.sounds.AmbientDesertBlockSoundsPlayer;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.ArrayList;
@@ -34,7 +32,7 @@ public abstract class FallingFortunaBlock extends ColoredFallingBlock implements
     protected MiningLevel requiredMiningLevel = MiningLevel.Iron;
     protected IntProvider xpRange;
 
-    public FallingFortunaBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, BlockBehaviour.Properties properties) {
+    public FallingFortunaBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties) {
         super(dynamicProperties.material().getColorRGBA(), properties.setId(dynamicProperties.resourceKey()));
         this.dynamicProperties = dynamicProperties;
     }

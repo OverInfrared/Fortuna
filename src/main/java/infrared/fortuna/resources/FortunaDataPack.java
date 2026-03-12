@@ -3,10 +3,10 @@ package infrared.fortuna.resources;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
+import infrared.fortuna.Utilities;
 import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.blocks.ModBlocks;
 import infrared.fortuna.resources.enums.MiningLevel;
-import infrared.fortuna.resources.materials.Material;
 import net.fabricmc.fabric.api.resource.v1.pack.ModPackResources;
 import net.fabricmc.fabric.impl.resource.pack.ModResourcePackCreator;
 import net.fabricmc.loader.api.FabricLoader;
@@ -35,9 +35,7 @@ public class FortunaDataPack implements PackResources, ModPackResources
     private static final FortunaDataPack INSTANCE = new FortunaDataPack();
     public static FortunaDataPack getInstance() { return INSTANCE; }
 
-    private static final List<Material> loadedMaterials = new ArrayList<>();
-
-    private static final Set<String> namespaces = Set.of(Fortuna.MOD_ID, "minecraft");
+    private static final Set<String> namespaces = Set.of("minecraft", Fortuna.MOD_ID);
 
     private final PackLocationInfo locationInfo = new PackLocationInfo(
             PACK_ID,
@@ -47,10 +45,6 @@ public class FortunaDataPack implements PackResources, ModPackResources
     );
 
     private FortunaDataPack() {}
-
-    public static void initializeMaterial(Material material) {
-        loadedMaterials.add(material);
-    }
 
     @Override
     public PackLocationInfo location() {
@@ -62,6 +56,8 @@ public class FortunaDataPack implements PackResources, ModPackResources
         if (paths.length == 1 && paths[0].equals("pack.mcmeta")) {
             JsonObject pack = new JsonObject();
             pack.addProperty("pack_format", 94);
+            pack.addProperty("min_format", 94);
+            pack.addProperty("max_format", 95);
             pack.addProperty("description", "Fortuna Dynamic Data");
             JsonObject mcmeta = new JsonObject();
             mcmeta.add("pack", pack);
@@ -88,9 +84,13 @@ public class FortunaDataPack implements PackResources, ModPackResources
     @Override
     public @Nullable IoSupplier<InputStream> getResource(@NonNull PackType packType, @NonNull Identifier id) {
         if (packType != PackType.SERVER_DATA) return null;
-        if (!id.getNamespace().equals("minecraft")) return null;
+        if (!namespaces.contains(id.getNamespace())) return null;
 
-        String json = resolveResource(id.getPath());
+        String path = id.getPath();
+        String prefix = path.substring(0, path.lastIndexOf('/') + 1);
+        String entry = path.substring(path.lastIndexOf('/') + 1);
+
+        String json = resolveResource(prefix, entry);
         if (json == null) return null;
 
         byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
@@ -107,12 +107,22 @@ public class FortunaDataPack implements PackResources, ModPackResources
         if (!namespaces.contains(namespace))
             return;
 
-        emitTag(resourceOutput, prefix, "tags/block/mineable/pickaxe.json");
-        emitTag(resourceOutput, prefix, "tags/block/mineable/axe.json");
-        emitTag(resourceOutput, prefix, "tags/block/mineable/shovel.json");
-        emitTag(resourceOutput, prefix, "tags/block/needs_stone_tool.json");
-        emitTag(resourceOutput, prefix, "tags/block/needs_iron_tool.json");
-        emitTag(resourceOutput, prefix, "tags/block/needs_diamond_tool.json");
+        if (namespace.equals("minecraft"))
+        {
+            emitData(resourceOutput, prefix, "tags/block/mineable/pickaxe.json", namespace);
+            emitData(resourceOutput, prefix, "tags/block/mineable/axe.json", namespace);
+            emitData(resourceOutput, prefix, "tags/block/mineable/shovel.json", namespace);
+            emitData(resourceOutput, prefix, "tags/block/needs_stone_tool.json", namespace);
+            emitData(resourceOutput, prefix, "tags/block/needs_iron_tool.json", namespace);
+            emitData(resourceOutput, prefix, "tags/block/needs_diamond_tool.json", namespace);
+        }
+
+        if (!namespace.equals(Fortuna.MOD_ID))
+            return;
+
+        if (prefix.contains("loot_table"))
+            for (IFortunaBlock block : ModBlocks.getRegisteredBlocks())
+                emitData(resourceOutput, prefix, "loot_table/blocks/" + block.getRegistryName() + ".json", namespace);
     }
 
     @Override
@@ -133,26 +143,38 @@ public class FortunaDataPack implements PackResources, ModPackResources
         return this;
     }
 
-    private void emitTag(ResourceOutput resourceOutput, String prefix, String path) {
+    private void emitData(ResourceOutput resourceOutput, String prefix, String path, String namespace) {
         if (!path.startsWith(prefix))
             return;
 
-        Identifier id = Identifier.fromNamespaceAndPath("minecraft", path);
+        Identifier id = Identifier.fromNamespaceAndPath(namespace, path);
         resourceOutput.accept(id, () -> Objects.requireNonNull(getResource(PackType.SERVER_DATA, id)).get());
     }
 
-    private @Nullable String resolveResource(String path)
+    private @Nullable String resolveResource(String prefix, String entry)
     {
-        return switch (path)
+        String path = prefix + entry;
+
+        if (prefix.startsWith("tags/block/"))
+            return switch (path) {
+                case "tags/block/mineable/pickaxe.json"   -> generateToolTag(BlockTags.MINEABLE_WITH_PICKAXE);
+                case "tags/block/mineable/axe.json"       -> generateToolTag(BlockTags.MINEABLE_WITH_AXE);
+                case "tags/block/mineable/shovel.json"    -> generateToolTag(BlockTags.MINEABLE_WITH_SHOVEL);
+                case "tags/block/needs_stone_tool.json"   -> generateMiningLevelTag(MiningLevel.Iron);
+                case "tags/block/needs_iron_tool.json"    -> generateMiningLevelTag(MiningLevel.Diamond);
+                case "tags/block/needs_diamond_tool.json" -> generateMiningLevelTag(MiningLevel.Netherite);
+                default -> null;
+            };
+
+        if (prefix.startsWith("loot_table/blocks"))
         {
-            case "tags/block/mineable/pickaxe.json"   -> generateToolTag(BlockTags.MINEABLE_WITH_PICKAXE);
-            case "tags/block/mineable/axe.json"       -> generateToolTag(BlockTags.MINEABLE_WITH_AXE);
-            case "tags/block/mineable/shovel.json"    -> generateToolTag(BlockTags.MINEABLE_WITH_SHOVEL);
-            case "tags/block/needs_stone_tool.json"   -> generateMiningLevelTag(MiningLevel.Iron);
-            case "tags/block/needs_iron_tool.json"    -> generateMiningLevelTag(MiningLevel.Diamond);
-            case "tags/block/needs_diamond_tool.json" -> generateMiningLevelTag(MiningLevel.Netherite);
-            default -> null;
-        };
+            String blockName = entry.replace(".json", "");
+            IFortunaBlock block = Utilities.findBlock(blockName);
+            if (block == null) return null;
+            return block.getLoot().toString();
+        }
+
+        return null;
     }
 
     private String generateToolTag(TagKey<Block> toolTag)
@@ -168,7 +190,8 @@ public class FortunaDataPack implements PackResources, ModPackResources
         return tag.toString();
     }
 
-    private String generateMiningLevelTag(MiningLevel requiredLevel) {
+    private String generateMiningLevelTag(MiningLevel requiredLevel)
+    {
         JsonArray values = new JsonArray();
         for (IFortunaBlock block : ModBlocks.getRegisteredBlocks())
             if (block.getMiningLevel().ordinal() == requiredLevel.ordinal())

@@ -50,8 +50,6 @@ public class Fortuna implements ModInitializer
 			{
 				ModItems.initializeOreMaterial(material);
 				ModBlocks.initializeOreMaterial(material);
-				FortunaResourcePack.initializeMaterial(material);
-				FortunaDataPack.initializeMaterial(material);
 
 				initializedMaterials.add(material);
 			}

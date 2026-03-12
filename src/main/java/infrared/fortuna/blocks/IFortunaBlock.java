@@ -50,11 +50,13 @@ public interface IFortunaBlock
 
     default TagKey<Block> getRequiredTool() { return BlockTags.MINEABLE_WITH_PICKAXE; }
 
-    default void addRequiredTexture(String label, String texture) {
+    default void addRequiredTexture(String label, String texture)
+    {
         getRequiredTextures().add(Pair.of(label, texture));
     }
 
-    default void addBaseTextures(String texture) {
+    default void addBaseTextures(String texture)
+    {
         addRequiredTexture("particle", texture);
         addRequiredTexture("top", texture);
         addRequiredTexture("bottom", texture);
@@ -62,7 +64,8 @@ public interface IFortunaBlock
         getRequiredElements().add(new RequiredElement("side", ElementType.BASE, -1));
     }
 
-    default void addOverlayTexture(String key, String texture, int tintIndex) {
+    default void addOverlayTexture(String key, String texture, int tintIndex)
+    {
         addRequiredTexture(key, texture);
         getRequiredElements().add(new RequiredElement(key, ElementType.OVERLAY, tintIndex));
     }
@@ -83,7 +86,8 @@ public interface IFortunaBlock
         return generateItemModel().toString();
     }
 
-    default JsonObject generateBlockState() {
+    default JsonObject generateBlockState()
+    {
         JsonObject empty = new JsonObject();
         empty.addProperty("model", "%s:block/%s".formatted(Fortuna.MOD_ID, getRegistryName()));
 
@@ -95,7 +99,8 @@ public interface IFortunaBlock
         return blockstate;
     }
 
-    default JsonObject generateModel() {
+    default JsonObject generateModel()
+    {
         JsonObject textures = new JsonObject();
         for (Pair<String, String> texture : getRequiredTextures())
             textures.addProperty(texture.getLeft(), "%s:block/%s".formatted(Fortuna.MOD_ID, texture.getRight()));
@@ -115,7 +120,8 @@ public interface IFortunaBlock
         return model;
     }
 
-    default JsonObject generateItemModel() {
+    default JsonObject generateItemModel()
+    {
         JsonObject model = new JsonObject();
         model.addProperty("type", "minecraft:model");
         model.addProperty("model", "%s:block/%s".formatted(Fortuna.MOD_ID, getRegistryName()));
@@ -130,7 +136,8 @@ public interface IFortunaBlock
         return itemModel;
     }
 
-    default JsonObject buildBaseCube() {
+    default JsonObject buildBaseCube()
+    {
         JsonObject faceObj = new JsonObject();
         faceObj.add("down",  buildFaceJson("down",  "bottom"));
         faceObj.add("up",    buildFaceJson("up",    "top"));
@@ -141,7 +148,8 @@ public interface IFortunaBlock
         return buildElement(faceObj);
     }
 
-    default JsonObject buildFaceJson(String direction, String texture) {
+    default JsonObject buildFaceJson(String direction, String texture)
+    {
         JsonObject face = new JsonObject();
         face.add("uv", buildUVArray());
         face.addProperty("texture", "#" + texture);
@@ -149,7 +157,8 @@ public interface IFortunaBlock
         return face;
     }
 
-    default JsonObject buildOverlayCube(String textureRef, int tintIndex) {
+    default JsonObject buildOverlayCube(String textureRef, int tintIndex)
+    {
         String[] faces = {"down", "up", "north", "south", "west", "east"};
         JsonObject faceObj = new JsonObject();
         for (String face : faces) {
@@ -164,7 +173,8 @@ public interface IFortunaBlock
         return buildElement(faceObj);
     }
 
-    default JsonObject buildElement(JsonObject faces) {
+    default JsonObject buildElement(JsonObject faces)
+    {
         JsonArray from = new JsonArray();
         from.add(0); from.add(0); from.add(0);
         JsonArray to = new JsonArray();
@@ -177,16 +187,49 @@ public interface IFortunaBlock
         return element;
     }
 
-    default JsonArray buildUVArray() {
+    default JsonArray buildUVArray()
+    {
         JsonArray uv = new JsonArray();
         uv.add(0); uv.add(0); uv.add(16); uv.add(16);
         return uv;
     }
 
-    default JsonObject buildTint(int color) {
+    default JsonObject buildTint(int color)
+    {
         JsonObject tint = new JsonObject();
         tint.addProperty("type", "minecraft:constant");
         tint.addProperty("value", color);
         return tint;
+    }
+
+    default JsonObject getLoot()
+    {
+        JsonObject entry = new JsonObject();
+        entry.addProperty("type", "minecraft:item");
+        entry.addProperty("name", "%s:%s".formatted(Fortuna.MOD_ID, getDynamicProperties().registryName()));
+
+        JsonArray entries = new JsonArray();
+        entries.add(entry);
+
+        JsonObject condition = new JsonObject();
+        condition.addProperty("condition", "minecraft:survives_explosion");
+
+        JsonArray conditions = new JsonArray();
+        conditions.add(condition);
+
+        JsonObject drop = new JsonObject();
+        drop.addProperty("bonus_rolls", 0.0f);
+        drop.add("conditions", conditions);
+        drop.add("entries", entries);
+        drop.addProperty("rolls", 1.0);
+
+        JsonArray pools = new JsonArray();
+        pools.add(drop);
+
+        JsonObject loottable = new JsonObject();
+        loottable.addProperty("type", "minecraft:block");
+        loottable.add("pools", pools);
+        loottable.addProperty("random_sequence", "%s:blocks/%s".formatted(Fortuna.MOD_ID, getDynamicProperties().registryName()));
+        return loottable;
     }
 }

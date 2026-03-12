@@ -1,5 +1,12 @@
 package infrared.fortuna;
 
+import infrared.fortuna.blocks.IFortunaBlock;
+import infrared.fortuna.blocks.ModBlocks;
+import infrared.fortuna.items.FortunaItem;
+import infrared.fortuna.items.ModItems;
+import net.minecraft.world.item.Item;
+import org.jspecify.annotations.Nullable;
+
 import java.awt.*;
 import java.util.NavigableMap;
 import java.util.Random;
@@ -70,6 +77,22 @@ public class Utilities
         int g = (int) (a.getGreen() + (b.getGreen() - a.getGreen()) * t);
         int b2 = (int) (a.getBlue() + (b.getBlue()  - a.getBlue())  * t);
         return new Color(r, g, b2);
+    }
+
+    public static @Nullable IFortunaBlock findBlock(String registryName)
+    {
+        for (IFortunaBlock block : ModBlocks.getRegisteredBlocks())
+            if (block.getRegistryName().equals(registryName))
+                return block;
+        return null;
+    }
+
+    public static @Nullable FortunaItem findItem(String registryName)
+    {
+        for (Item item : ModItems.getRegisteredItem())
+            if (item instanceof FortunaItem fortunaItem && fortunaItem.getRegistryName().equals(registryName))
+                return fortunaItem;
+        return null;
     }
 
 }
