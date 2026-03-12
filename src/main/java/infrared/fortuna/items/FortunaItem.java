@@ -3,23 +3,19 @@ package infrared.fortuna.items;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
-import infrared.fortuna.resources.FortunaProperties;
-import net.minecraft.core.registries.Registries;
+import infrared.fortuna.resources.DynamicProperties;
+import infrared.fortuna.resources.materials.OreMaterial;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public abstract class FortunaItem extends Item
 {
-    protected final FortunaProperties<Item> fortunaProperties;
+    protected final DynamicProperties<Item, OreMaterial> dynamicProperties;
 
     private JsonObject itemJson;
     private JsonObject modelJson;
@@ -27,31 +23,31 @@ public abstract class FortunaItem extends Item
     private final List<String> requiredTextures = new ArrayList<>();
     private final List<Integer> requiredTints = new ArrayList<>();
 
-    public FortunaItem(FortunaProperties<Item> fortunaProps, Properties properties)
+    public FortunaItem(DynamicProperties<Item, OreMaterial> dynamicProperties, Properties properties)
     {
-        super(properties.setId(fortunaProps.resourceKey()));
-        fortunaProperties = fortunaProps;
+        super(properties.setId(dynamicProperties.resourceKey()));
+        this.dynamicProperties = dynamicProperties;
     }
 
     @Override
     public Component getName(ItemStack itemStack)
     {
-        return fortunaProperties.displayName();
+        return dynamicProperties.displayName();
     }
 
     public Component getDisplayName()
     {
-        return fortunaProperties.displayName();
+        return dynamicProperties.displayName();
     }
 
     public String getRegistryName()
     {
-        return fortunaProperties.registryName();
+        return dynamicProperties.registryName();
     }
 
     public ResourceKey<Item> getResourceKey()
     {
-        return fortunaProperties.resourceKey();
+        return dynamicProperties.resourceKey();
     }
 
     protected void addRequiredTexture(String texture)
@@ -75,7 +71,7 @@ public abstract class FortunaItem extends Item
     {
         JsonObject model = new JsonObject();
         model.addProperty("type", "minecraft:model");
-        model.addProperty("model", "%s:item/%s".formatted(Fortuna.MOD_ID, fortunaProperties.registryName()));
+        model.addProperty("model", "%s:item/%s".formatted(Fortuna.MOD_ID, dynamicProperties.registryName()));
 
         JsonArray tints = new JsonArray();
         for (int color : requiredTints)

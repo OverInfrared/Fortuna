@@ -2,7 +2,7 @@ package infrared.fortuna.blocks.ore;
 
 import infrared.fortuna.Utilities;
 import infrared.fortuna.blocks.FortunaBlock;
-import infrared.fortuna.resources.FortunaProperties;
+import infrared.fortuna.resources.DynamicProperties;
 import infrared.fortuna.resources.enums.ore.MaterialOreBase;
 import infrared.fortuna.resources.enums.ore.MaterialOreOverlay;
 import infrared.fortuna.resources.materials.OreMaterial;
@@ -17,45 +17,47 @@ import java.awt.*;
 
 public class OreBlock extends FortunaBlock
 {
-    public OreBlock(FortunaProperties<Block> fortunaProperties, Properties properties, OreMaterial oreMaterial)
+    public OreBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties)
     {
-        this(fortunaProperties, properties, oreMaterial, oreMaterial.getMaterialOreBase());
+        this(dynamicProperties, properties, dynamicProperties.material().getBase());
     }
 
-    public OreBlock(FortunaProperties<Block> fortunaProperties, Properties properties, OreMaterial oreMaterial, MaterialOreBase base)
+    public OreBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, MaterialOreBase base)
     {
-        this(fortunaProperties, properties, oreMaterial, base, oreMaterial.getXpRange());
+        this(dynamicProperties, properties, base, dynamicProperties.material().getXpRange());
     }
 
-    public OreBlock(FortunaProperties<Block> fortunaProperties, Properties properties, OreMaterial oreMaterial, MaterialOreBase base, IntProvider xpRange) {
-        super(fortunaProperties, properties);
+    public OreBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, MaterialOreBase base, IntProvider xpRange) {
+        super(dynamicProperties, properties);
+
+        OreMaterial material = dynamicProperties.material();
 
         this.requiredTool = base.getRequiredTool();
-        this.requiredMiningLevel = oreMaterial.getMiningLevel();
+        this.requiredMiningLevel = material.getMiningLevel();
         this.xpRange = xpRange;
 
         addBaseTextures(base.getTexture());
 
-        MaterialOreOverlay materialOreOverlay = oreMaterial.getMaterialOreOverlay();
+        MaterialOreOverlay materialOreOverlay = material.getOverlay();
         addOverlayTexture("borderbottom", materialOreOverlay.getBorderBottom(), 0);
         addOverlayTexture("bordertop", materialOreOverlay.getBorderTop(), 1);
         addRequiredTint(base.getBottomBorderColor().getRGB());
         addRequiredTint(base.getBorderColor().getRGB());
 
         addOverlayTexture("overlay", materialOreOverlay.getTexture(), 2);
-        addRequiredTint(oreMaterial.getColor().getRGB());
+        addRequiredTint(material.getColor().getRGB());
 
         if (materialOreOverlay.hasSecondary() && materialOreOverlay.hasTertiary())
         {
             addOverlayTexture("overlayoxidized", materialOreOverlay.getSecondary(), 3);
             addOverlayTexture("overlaytransition", materialOreOverlay.getTertiary(), 4);
-            addRequiredTint(oreMaterial.getSecondaryColor().getRGB());
-            addRequiredTint(oreMaterial.getTransitionColor(0.5f, 0.5f, 1f).getRGB());
+            addRequiredTint(material.getSecondaryColor().getRGB());
+            addRequiredTint(material.getTransitionColor(0.5f, 0.5f, 1f).getRGB());
         }
         else if (materialOreOverlay.hasSecondary())
         {
             addOverlayTexture("overlaytransition", materialOreOverlay.getSecondary(), 3);
-            Color color = Utilities.lerpColor(oreMaterial.getColor(), base.getBottomBorderColor(), 0.2f);
+            Color color = Utilities.lerpColor(material.getColor(), base.getBottomBorderColor(), 0.2f);
             float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
             color = Color.getHSBColor(hsb[0], hsb[1] * 0.3f, hsb[2]);
             addRequiredTint(color.getRGB());

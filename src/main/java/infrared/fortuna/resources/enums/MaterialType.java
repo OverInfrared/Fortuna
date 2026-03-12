@@ -1,6 +1,6 @@
 package infrared.fortuna.resources.enums;
 
-public enum MaterialRaw
+public enum MaterialType
 {
     Wood,
     Stone,

@@ -1,16 +1,16 @@
 package infrared.fortuna.items;
 
-import infrared.fortuna.resources.FortunaProperties;
+import infrared.fortuna.resources.DynamicProperties;
 import infrared.fortuna.resources.materials.OreMaterial;
 import net.minecraft.world.item.Item;
 
 public class GemItem extends FortunaItem
 {
-    public GemItem(FortunaProperties<Item> fortunaProps, Properties properties, OreMaterial oreMaterial)
+    public GemItem(DynamicProperties<Item, OreMaterial> dynamicProperties, Properties properties)
     {
-        super(fortunaProps, properties);
+        super(dynamicProperties, properties);
 
-        addRequiredTexture(oreMaterial.getMaterialOreGem().getTexture());
-        addRequiredTint(oreMaterial.getColor().getRGB());
+        addRequiredTexture(dynamicProperties.material().getGem().getTexture());
+        addRequiredTint(dynamicProperties.material().getColor().getRGB());
     }
 }

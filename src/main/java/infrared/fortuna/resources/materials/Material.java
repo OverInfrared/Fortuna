@@ -23,9 +23,6 @@ public abstract class Material
     protected Color borderColor = Color.white;
     protected Color bottomBorderColor = Color.white;
 
-    protected final List<FortunaItem>  materialItems  = new ArrayList<>();
-    protected final List<IFortunaBlock> materialBlocks = new ArrayList<>();
-
     public Material(long seed)
     {
         rng = new Random(seed);
@@ -66,16 +63,6 @@ public abstract class Material
         Color color = Utilities.lerpColor(mainColor, secondaryColor, transition);
         float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
         return Color.getHSBColor(hsb[0], hsb[1] * saturation, hsb[2] * brightness);
-    }
-
-    public List<FortunaItem> getItems()
-    {
-        return materialItems;
-    }
-
-    public List<IFortunaBlock> getBlocks()
-    {
-        return materialBlocks;
     }
 
     protected abstract String chooseName();

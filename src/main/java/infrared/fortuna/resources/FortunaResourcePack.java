@@ -3,7 +3,10 @@ package infrared.fortuna.resources;
 import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.blocks.IFortunaBlock;
+import infrared.fortuna.blocks.ModBlocks;
+import infrared.fortuna.items.FortunaBlockItem;
 import infrared.fortuna.items.FortunaItem;
+import infrared.fortuna.items.ModItems;
 import infrared.fortuna.resources.materials.Material;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -12,6 +15,7 @@ import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.repository.RepositorySource;
 import net.minecraft.server.packs.resources.IoSupplier;
+import net.minecraft.world.item.Item;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -99,20 +103,20 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     {
         if (packType != PackType.CLIENT_RESOURCES) return;
 
-        for (Material material : loadedMaterials)
+        for (IFortunaBlock block : ModBlocks.getRegisteredBlocks())
         {
-            for (IFortunaBlock block : material.getBlocks())
-            {
-                emitIfMatch(resourceOutput, prefix, "blockstates/" + block.getRegistryName() + ".json");
-                emitIfMatch(resourceOutput, prefix, "models/block/" + block.getRegistryName() + ".json");
-                emitIfMatch(resourceOutput, prefix, "items/" + block.getRegistryName() + ".json");
-            }
+            emitIfMatch(resourceOutput, prefix, "blockstates/" + block.getRegistryName() + ".json");
+            emitIfMatch(resourceOutput, prefix, "models/block/" + block.getRegistryName() + ".json");
+            emitIfMatch(resourceOutput, prefix, "items/" + block.getRegistryName() + ".json");
+        }
 
-            for (FortunaItem item : material.getItems())
-            {
-                emitIfMatch(resourceOutput, prefix, "models/item/" + item.getRegistryName() + ".json");
-                emitIfMatch(resourceOutput, prefix, "items/" + item.getRegistryName() + ".json");
-            }
+        for (Item item : ModItems.getRegisteredItem())
+        {
+            if (!(item instanceof FortunaItem fortunaItem))
+                continue;
+
+            emitIfMatch(resourceOutput, prefix, "models/item/" + fortunaItem.getRegistryName() + ".json");
+            emitIfMatch(resourceOutput, prefix, "items/" + fortunaItem.getRegistryName() + ".json");
         }
     }
 
@@ -169,19 +173,17 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
 
     private @Nullable IFortunaBlock findBlock(String registryName)
     {
-        for (Material material : loadedMaterials)
-            for (IFortunaBlock block : material.getBlocks())
-                if (block.getRegistryName().equals(registryName))
-                    return block;
+        for (IFortunaBlock block : ModBlocks.getRegisteredBlocks())
+            if (block.getRegistryName().equals(registryName))
+                return block;
         return null;
     }
 
     private @Nullable FortunaItem findItem(String registryName)
     {
-        for (Material material : loadedMaterials)
-            for (FortunaItem item : material.getItems())
-                if (item.getRegistryName().equals(registryName))
-                    return item;
+        for (Item item : ModItems.getRegisteredItem())
+            if (item instanceof FortunaItem fortunaItem && fortunaItem.getRegistryName().equals(registryName))
+                return fortunaItem;
         return null;
     }
 }

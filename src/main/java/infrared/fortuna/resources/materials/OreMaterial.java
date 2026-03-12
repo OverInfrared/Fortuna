@@ -2,14 +2,12 @@ package infrared.fortuna.resources.materials;
 
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.Utilities;
-import infrared.fortuna.blocks.ore.*;
 import infrared.fortuna.items.GemItem;
 import infrared.fortuna.items.IngotItem;
 import infrared.fortuna.items.RawItem;
-import infrared.fortuna.resources.FortunaProperties;
+import infrared.fortuna.resources.DynamicProperties;
 import infrared.fortuna.resources.enums.*;
 import infrared.fortuna.resources.enums.ore.*;
-import net.fabricmc.fabric.api.registry.OxidizableBlocksRegistry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -17,11 +15,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.WeatheringCopper;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 
 import java.awt.*;
 
@@ -31,7 +24,7 @@ public class OreMaterial extends Material
     private final MiningLevel miningLevel;
 
     // What the material is
-    private final MaterialRaw raw;
+    private final MaterialType raw;
 
     // The background base for the ore, i.e. stone, diorite, sand.
     private final MaterialOreBase oreBase;
@@ -82,9 +75,6 @@ public class OreMaterial extends Material
         name = chooseName();
 
         generateOreColors();
-
-        createOreBlocks();
-        createOreItems();
     }
 
     public MiningLevel getMiningLevel()
@@ -92,32 +82,32 @@ public class OreMaterial extends Material
         return miningLevel;
     }
 
-    public MaterialRaw getMaterialRaw()
+    public MaterialType getType()
     {
         return raw;
     }
 
-    public MaterialOreBase getMaterialOreBase()
+    public MaterialOreBase getBase()
     {
         return oreBase;
     }
 
-    public MaterialOreOverlay getMaterialOreOverlay()
+    public MaterialOreOverlay getOverlay()
     {
         return oreOverlay;
     }
 
-    public MaterialOreIngot getMaterialOreIngot()
+    public MaterialOreIngot getIngot()
     {
         return oreIngot;
     }
 
-    public MaterialOreRaw getMaterialOreRaw()
+    public MaterialOreRaw getRaw()
     {
         return oreRaw;
     }
 
-    public MaterialOreGem getMaterialOreGem()
+    public MaterialOreGem getGem()
     {
         return oreGem;
     }
@@ -142,29 +132,29 @@ public class OreMaterial extends Material
         return xpRange;
     }
 
-    private MaterialRaw chooseMaterialRaw(MiningLevel level)
+    private MaterialType chooseMaterialRaw(MiningLevel level)
     {
         return switch (level)
         {
             case Iron ->
             {
-                Utilities.WeightedRandom<MaterialRaw> ironRandom = new Utilities.WeightedRandom<MaterialRaw>(rng.nextLong())
-                        .add(65, MaterialRaw.Ingot).add(35, MaterialRaw.Gem);
+                Utilities.WeightedRandom<MaterialType> ironRandom = new Utilities.WeightedRandom<MaterialType>(rng.nextLong())
+                        .add(65, MaterialType.Ingot).add(35, MaterialType.Gem);
                 yield ironRandom.next();
             }
             case Diamond ->
             {
-                Utilities.WeightedRandom<MaterialRaw> diamondRandom = new Utilities.WeightedRandom<MaterialRaw>(rng.nextLong())
-                        .add(35, MaterialRaw.Ingot).add(60, MaterialRaw.Gem).add(5, MaterialRaw.Special);
+                Utilities.WeightedRandom<MaterialType> diamondRandom = new Utilities.WeightedRandom<MaterialType>(rng.nextLong())
+                        .add(35, MaterialType.Ingot).add(60, MaterialType.Gem).add(5, MaterialType.Special);
                 yield diamondRandom.next();
             }
             case Netherite ->
             {
-                Utilities.WeightedRandom<MaterialRaw> netherRandom = new Utilities.WeightedRandom<MaterialRaw>(rng.nextLong())
-                        .add(33, MaterialRaw.Ingot).add(33, MaterialRaw.Gem).add(33, MaterialRaw.Special);
+                Utilities.WeightedRandom<MaterialType> netherRandom = new Utilities.WeightedRandom<MaterialType>(rng.nextLong())
+                        .add(33, MaterialType.Ingot).add(33, MaterialType.Gem).add(33, MaterialType.Special);
                 yield netherRandom.next();
             }
-            default -> MaterialRaw.Ingot;
+            default -> MaterialType.Ingot;
         };
     }
 
@@ -182,7 +172,7 @@ public class OreMaterial extends Material
                 .add(10, MaterialOreOverlay.Iron).add(10, MaterialOreOverlay.Diamond).add(10, MaterialOreOverlay.Coal)
                 .add(10, MaterialOreOverlay.Redstone).add(10, MaterialOreOverlay.Emerald).add(10, MaterialOreOverlay.Gold).add(10, MaterialOreOverlay.Lapis);
 
-        if (raw == MaterialRaw.Ingot)
+        if (raw == MaterialType.Ingot)
             overlayRandom.add(10, MaterialOreOverlay.Copper);
 
         return overlayRandom.next();
@@ -240,7 +230,7 @@ public class OreMaterial extends Material
 
     private float chooseMiningTime()
     {
-        float hardnessAddition = rng.nextFloat() * 2.5f;
+        float hardnessAddition = rng.nextFloat() * 3.5f;
 
         return switch (oreBase) {
             case Sand, Gravel   -> 0.5f + hardnessAddition;   // 0.5 - 1.0, soft
@@ -348,126 +338,6 @@ public class OreMaterial extends Material
         }
 
         return cleanupName(name);
-    }
-
-    // Todo generate correct block properties.
-    private void createOreBlocks()
-    {
-        switch (raw)
-        {
-            case Ingot:
-                // If an ingot make the raw block
-                String rawRegistryName = name + "_raw_block";
-                ResourceKey<Block> rawBlockKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, rawRegistryName));
-                FortunaProperties<Block> rawBlockProperties = new FortunaProperties<>(rawRegistryName, Component.literal("Block of Raw " + Utilities.capitalize(name)), rawBlockKey);
-                materialBlocks.add(new RawMaterialBlock(rawBlockProperties, BlockBehaviour.Properties.of().instrument(NoteBlockInstrument.BASEDRUM).requiresCorrectToolForDrops().strength(5.0F, 6.0F), this));
-            case Gem:
-            case Special:
-                // Ore block
-                String registryName = name + "_ore";
-                ResourceKey<Block> oreKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, registryName));
-
-                FortunaProperties<Block> oreFortuna = new FortunaProperties<>(registryName, Component.literal(Utilities.capitalize(name) + " Ore"), oreKey);
-                BlockBehaviour.Properties oreProperties = BlockBehaviour.Properties.of().strength(materialMineTime, materialHardness).requiresCorrectToolForDrops();
-
-                if (oreBase == MaterialOreBase.Sand || oreBase == MaterialOreBase.Gravel)
-                {
-                    // Create falling sand ore block
-                    materialBlocks.add(new FallingOreBlock(oreFortuna, oreProperties, this));
-                }
-                else
-                {
-                    materialBlocks.add(new OreBlock(oreFortuna, oreProperties, this));
-                    if (oreBase == MaterialOreBase.Stone)
-                    {
-                        String deepslateRegistryName = "deepslate_" + name + "_ore";
-                        ResourceKey<Block> deepslateOreKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, deepslateRegistryName));
-                        FortunaProperties<Block> deepslateOreProperties = new FortunaProperties<>(deepslateRegistryName, Component.literal("Deepslate " + Utilities.capitalize(name) + " Ore"), deepslateOreKey);
-                        materialBlocks.add(new OreBlock(deepslateOreProperties, BlockBehaviour.Properties.of().sound(SoundType.STONE), this, MaterialOreBase.Deepslate));
-                    }
-                }
-
-                // The main material block
-                if (oreOverlay == MaterialOreOverlay.Copper) {
-                    createWeatheredBlocks();
-                } else {
-                    String materialBlockReg = name + "_block";
-                    ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, materialBlockReg));
-                    FortunaProperties<Block> blockProperties = new FortunaProperties<>(materialBlockReg, Component.literal("Block of " + Utilities.capitalize(name)), blockKey);
-                    materialBlocks.add(new MaterialBlock(blockProperties, BlockBehaviour.Properties.of().sound(SoundType.STONE), this));
-                }
-        }
-    }
-
-    private void createWeatheredBlocks()
-    {
-        // Register 4 weathering variants
-        String[] prefixes = {"", "exposed_", "weathered_", "oxidized_"};
-        String[] waxedPrefixes = {"waxed_", "waxed_exposed_", "waxed_weathered_", "waxed_oxidized_"};
-        String[] waxedDisplayPrefixes = {"Waxed ", "Waxed Exposed ", "Waxed Weathered ", "Waxed Oxidized "};
-        WeatheringCopper.WeatherState[] states = {
-                WeatheringCopper.WeatherState.UNAFFECTED,
-                WeatheringCopper.WeatherState.EXPOSED,
-                WeatheringCopper.WeatherState.WEATHERED,
-                WeatheringCopper.WeatherState.OXIDIZED
-        };
-
-        WeatheringMaterialBlock[] weatheringBlocks = new WeatheringMaterialBlock[4];
-        MaterialBlock[] waxedBlocks = new MaterialBlock[4];
-        for (int i = 0; i < 4; i++) {
-            String materialBlockReg = prefixes[i] + name + "_block";
-            ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, materialBlockReg));
-            FortunaProperties<Block> blockProperties = new FortunaProperties<>(materialBlockReg, Component.literal(Utilities.capitalize(prefixes[i].replace("_", " ")) + "Block of " + Utilities.capitalize(name)), blockKey);
-            weatheringBlocks[i] = new WeatheringMaterialBlock(blockProperties, BlockBehaviour.Properties.of().sound(SoundType.STONE), this, states[i]);
-            materialBlocks.add(weatheringBlocks[i]);
-
-            // Waxed block
-            String waxedBlockReg = waxedPrefixes[i] + name + "_block";
-            ResourceKey<Block> waxedBlockKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, waxedBlockReg));
-            FortunaProperties<Block> waxedBlockProperties = new FortunaProperties<>(waxedBlockReg, Component.literal(waxedDisplayPrefixes[i] + "Block of " + Utilities.capitalize(name)), waxedBlockKey);
-            waxedBlocks[i] = new MaterialBlock(waxedBlockProperties, BlockBehaviour.Properties.of().sound(SoundType.STONE), this, states[i]);
-            materialBlocks.add(waxedBlocks[i]);
-        }
-
-        OxidizableBlocksRegistry.registerOxidizableBlockPair(weatheringBlocks[0], weatheringBlocks[1]);
-        OxidizableBlocksRegistry.registerOxidizableBlockPair(weatheringBlocks[1], weatheringBlocks[2]);
-        OxidizableBlocksRegistry.registerOxidizableBlockPair(weatheringBlocks[2], weatheringBlocks[3]);
-
-        OxidizableBlocksRegistry.registerWaxableBlockPair(weatheringBlocks[0], waxedBlocks[0]);
-        OxidizableBlocksRegistry.registerWaxableBlockPair(weatheringBlocks[1], waxedBlocks[1]);
-        OxidizableBlocksRegistry.registerWaxableBlockPair(weatheringBlocks[2], waxedBlocks[2]);
-        OxidizableBlocksRegistry.registerWaxableBlockPair(weatheringBlocks[3], waxedBlocks[3]);
-    }
-
-    private void createOreItems()
-    {
-        // Generate raw and refined items.
-        switch (raw)
-        {
-            case Gem:
-            case Special:
-            {
-                ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, name));
-                FortunaProperties<Item> itemProperties = new FortunaProperties<>(name, Component.literal(Utilities.capitalize(name)), key);
-                materialItems.add(new GemItem(itemProperties, new Item.Properties(), this));
-                break;
-            }
-            case Ingot:
-            {
-                // Raw Ore Item
-                String rawName = "raw_" + name;
-                ResourceKey<Item> rawKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, rawName));
-                FortunaProperties<Item> rawProps = new FortunaProperties<>(rawName, Component.literal("Raw " + Utilities.capitalize(name)), rawKey);
-                materialItems.add(new RawItem(rawProps, new Item.Properties(), this));
-
-                // Refined Ore Item
-                String refinedName = name + "_ingot";
-                ResourceKey<Item> refinedKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, refinedName));
-                FortunaProperties<Item> refinedProps = new FortunaProperties<>(refinedName, Component.literal(Utilities.capitalize(name) + " Ingot"), refinedKey);
-                materialItems.add(new IngotItem(refinedProps, new Item.Properties(), this));
-                break;
-            }
-        }
     }
 
     public float getHue()

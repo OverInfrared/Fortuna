@@ -2,8 +2,9 @@ package infrared.fortuna.blocks;
 
 import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
 import com.mojang.serialization.MapCodec;
-import infrared.fortuna.resources.FortunaProperties;
+import infrared.fortuna.resources.DynamicProperties;
 import infrared.fortuna.resources.enums.MiningLevel;
+import infrared.fortuna.resources.materials.OreMaterial;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
@@ -24,7 +25,7 @@ public abstract class FallingFortunaBlock extends ColoredFallingBlock implements
 {
     public static final MapCodec<FallingFortunaBlock> CODEC = MapCodec.unit(() -> null);
 
-    protected final FortunaProperties<Block> fortunaProperties;
+    protected final DynamicProperties<Block, OreMaterial> dynamicProperties;
     private final List<Pair<String, String>> requiredTextures = new ArrayList<>();
     private final List<IFortunaBlock.RequiredElement> requiredElements = new ArrayList<>();
     private final List<Integer> requiredTints = new ArrayList<>();
@@ -33,9 +34,9 @@ public abstract class FallingFortunaBlock extends ColoredFallingBlock implements
     protected MiningLevel requiredMiningLevel = MiningLevel.Iron;
     protected IntProvider xpRange;
 
-    public FallingFortunaBlock(FortunaProperties<Block> fortunaProps, ColorRGBA colorRGBA, BlockBehaviour.Properties properties) {
-        super(colorRGBA, properties.setId(fortunaProps.resourceKey()));
-        fortunaProperties = fortunaProps;
+    public FallingFortunaBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, BlockBehaviour.Properties properties) {
+        super(dynamicProperties.material().getColorRGBA(), properties.setId(dynamicProperties.resourceKey()));
+        this.dynamicProperties = dynamicProperties;
     }
 
     @Override
@@ -50,7 +51,7 @@ public abstract class FallingFortunaBlock extends ColoredFallingBlock implements
     @Override public List<Pair<String, String>> getRequiredTextures() { return requiredTextures; }
     @Override public List<IFortunaBlock.RequiredElement> getRequiredElements() { return requiredElements; }
     @Override public List<Integer> getRequiredTints() { return requiredTints; }
-    @Override public FortunaProperties<Block> getFortunaProperties() { return fortunaProperties; }
+    @Override public DynamicProperties<Block, OreMaterial> getDynamicProperties() { return dynamicProperties; }
     @Override public MiningLevel getMiningLevel() {
         return requiredMiningLevel;
     }

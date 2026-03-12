@@ -1,20 +1,20 @@
 package infrared.fortuna.blocks.ore;
 
 import infrared.fortuna.blocks.FortunaBlock;
-import infrared.fortuna.resources.FortunaProperties;
+import infrared.fortuna.resources.DynamicProperties;
 import infrared.fortuna.resources.enums.ore.MaterialOreRaw;
 import infrared.fortuna.resources.materials.OreMaterial;
 import net.minecraft.world.level.block.Block;
 
 public class RawMaterialBlock extends FortunaBlock
 {
-    public RawMaterialBlock(FortunaProperties<Block> fortunaProps, Properties properties, OreMaterial oreMaterial)
+    public RawMaterialBlock(DynamicProperties<Block, OreMaterial> fortunaProps, Properties properties)
     {
         super(fortunaProps, properties);
 
-        this.requiredMiningLevel = oreMaterial.getMiningLevel();
+        this.requiredMiningLevel = fortunaProps.material().getMiningLevel();
 
-        MaterialOreRaw oreRaw = oreMaterial.getMaterialOreRaw();
+        MaterialOreRaw oreRaw = fortunaProps.material().getRaw();
         boolean oxidizable = oreRaw.isOxidizable();
 
         String blockTexture = oreRaw.getTexture() + "_block";
@@ -28,8 +28,8 @@ public class RawMaterialBlock extends FortunaBlock
             addOverlayTexture("overlaytransition", blockTexture + "_transition", 2);
         }
 
-        addRequiredTint(oreMaterial.getColor().getRGB());
-        addRequiredTint(oreMaterial.getSecondaryColor().getRGB());
-        addRequiredTint(oreMaterial.getTransitionColor(0.5f, 0.5f, 1f).getRGB());
+        addRequiredTint(fortunaProps.material().getColor().getRGB());
+        addRequiredTint(fortunaProps.material().getSecondaryColor().getRGB());
+        addRequiredTint(fortunaProps.material().getTransitionColor(0.5f, 0.5f, 1f).getRGB());
     }
 }

@@ -12,7 +12,7 @@ public class MaterialChain
 {
 
     // Materials created for their respective mining level.
-    private final EnumMap<MiningLevel, List<Material>> chainedMaterials = new EnumMap<>(MiningLevel.class);
+    private final EnumMap<MiningLevel, List<OreMaterial>> chainedMaterials = new EnumMap<>(MiningLevel.class);
 
     public MaterialChain(long seed)
     {
@@ -26,12 +26,12 @@ public class MaterialChain
         {
             int materialCount = countRNG.next();
 
-            List<Material> materials = new ArrayList<>();
+            List<OreMaterial> materials = new ArrayList<>();
 
             // Generate those materials.
             for (int i = 0; i < materialCount; i++)
             {
-                Material newMat = new OreMaterial(chainRNG.nextLong(), level);
+                OreMaterial newMat = new OreMaterial(chainRNG.nextLong(), level);
                 materials.add(newMat);
             }
 
@@ -39,7 +39,7 @@ public class MaterialChain
         }
     }
 
-    public List<Material> getMaterialsAtMiningLevel(MiningLevel level)
+    public List<OreMaterial> getMaterialsAtMiningLevel(MiningLevel level)
     {
         return chainedMaterials.get(level);
     }

@@ -7,18 +7,9 @@ import infrared.fortuna.resources.FortunaResourcePack;
 import infrared.fortuna.resources.materials.Material;
 import infrared.fortuna.resources.materials.MaterialChain;
 import infrared.fortuna.resources.enums.MiningLevel;
+import infrared.fortuna.resources.materials.OreMaterial;
 import net.fabricmc.api.ModInitializer;
 
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-import net.fabricmc.fabric.api.resource.ResourcePackActivationType;
-import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
-import net.fabricmc.fabric.api.resource.v1.pack.PackActivationType;
-import net.fabricmc.fabric.impl.resource.PackSourceTracker;
-import net.minecraft.resources.Identifier;
-import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.repository.PackSource;
-import net.minecraft.server.packs.resources.PreparableReloadListener;
-import net.minecraft.server.packs.resources.ResourceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +28,7 @@ public class Fortuna implements ModInitializer
 	{
 		// cool seed 321312312
 		// cool copper seed 453294812
-		long seed = 312312423423452312L;
+		long seed = 3125435435423452312L;
 
 		LOGGER.info("Starting generation for Overworld");
 		initializeOverworld(seed);
@@ -54,11 +45,11 @@ public class Fortuna implements ModInitializer
 		// Materials are stored in their mining level order.
 		for (MiningLevel level : MiningLevel.values())
 		{
-			List<Material> materials = chain.getMaterialsAtMiningLevel(level);
-			for (Material material : materials)
+			List<OreMaterial> materials = chain.getMaterialsAtMiningLevel(level);
+			for (OreMaterial material : materials)
 			{
-				ModItems.initializeMaterial(material);
-				ModBlocks.initializeMaterial(material);
+				ModItems.initializeOreMaterial(material);
+				ModBlocks.initializeOreMaterial(material);
 				FortunaResourcePack.initializeMaterial(material);
 				FortunaDataPack.initializeMaterial(material);
 

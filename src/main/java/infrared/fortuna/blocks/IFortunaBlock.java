@@ -4,8 +4,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
 import infrared.fortuna.Fortuna;
-import infrared.fortuna.resources.FortunaProperties;
+import infrared.fortuna.resources.DynamicProperties;
 import infrared.fortuna.resources.enums.MiningLevel;
+import infrared.fortuna.resources.materials.OreMaterial;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.BlockTags;
@@ -27,20 +28,20 @@ public interface IFortunaBlock
     List<Pair<String, String>> getRequiredTextures();
     List<RequiredElement> getRequiredElements();
     List<Integer> getRequiredTints();
-    FortunaProperties<Block> getFortunaProperties();
+    DynamicProperties<Block, OreMaterial> getDynamicProperties();
 
     MiningLevel getMiningLevel();
 
     default Component getDisplayName() {
-        return getFortunaProperties().displayName();
+        return getDynamicProperties().displayName();
     }
 
     default String getRegistryName() {
-        return getFortunaProperties().registryName();
+        return getDynamicProperties().registryName();
     }
 
     default ResourceKey<Block> getResourceKey() {
-        return getFortunaProperties().resourceKey();
+        return getDynamicProperties().resourceKey();
     }
 
     default Integer getRegisteredTint(int index) {
