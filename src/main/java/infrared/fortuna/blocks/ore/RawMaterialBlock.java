@@ -14,7 +14,7 @@ public class RawMaterialBlock extends FortunaBlock
 
         this.requiredMiningLevel = fortunaProps.material().getMiningLevel();
 
-        MaterialOreRaw oreRaw = fortunaProps.material().getRaw();
+        MaterialOreRaw oreRaw = fortunaProps.material().getMaterialType();
         boolean oxidizable = oreRaw.isOxidizable();
 
         String blockTexture = oreRaw.getTexture() + "_block";

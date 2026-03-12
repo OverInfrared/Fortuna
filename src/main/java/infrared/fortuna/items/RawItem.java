@@ -12,7 +12,7 @@ public class RawItem extends FortunaItem
         super(dynamicProperties, properties);
 
         OreMaterial material = dynamicProperties.material();
-        MaterialOreRaw rawOre = material.getRaw();
+        MaterialOreRaw rawOre = material.getMaterialType();
 
         addRequiredTexture(rawOre.isOxidizable() ? rawOre.getTexture() + "_base" : rawOre.getTexture());
         addRequiredTint(material.getColor().getRGB());

@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.resources.DynamicProperties;
+import infrared.fortuna.resources.LootBuilder;
 import infrared.fortuna.resources.enums.MiningLevel;
 import infrared.fortuna.resources.materials.OreMaterial;
 import net.minecraft.network.chat.Component;
@@ -204,32 +205,8 @@ public interface IFortunaBlock
 
     default JsonObject getLoot()
     {
-        JsonObject entry = new JsonObject();
-        entry.addProperty("type", "minecraft:item");
-        entry.addProperty("name", "%s:%s".formatted(Fortuna.MOD_ID, getDynamicProperties().registryName()));
-
-        JsonArray entries = new JsonArray();
-        entries.add(entry);
-
-        JsonObject condition = new JsonObject();
-        condition.addProperty("condition", "minecraft:survives_explosion");
-
-        JsonArray conditions = new JsonArray();
-        conditions.add(condition);
-
-        JsonObject drop = new JsonObject();
-        drop.addProperty("bonus_rolls", 0.0f);
-        drop.add("conditions", conditions);
-        drop.add("entries", entries);
-        drop.addProperty("rolls", 1.0);
-
-        JsonArray pools = new JsonArray();
-        pools.add(drop);
-
-        JsonObject loottable = new JsonObject();
-        loottable.addProperty("type", "minecraft:block");
-        loottable.add("pools", pools);
-        loottable.addProperty("random_sequence", "%s:blocks/%s".formatted(Fortuna.MOD_ID, getDynamicProperties().registryName()));
-        return loottable;
+        return new LootBuilder(getDynamicProperties().registryName())
+                .dropSelf()
+                .build();
     }
 }

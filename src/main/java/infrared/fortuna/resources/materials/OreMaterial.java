@@ -14,7 +14,7 @@ public class OreMaterial extends Material
     private final MiningLevel miningLevel;
 
     // What the material is
-    private final MaterialType raw;
+    private final MaterialType materialType;
 
     // The background base for the ore, i.e. stone, diorite, sand.
     private final MaterialOreBase oreBase;
@@ -43,7 +43,7 @@ public class OreMaterial extends Material
     {
         super(seed);
 
-        raw = chooseMaterialRaw(level);
+        materialType = chooseMaterialRaw(level);
 
         // Ore generation randomness.
         miningLevel = level;
@@ -74,7 +74,7 @@ public class OreMaterial extends Material
 
     public MaterialType getType()
     {
-        return raw;
+        return materialType;
     }
 
     public MaterialOreBase getBase()
@@ -92,7 +92,7 @@ public class OreMaterial extends Material
         return oreIngot;
     }
 
-    public MaterialOreRaw getRaw()
+    public MaterialOreRaw getMaterialType()
     {
         return oreRaw;
     }
@@ -120,6 +120,12 @@ public class OreMaterial extends Material
     public IntProvider getXpRange()
     {
         return xpRange;
+    }
+
+    // This is a soft connection and is pretty dangerous, ohh well. I'll fix it when I have to.
+    public String getRawRegistryName()
+    {
+        return materialType == MaterialType.Ingot ? "raw_%s".formatted(name) : name;
     }
 
     private MaterialType chooseMaterialRaw(MiningLevel level)
@@ -162,7 +168,7 @@ public class OreMaterial extends Material
                 .add(10, MaterialOreOverlay.Iron).add(10, MaterialOreOverlay.Diamond).add(10, MaterialOreOverlay.Coal)
                 .add(10, MaterialOreOverlay.Redstone).add(10, MaterialOreOverlay.Emerald).add(10, MaterialOreOverlay.Gold).add(10, MaterialOreOverlay.Lapis);
 
-        if (raw == MaterialType.Ingot)
+        if (materialType == MaterialType.Ingot)
             overlayRandom.add(10, MaterialOreOverlay.Copper);
 
         return overlayRandom.next();
@@ -194,7 +200,7 @@ public class OreMaterial extends Material
 
     private MaterialOreBlock chooseOreBlock()
     {
-        return switch (raw)
+        return switch (materialType)
         {
             case Ingot -> {
                 if (oreOverlay == MaterialOreOverlay.Copper)
@@ -304,7 +310,7 @@ public class OreMaterial extends Material
     @Override
     protected String chooseName()
     {
-        String end = switch (raw)
+        String end = switch (materialType)
         {
             case Ingot -> pick(METAL_END, rng);
             case Gem -> pick(GEM_END, rng);
@@ -350,7 +356,7 @@ public class OreMaterial extends Material
 
     private void generateOreColors()
     {
-        switch (raw)
+        switch (materialType)
         {
             case Ingot -> {
                 float hue = getHue();

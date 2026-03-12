@@ -1,8 +1,10 @@
 package infrared.fortuna.blocks.ore;
 
+import com.google.gson.JsonObject;
 import infrared.fortuna.Utilities;
 import infrared.fortuna.blocks.FortunaBlock;
 import infrared.fortuna.resources.DynamicProperties;
+import infrared.fortuna.resources.LootBuilder;
 import infrared.fortuna.resources.enums.ore.MaterialOreBase;
 import infrared.fortuna.resources.enums.ore.MaterialOreOverlay;
 import infrared.fortuna.resources.materials.OreMaterial;
@@ -71,5 +73,15 @@ public class OreBlock extends FortunaBlock
         if (bl && xpRange.getMaxValue() != 0) {
             this.tryDropExperience(serverLevel, blockPos, itemStack, xpRange);
         }
+    }
+
+    @Override
+    public JsonObject getLoot()
+    {
+        return new LootBuilder(getDynamicProperties().registryName())
+                .withSilkTouch(getDynamicProperties().registryName())
+                .dropByName(getDynamicProperties().material().getRawRegistryName())
+                .withFortune()
+                .build();
     }
 }
