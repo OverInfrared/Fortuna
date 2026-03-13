@@ -1,11 +1,14 @@
 package infrared.fortuna.materials;
 
-import infrared.fortuna.Utilities;
-import infrared.fortuna.enums.FortunaArmorType;
+import infrared.fortuna.Fortuna;
+import infrared.fortuna.util.Utilities;
 import infrared.fortuna.enums.MaterialType;
 import infrared.fortuna.enums.MiningLevel;
-import infrared.fortuna.enums.ToolType;
+import infrared.fortuna.enums.DynamicToolType;
 import infrared.fortuna.enums.ore.*;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
@@ -14,10 +17,8 @@ import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ToolMaterial;
-import net.minecraft.world.item.equipment.ArmorMaterial;
-import net.minecraft.world.item.equipment.ArmorMaterials;
-import net.minecraft.world.item.equipment.ArmorType;
-import net.minecraft.world.item.equipment.EquipmentAssets;
+import net.minecraft.world.item.equipment.*;
+import net.minecraft.world.item.equipment.trim.TrimMaterial;
 import net.minecraft.world.level.block.Block;
 
 import java.awt.*;
@@ -56,6 +57,7 @@ public class OreMaterial extends Material
     private final boolean makeArmor;
     private final ArmorMaterial armorMaterial;
     private final int armorVariant;
+    private final ResourceKey<TrimMaterial> trimMaterialKey;
 
     // =========================================================================
     // Constructor
@@ -64,6 +66,7 @@ public class OreMaterial extends Material
     public OreMaterial(long seed, MiningLevel level)
     {
         super(seed);
+        name = chooseName();
 
         materialType = chooseMaterialRaw(level);
 
@@ -86,13 +89,14 @@ public class OreMaterial extends Material
 
         makeTools = true;
         toolMaterial = chooseToolMaterial();
-        toolVariant = rng.nextInt(ToolType.getVariantCount());
+        toolVariant = rng.nextInt(DynamicToolType.getVariantCount());
 
         makeArmor = true;
         armorMaterial = chooseArmorMaterial();
-        armorVariant = rng.nextInt(FortunaArmorType.getVariantCount());
+        armorVariant = toolVariant;
 
-        name = chooseName();
+        trimMaterialKey = ResourceKey.create(Registries.TRIM_MATERIAL,
+                Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, name));
 
         generateOreColors();
     }
@@ -101,30 +105,31 @@ public class OreMaterial extends Material
     // Public getters
     // =========================================================================
 
-    public MiningLevel getMiningLevel()         { return miningLevel; }
-    public MaterialType getType()               { return materialType; }
+    public MiningLevel getMiningLevel()                   { return miningLevel; }
+    public MaterialType getType()                         { return materialType; }
 
-    public MaterialOreBase getBase()            { return oreBase; }
-    public MaterialOreOverlay getOverlay()      { return oreOverlay; }
+    public MaterialOreBase getBase()                      { return oreBase; }
+    public MaterialOreOverlay getOverlay()                { return oreOverlay; }
 
-    public MaterialOreIngot getIngot()          { return oreIngot; }
-    public MaterialOreRaw getMaterialType()     { return oreRaw; }
-    public MaterialOreGem getGem()              { return oreGem; }
-    public MaterialOreBlock getMaterialBlock()  { return materialBlock; }
+    public MaterialOreIngot getIngot()                    { return oreIngot; }
+    public MaterialOreRaw getMaterialType()               { return oreRaw; }
+    public MaterialOreGem getGem()                        { return oreGem; }
+    public MaterialOreBlock getMaterialBlock()            { return materialBlock; }
 
-    public float getMaterialMineTime()          { return materialMineTime; }
-    public float getMaterialHardness()          { return materialHardness; }
+    public float getMaterialMineTime()                    { return materialMineTime; }
+    public float getMaterialHardness()                    { return materialHardness; }
 
-    public IntProvider getXpRange()             { return xpRange; }
-    public MaterialOreDrops getDropType()       { return drops; }
+    public IntProvider getXpRange()                       { return xpRange; }
+    public MaterialOreDrops getDropType()                 { return drops; }
 
-    public boolean getHasTools()                { return makeTools; }
-    public ToolMaterial getToolMaterial()       { return toolMaterial; }
-    public int getToolVariant()                 { return toolVariant; }
+    public boolean hasTools()                             { return makeTools; }
+    public ToolMaterial getToolMaterial()                 { return toolMaterial; }
+    public int getToolVariant()                           { return toolVariant; }
 
-    public boolean getHasArmor()                { return makeArmor; }
-    public ArmorMaterial getArmorMaterial()     { return armorMaterial; }
-    public int getArmorVariant()                { return armorVariant; }
+    public boolean hasArmor()                             { return makeArmor; }
+    public ArmorMaterial getArmorMaterial()               { return armorMaterial; }
+    public int getArmorVariant()                          { return armorVariant; }
+    public ResourceKey<TrimMaterial> getTrimMaterialKey() { return trimMaterialKey; }
 
     // =========================================================================
     // Registry name helpers
@@ -313,7 +318,7 @@ public class OreMaterial extends Material
 
         float baseAttackDamage = switch (miningLevel)
         {
-            case Iron     -> 1.5f + rng.nextFloat() * 1.0f;    // 1.5 - 2.5
+            case Iron     -> 1.5f + rng.nextFloat();    // 1.5 - 2.5
             case Diamond  -> 2.5f + rng.nextFloat() * 1.5f;    // 2.5 - 4.0
             case Netherite -> 3.5f + rng.nextFloat() * 1.5f;   // 3.5 - 5.0
             default       -> rng.nextFloat() * 0.5f;           // 0.0 - 0.5
@@ -411,6 +416,11 @@ public class OreMaterial extends Material
             default        -> ItemTags.REPAIRS_LEATHER_ARMOR;
         };
 
+        ResourceKey<EquipmentAsset> armorAssetKey = ResourceKey.create(
+                EquipmentAssets.ROOT_ID,
+                Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, name)
+        );
+
         return new ArmorMaterial(
                 durabilityMultiplier,
                 defense,
@@ -419,7 +429,7 @@ public class OreMaterial extends Material
                 toughness,
                 knockbackResistance,
                 repairItems,
-                EquipmentAssets.IRON  // placeholder
+                armorAssetKey
         );
     }
 
@@ -433,7 +443,7 @@ public class OreMaterial extends Material
             "dar", "el", "fal", "gor", "hal", "jor", "kel", "lor", "mor", "nal",
             "or", "pel", "quil", "ran", "sar", "tur", "ul", "vor", "wyn", "xer",
             "yor", "zen", "br", "cr", "dr", "gr", "kr", "pr", "tr", "vr", "run",
-            "mi", "ar", "la", "fa", "r", "gl",
+            "mi", "ar", "la", "fa", "r", "gl", "red"
     };
 
     private static final String[] VOWELS = {
@@ -514,14 +524,16 @@ public class OreMaterial extends Material
                 ? pick(RARE_PREFIX, rng)
                 : pick(PREFIX, rng);
 
-        Utilities.WeightedRandom<Integer> patternRNG = new Utilities.WeightedRandom<Integer>(rng.nextLong()).add(10, 0).add(2, 1).add(7, 2).add(2, 3);
+        Utilities.WeightedRandom<Integer> patternRNG = new Utilities.WeightedRandom<Integer>(rng.nextLong())
+                .add(10, 0).add(1, 1).add(10, 2).add(3, 3).add(3, 4);
 
         switch (patternRNG.next())
         {
             case 0 -> name = prefix + chooseVowel() + end;
             case 1 -> name = prefix + chooseVowel() + pick(INFIX, rng) + chooseVowel() + end;
             case 2 -> name = prefix + pick(CORE, rng) + end;
-            default -> name = chooseVowel() + pick(INFIX, rng) + end;
+            case 3 -> name = chooseVowel() + pick(INFIX, rng) + end;
+            default -> name = prefix + end;
         }
 
         return cleanupName(name);

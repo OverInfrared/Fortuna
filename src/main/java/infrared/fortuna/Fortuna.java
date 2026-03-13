@@ -26,7 +26,7 @@ public class Fortuna implements ModInitializer
 	{
 		// cool seed 321312312
 		// cool copper seed 453294812
-		long seed = 3756757562312L;
+		long seed = 375675732562312L;
 
 		LOGGER.info("Starting generation for Overworld");
 		initializeOverworld(seed);
@@ -52,5 +52,13 @@ public class Fortuna implements ModInitializer
 				initializedMaterials.add(material);
 			}
 		}
+	}
+
+	public static OreMaterial findMaterial(String name)
+	{
+		for (Material mat : initializedMaterials)
+			if (mat instanceof OreMaterial oreMat && oreMat.getName().equals(name))
+				return oreMat;
+		return null;
 	}
 }

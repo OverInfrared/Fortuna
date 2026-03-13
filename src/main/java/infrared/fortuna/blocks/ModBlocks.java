@@ -1,7 +1,7 @@
 package infrared.fortuna.blocks;
 
 import infrared.fortuna.Fortuna;
-import infrared.fortuna.Utilities;
+import infrared.fortuna.util.Utilities;
 import infrared.fortuna.blocks.ore.*;
 import infrared.fortuna.items.ModItems;
 import infrared.fortuna.DynamicProperties;

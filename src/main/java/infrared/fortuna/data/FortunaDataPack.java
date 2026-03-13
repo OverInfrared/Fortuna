@@ -3,12 +3,12 @@ package infrared.fortuna.data;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
-import infrared.fortuna.Utilities;
-import infrared.fortuna.blocks.FortunaBlock;
 import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.blocks.ModBlocks;
+import infrared.fortuna.items.FortunaArmor;
 import infrared.fortuna.items.FortunaItem;
 import infrared.fortuna.items.ModItems;
+import infrared.fortuna.materials.OreMaterial;
 import infrared.fortuna.recipes.IFortunaRecipe;
 import infrared.fortuna.enums.MiningLevel;
 import net.fabricmc.fabric.api.resource.v1.pack.ModPackResources;
@@ -123,6 +123,8 @@ public class FortunaDataPack implements PackResources, ModPackResources
             emitData(resourceOutput, prefix, "tags/block/needs_stone_tool.json", namespace);
             emitData(resourceOutput, prefix, "tags/block/needs_iron_tool.json", namespace);
             emitData(resourceOutput, prefix, "tags/block/needs_diamond_tool.json", namespace);
+            emitData(resourceOutput, prefix, "tags/item/trimmable_armor.json", namespace);
+            emitData(resourceOutput, prefix, "tags/item/trim_materials.json", namespace);
         }
 
         if (!namespace.equals(Fortuna.MOD_ID))
@@ -149,6 +151,10 @@ public class FortunaDataPack implements PackResources, ModPackResources
                             emitData(resourceOutput, prefix, "recipe/" + name + ".json", namespace);
         }
 
+        if (prefix.contains("trim_material"))
+            for (infrared.fortuna.materials.Material mat : Fortuna.initializedMaterials)
+                if (mat instanceof OreMaterial oreMat)
+                    emitData(resourceOutput, prefix, "trim_material/" + oreMat.getName() + ".json", namespace);
     }
 
     @Override
@@ -207,6 +213,24 @@ public class FortunaDataPack implements PackResources, ModPackResources
             return resolveRecipe(recipeName);
         }
 
+        if (prefix.startsWith("tags/item/"))
+            return switch (path)
+            {
+                case "tags/item/trimmable_armor.json" -> generateTrimmableArmorTag();
+                case "tags/item/trim_materials.json"  -> generateTrimMaterialsTag();
+                default -> null;
+            };
+
+        if (prefix.startsWith("trim_material/"))
+        {
+            String materialName = entry.replace(".json", "");
+            OreMaterial material = Fortuna.findMaterial(materialName);
+            if (material == null) return null;
+            String json = generateTrimMaterial(material);
+            Fortuna.LOGGER.info("Serving trim_material: {} -> {}", materialName, json);
+            return generateTrimMaterial(material);
+        }
+
         return null;
     }
 
@@ -256,6 +280,55 @@ public class FortunaDataPack implements PackResources, ModPackResources
         for (IFortunaBlock block : ModBlocks.getRegisteredBlocks().values())
             if (block.getMiningLevel().ordinal() == requiredLevel.ordinal())
                 values.add("%s:%s".formatted(Fortuna.MOD_ID, block.getRegistryName()));
+
+        JsonObject tag = new JsonObject();
+        tag.addProperty("replace", false);
+        tag.add("values", values);
+        return tag.toString();
+    }
+
+    private String generateTrimmableArmorTag()
+    {
+        JsonArray values = new JsonArray();
+        for (Item item : ModItems.getRegisteredItem().values())
+        {
+            if (item instanceof FortunaArmor armor)
+                values.add("%s:%s".formatted(Fortuna.MOD_ID, armor.getRegistryName()));
+        }
+
+        JsonObject tag = new JsonObject();
+        tag.addProperty("replace", false);
+        tag.add("values", values);
+        return tag.toString();
+    }
+
+    private String generateTrimMaterial(OreMaterial material)
+    {
+        JsonObject assetName = new JsonObject();
+        assetName.addProperty("asset_name", material.getName());
+
+        JsonObject description = new JsonObject();
+        description.addProperty("color", String.format("#%06X", material.getColor().getRGB() & 0xFFFFFF));
+        description.addProperty("translate", "trim_material.%s.%s".formatted(Fortuna.MOD_ID, material.getName()));
+
+        JsonObject trimMaterial = new JsonObject();
+        trimMaterial.addProperty("asset_name", material.getName());
+        trimMaterial.add("description", description);
+
+        return trimMaterial.toString();
+    }
+
+    private String generateTrimMaterialsTag()
+    {
+        JsonArray values = new JsonArray();
+        for (infrared.fortuna.materials.Material mat : Fortuna.initializedMaterials)
+        {
+            if (mat instanceof OreMaterial oreMat)
+            {
+                String itemName = oreMat.getRefinedRegistryName();
+                values.add("%s:%s".formatted(Fortuna.MOD_ID, itemName));
+            }
+        }
 
         JsonObject tag = new JsonObject();
         tag.addProperty("replace", false);

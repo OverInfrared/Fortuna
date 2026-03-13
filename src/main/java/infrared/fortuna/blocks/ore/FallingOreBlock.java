@@ -3,7 +3,7 @@ package infrared.fortuna.blocks.ore;
 import com.google.gson.JsonObject;
 import com.mojang.serialization.JsonOps;
 import infrared.fortuna.Fortuna;
-import infrared.fortuna.Utilities;
+import infrared.fortuna.util.Utilities;
 import infrared.fortuna.blocks.FallingFortunaBlock;
 import infrared.fortuna.blocks.FortunaBlockLootProvider;
 import infrared.fortuna.DynamicProperties;

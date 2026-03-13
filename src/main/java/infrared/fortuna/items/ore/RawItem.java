@@ -1,7 +1,7 @@
 package infrared.fortuna.items.ore;
 
 import com.google.gson.JsonObject;
-import infrared.fortuna.Utilities;
+import infrared.fortuna.util.Utilities;
 import infrared.fortuna.items.FortunaItem;
 import infrared.fortuna.recipes.FortunaRecipeProvider;
 import infrared.fortuna.recipes.IFortunaRecipe;

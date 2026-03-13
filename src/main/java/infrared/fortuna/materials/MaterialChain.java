@@ -1,6 +1,6 @@
 package infrared.fortuna.materials;
 
-import infrared.fortuna.Utilities.WeightedRandom;
+import infrared.fortuna.util.Utilities.WeightedRandom;
 import infrared.fortuna.enums.MiningLevel;
 
 import java.util.ArrayList;

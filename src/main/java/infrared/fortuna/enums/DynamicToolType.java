@@ -4,7 +4,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 
-public enum ToolType
+public enum DynamicToolType
 {
     Sword("sword", null,
             new String[]{ "iron_sword", "golden_sword", "diamond_sword", "copper_sword", "netherite_sword" },
@@ -53,7 +53,7 @@ public enum ToolType
     private final String hiltTexture;
     private final String[] recipePattern;
 
-    ToolType(String name, TagKey<Block> mineableTag, String[] materialVariants, String hiltTexture, String[] recipePattern)
+    DynamicToolType(String name, TagKey<Block> mineableTag, String[] materialVariants, String hiltTexture, String[] recipePattern)
     {
         this.name = name;
         this.mineableTag = mineableTag;
@@ -67,7 +67,7 @@ public enum ToolType
     public String getHiltTexture()         { return hiltTexture; }
     public String[] getRecipePattern()     { return recipePattern; }
 
-    public static int getVariantCount() { return ToolType.Pickaxe.materialVariants.length - 1; }
+    public static int getVariantCount() { return DynamicToolType.Pickaxe.materialVariants.length - 1; }
 
     public String getMaterialTexture(int variant)
     {

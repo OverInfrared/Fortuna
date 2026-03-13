@@ -1,16 +1,9 @@
 package infrared.fortuna.materials;
 
-import infrared.fortuna.Utilities;
-import infrared.fortuna.blocks.FortunaBlock;
-import infrared.fortuna.blocks.IFortunaBlock;
-import infrared.fortuna.items.FortunaBlockItem;
-import infrared.fortuna.items.FortunaItem;
-import net.minecraft.world.level.block.Block;
+import infrared.fortuna.util.Utilities;
 import net.minecraft.util.ColorRGBA;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 public abstract class Material

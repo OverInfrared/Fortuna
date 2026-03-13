@@ -50,6 +50,8 @@ public abstract class FortunaItem extends Item
         return dynamicProperties.resourceKey();
     }
 
+    public DynamicProperties<Item, OreMaterial> getDynamicProperties() { return dynamicProperties; }
+
     protected void addRequiredTexture(String texture)
     {
         requiredTextures.add(texture);

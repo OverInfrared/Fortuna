@@ -2,11 +2,12 @@ package infrared.fortuna.items;
 
 import infrared.fortuna.Fortuna;
 
-import infrared.fortuna.Utilities;
+import infrared.fortuna.util.Utilities;
 import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.DynamicProperties;
+import infrared.fortuna.enums.DynamicArmorType;
 import infrared.fortuna.enums.MaterialType;
-import infrared.fortuna.enums.ToolType;
+import infrared.fortuna.enums.DynamicToolType;
 import infrared.fortuna.items.ore.GemItem;
 import infrared.fortuna.items.ore.IngotItem;
 import infrared.fortuna.items.ore.RawItem;
@@ -22,10 +23,10 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.level.block.Block;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ModItems
 {
@@ -46,7 +47,6 @@ public class ModItems
 
     public static final ResourceKey<CreativeModeTab> CUSTOM_CREATIVE_TAB_KEY = ResourceKey.create(BuiltInRegistries.CREATIVE_MODE_TAB.key(), Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, "creative_tab"));
 
-
     // Initializes items for ores, raw material, refined material, tools, and armor items.
     public static void initializeOreMaterial(OreMaterial material)
     {
@@ -55,47 +55,56 @@ public class ModItems
 
         if (type == MaterialType.Gem || type == MaterialType.Special)
         {
-            ResourceKey<Item>                    key               = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, name));
-            DynamicProperties<Item, OreMaterial> dynamicProperties = new DynamicProperties<>(name, Component.literal(Utilities.capitalize(name)), key, material);
-            Properties                           properties        = new Properties();
-
-            registerItem(new GemItem(dynamicProperties, properties));
+            registerItem(new GemItem(createItemProperties(name, material), new Properties().trimMaterial(material.getTrimMaterialKey())));
         }
         else if (type == MaterialType.Ingot)
         {
             // Raw Ore Item
-            String            rawName = "raw_%s".formatted(name);
-            ResourceKey<Item> rawKey  = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, rawName));
-
-            DynamicProperties<Item, OreMaterial> rawDynamicProperties = new DynamicProperties<>(rawName, Component.literal("Raw %s".formatted(Utilities.capitalize(name))), rawKey, material);
-            Properties                           properties           = new Properties();
-
-            registerItem(new RawItem(rawDynamicProperties, properties));
+            registerItem(new RawItem(createItemProperties("raw", name, "", material), new Properties()));
 
             // Refined Ore Item
-            String            refinedName = "%s_ingot".formatted(name);
-            ResourceKey<Item> refinedKey  = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, refinedName));
-
-            DynamicProperties<Item, OreMaterial> refinedDynamicProperties = new DynamicProperties<>(refinedName, Component.literal("%s Ingot".formatted(Utilities.capitalize(name))), refinedKey, material);
-            Properties                           refinedProperties        = new Properties();
-
-            registerItem(new IngotItem(refinedDynamicProperties, refinedProperties));
+            registerItem(new IngotItem(createItemProperties(name, "ingot", material), new Properties().trimMaterial(material.getTrimMaterialKey())));
         }
 
         // Generate tool items
-        if (material.getHasTools())
-        {
-            for (ToolType tool : ToolType.values())
-            {
-                String            registryName = "%s_%s".formatted(name, tool.getName());
-                ResourceKey<Item> key          = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, registryName));
+        if (material.hasTools())
+            for (DynamicToolType tool : DynamicToolType.values())
+                registerItem(new FortunaTool(createItemProperties(name, tool.getName(), material), new Properties(), tool));
 
-                DynamicProperties<Item, OreMaterial> dynamicProperties = new DynamicProperties<>(registryName, Component.literal("%s %s".formatted(Utilities.capitalize(name), Utilities.capitalize(tool.getName()))), key, material);
-                Properties                           properties        = applyToolProperties(new Properties(), tool, material.getToolMaterial());
+        // Generate armor items
+        if (material.hasArmor())
+            for (DynamicArmorType armor : DynamicArmorType.values())
+                registerItem(new FortunaArmor(createItemProperties(name, armor.getName(), material), new Properties(), armor));
+    }
 
-                registerItem(new FortunaTool(dynamicProperties, properties, tool));
-            }
-        }
+    private static DynamicProperties<Item, OreMaterial> createItemProperties(String name, OreMaterial material)
+    {
+        return createItemProperties("", name, "", material);
+    }
+
+    private static DynamicProperties<Item, OreMaterial> createItemProperties(String name, String suffix, OreMaterial material)
+    {
+        return createItemProperties("", name, suffix, material);
+    }
+
+    private static DynamicProperties<Item, OreMaterial> createItemProperties(String prefix, String name, String suffix, OreMaterial material)
+    {
+        String registryName = name;
+
+        if (!prefix.isEmpty())
+            registryName = "%s_%s".formatted(prefix, registryName);
+
+        if (!suffix.isEmpty())
+            registryName = "%s_%s".formatted(registryName, suffix);
+
+        String displayName = Arrays.stream(registryName.split("_"))
+                .filter(s -> !s.isEmpty())
+                .map(Utilities::capitalize)
+                .collect(Collectors.joining(" "));
+
+        ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, registryName));
+
+        return new DynamicProperties<>(registryName, Component.literal(displayName), key, material);
     }
 
     public static void initializeCreativeModeTab()
@@ -110,18 +119,6 @@ public class ModItems
                 .build();
 
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, CUSTOM_CREATIVE_TAB_KEY, creativeTab);
-    }
-
-    private static Properties applyToolProperties(Properties properties, ToolType tool, ToolMaterial material)
-    {
-        return switch (tool)
-        {
-            case Sword   -> properties.sword(material, 3.0f, -2.4f);
-            case Pickaxe -> properties.pickaxe(material, 1.0f, -2.8f);
-            case Axe     -> properties.axe(material, 5.0f, -3.0f);
-            case Shovel  -> properties.shovel(material, 1.5f, -3.0f);
-            case Hoe     -> properties.hoe(material, -3.0f, 0.0f);
-        };
     }
 
     public static Map<String, Item> getRegisteredItem()
