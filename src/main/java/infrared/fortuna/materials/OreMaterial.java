@@ -373,11 +373,11 @@ public class OreMaterial extends Material
         };
 
         Map<ArmorType, Integer> defense = ArmorMaterials.makeDefense(
-                baseDefense,                          // boots
-                baseDefense + rng.nextInt(2) + 3,     // leggings
-                baseDefense + rng.nextInt(2) + 4,     // chestplate
-                baseDefense,                          // helmet
-                baseDefense + rng.nextInt(3) + 4      // body
+                baseDefense,                             // boots
+                baseDefense + rng.nextInt(2) + 3, // leggings
+                baseDefense + rng.nextInt(2) + 4, // chestplate
+                baseDefense,                            // helmet
+                baseDefense + rng.nextInt(3) + 4 // body
         );
 
         int enchantmentValue = switch (miningLevel)
