@@ -6,69 +6,71 @@ import net.minecraft.world.level.block.Block;
 
 public enum ToolType
 {
-    Sword("sword", null, 3.0f, 1.6f, new String[]{
-            "X",
-            "X",
-            "|"
-    }),
-    Pickaxe("pickaxe", BlockTags.MINEABLE_WITH_PICKAXE, 1.0f, 1.2f, new String[]{
-            "XXX",
-            " | ",
-            " | "
-    }),
-    Axe("axe", BlockTags.MINEABLE_WITH_AXE, 6.0f, 0.8f, new String[]{
-            "XX",
-            "X|",
-            " |"
-    }),
-    Shovel("shovel", BlockTags.MINEABLE_WITH_SHOVEL, 1.5f, 1.0f, new String[]{
-            "X",
-            "|",
-            "|"
-    }),
-    Hoe("hoe", BlockTags.MINEABLE_WITH_HOE, 0.0f, 3.0f, new String[]{
-            "XX",
-            " |",
-            " |"
-    });
+    Sword("sword", null,
+            new String[]{ "iron_sword", "golden_sword", "diamond_sword", "copper_sword", "netherite_sword" },
+            "sword_hilt",
+            new String[]{
+                    "X",
+                    "X",
+                    "|"
+            }),
+    Pickaxe("pickaxe", BlockTags.MINEABLE_WITH_PICKAXE,
+            new String[]{ "iron_pickaxe", "golden_pickaxe", "diamond_pickaxe", "copper_pickaxe", "netherite_pickaxe" },
+            "pickaxe_handle",
+            new String[]{
+                    "XXX",
+                    " | ",
+                    " | "
+            }),
+    Axe("axe", BlockTags.MINEABLE_WITH_AXE,
+            new String[]{ "iron_axe", "golden_axe", "diamond_axe", "copper_axe", "netherite_axe" },
+            "axe_handle",
+            new String[]{
+                    "XX",
+                    "X|",
+                    " |"
+            }),
+    Shovel("shovel", BlockTags.MINEABLE_WITH_SHOVEL,
+            new String[]{ "iron_shovel", "golden_shovel", "diamond_shovel", "copper_shovel", "netherite_shovel" },
+            "shovel_handle",
+            new String[]{
+                    "X",
+                    "|",
+                    "|"
+            }),
+    Hoe("hoe", BlockTags.MINEABLE_WITH_HOE,
+            new String[]{ "iron_hoe", "golden_hoe", "diamond_hoe", "copper_hoe", "netherite_hoe" },
+            "hoe_handle",
+            new String[]{
+                    "XX",
+                    " |",
+                    " |"
+            });
 
     private final String name;
     private final TagKey<Block> mineableTag;
-    private final float baseAttackDamage;
-    private final float attackSpeed;
+    private final String[] materialVariants;
+    private final String hiltTexture;
     private final String[] recipePattern;
 
-    ToolType(String name, TagKey<Block> mineableTag, float baseAttackDamage, float attackSpeed, String[] recipePattern)
+    ToolType(String name, TagKey<Block> mineableTag, String[] materialVariants, String hiltTexture, String[] recipePattern)
     {
         this.name = name;
         this.mineableTag = mineableTag;
-        this.baseAttackDamage = baseAttackDamage;
-        this.attackSpeed = attackSpeed;
+        this.materialVariants = materialVariants;
+        this.hiltTexture = hiltTexture;
         this.recipePattern = recipePattern;
     }
 
-    public String getName()
-    {
-        return name;
-    }
+    public String getName()                { return name; }
+    public TagKey<Block> getMineableTag()  { return mineableTag; }
+    public String getHiltTexture()         { return hiltTexture; }
+    public String[] getRecipePattern()     { return recipePattern; }
 
-    public TagKey<Block> getMineableTag()
-    {
-        return mineableTag;
-    }
+    public static int getVariantCount() { return ToolType.Pickaxe.materialVariants.length - 1; }
 
-    public float getBaseAttackDamage()
+    public String getMaterialTexture(int variant)
     {
-        return baseAttackDamage;
-    }
-
-    public float getAttackSpeed()
-    {
-        return attackSpeed;
-    }
-
-    public String[] getRecipePattern()
-    {
-        return recipePattern;
+        return materialVariants[variant % getVariantCount()];
     }
 }

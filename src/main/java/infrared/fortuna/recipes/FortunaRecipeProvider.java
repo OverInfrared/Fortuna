@@ -8,11 +8,14 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.ItemLike;
 import org.jspecify.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FortunaRecipeProvider extends RecipeProvider
 {
@@ -58,6 +61,18 @@ public class FortunaRecipeProvider extends RecipeProvider
                         "###", "###", "###"
                 ),
                 block.asItem().getDefaultInstance());
+        return encodeRecipe(recipe);
+    }
+
+    public JsonObject shapedTool(ItemLike tool, ItemLike material, String[] pattern)
+    {
+        Map<Character, Ingredient> key = new HashMap<>();
+        key.put('X', Ingredient.of(material));
+        key.put('|', Ingredient.of(Items.STICK));
+
+        ShapedRecipe recipe = new ShapedRecipe("", CraftingBookCategory.MISC,
+                ShapedRecipePattern.of(key, pattern),
+                tool.asItem().getDefaultInstance());
         return encodeRecipe(recipe);
     }
 

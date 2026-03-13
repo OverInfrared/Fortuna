@@ -3,9 +3,19 @@ package infrared.fortuna.materials;
 import infrared.fortuna.Utilities;
 import infrared.fortuna.enums.MaterialType;
 import infrared.fortuna.enums.MiningLevel;
+import infrared.fortuna.enums.ToolType;
 import infrared.fortuna.enums.ore.*;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.util.valueproviders.UniformInt;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.equipment.ArmorMaterial;
+import net.minecraft.world.item.equipment.ArmorMaterials;
+import net.minecraft.world.item.equipment.ArmorType;
+import net.minecraft.world.level.block.Block;
 
 import java.awt.*;
 
@@ -33,6 +43,16 @@ public class OreMaterial extends Material
     private final IntProvider xpRange;
     private final MaterialOreDrops drops;
 
+    // === Tool properties ===
+    private final boolean makeTools;
+    private final ToolMaterial toolMaterial;
+    private final int toolVariant;
+
+    // === Armor properties ===
+    private final boolean makeArmor;
+    private final ArmorMaterial armorMaterial;
+    private final int armorVariant;
+
     // =========================================================================
     // Constructor
     // =========================================================================
@@ -58,8 +78,14 @@ public class OreMaterial extends Material
         int minXp = 1 + miningLevel.ordinal();
         int maxXp = minXp + 1 + rng.nextInt(4);
         xpRange = UniformInt.of(minXp, maxXp);
-
         drops = chooseDropCountType();
+
+        makeTools = true;
+        toolMaterial = chooseToolMaterial();
+        toolVariant = rng.nextInt(ToolType.getVariantCount());
+
+        makeArmor = true;
+        armorMaterial =
 
         name = chooseName();
 
@@ -86,6 +112,12 @@ public class OreMaterial extends Material
 
     public IntProvider getXpRange()             { return xpRange; }
     public MaterialOreDrops getDropType()       { return drops; }
+
+    public boolean getHasTools()                { return makeTools; }
+    public ToolMaterial getToolMaterial()       { return toolMaterial; }
+    public int getToolVariant()                 { return toolVariant; }
+
+    public boolean getHasArmor()
 
     // =========================================================================
     // Registry name helpers
@@ -245,6 +277,147 @@ public class OreMaterial extends Material
     private float chooseHardness()
     {
         return 1f + rng.nextFloat() * 5.0f;
+    }
+
+    // =========================================================================
+    // Tool properties
+    // =========================================================================
+
+    private ToolMaterial chooseToolMaterial()
+    {
+        if (!makeTools)
+            return null;
+
+        int baseDurability = switch (miningLevel)
+        {
+            case Iron     -> 180 + rng.nextInt(150);     // 180 - 329
+            case Diamond  -> 800 + rng.nextInt(1200);    // 800 - 1999
+            case Netherite -> 1500 + rng.nextInt(1000);  // 1500 - 2499
+            default       -> 40 + rng.nextInt(40);       // 40 - 79
+        };
+
+        float baseSpeed = switch (miningLevel)
+        {
+            case Iron     -> 5.0f + rng.nextFloat() * 2.0f;    // 5.0 - 7.0
+            case Diamond  -> 7.0f + rng.nextFloat() * 2.5f;    // 7.0 - 9.5
+            case Netherite -> 8.0f + rng.nextFloat() * 2.0f;   // 8.0 - 10.0
+            default       -> 1.5f + rng.nextFloat() * 1.5f;    // 1.5 - 3.0
+        };
+
+        float baseAttackDamage = switch (miningLevel)
+        {
+            case Iron     -> 1.5f + rng.nextFloat() * 1.0f;    // 1.5 - 2.5
+            case Diamond  -> 2.5f + rng.nextFloat() * 1.5f;    // 2.5 - 4.0
+            case Netherite -> 3.5f + rng.nextFloat() * 1.5f;   // 3.5 - 5.0
+            default       -> rng.nextFloat() * 0.5f;           // 0.0 - 0.5
+        };
+
+        int baseEnchantment = switch (miningLevel)
+        {
+            case Iron     -> 8 + rng.nextInt(10);     // 8 - 17
+            case Diamond  -> 6 + rng.nextInt(10);     // 6 - 15
+            case Netherite -> 10 + rng.nextInt(10);   // 10 - 19
+            default       -> 10 + rng.nextInt(10);    // 10 - 19
+        };
+
+        TagKey<Block> incorrectBlocks = switch (miningLevel)
+        {
+            case Iron     -> BlockTags.INCORRECT_FOR_IRON_TOOL;
+            case Diamond  -> BlockTags.INCORRECT_FOR_DIAMOND_TOOL;
+            case Netherite -> BlockTags.INCORRECT_FOR_NETHERITE_TOOL;
+            default       -> BlockTags.INCORRECT_FOR_WOODEN_TOOL;
+        };
+
+        // TODO: generate a custom repair item tag once item tags are dynamic
+        TagKey<Item> repairItems = switch (miningLevel)
+        {
+            case Iron     -> ItemTags.IRON_TOOL_MATERIALS;
+            case Diamond  -> ItemTags.DIAMOND_TOOL_MATERIALS;
+            case Netherite -> ItemTags.NETHERITE_TOOL_MATERIALS;
+            default       -> ItemTags.WOODEN_TOOL_MATERIALS;
+        };
+
+        return new ToolMaterial(incorrectBlocks, baseDurability, baseSpeed, baseAttackDamage, baseEnchantment, repairItems);
+    }
+
+    // =========================================================================
+    // Tool properties
+    // =========================================================================
+
+    private ArmorMaterial chooseArmorMaterial()
+    {
+        if (!makeTools)
+            return null;
+
+        int durabilityMultiplier = switch (miningLevel)
+        {
+            case Stone    -> 8 + rng.nextInt(6);       // 8 - 13
+            case Iron     -> 12 + rng.nextInt(8);      // 12 - 19
+            case Diamond  -> 25 + rng.nextInt(15);     // 25 - 39
+            case Netherite -> 30 + rng.nextInt(15);    // 30 - 44
+            default       -> 4 + rng.nextInt(4);       // 4 - 7
+        };
+
+        int baseDefense = switch (miningLevel)
+        {
+            case Stone    -> 1;
+            case Iron     -> 2;
+            case Diamond  -> 3;
+            case Netherite -> 3;
+            default       -> 1;
+        };
+
+        Map<ArmorType, Integer> defense = ArmorMaterials.makeDefense(
+                baseDefense,                          // boots
+                baseDefense + rng.nextInt(2) + 3,     // leggings
+                baseDefense + rng.nextInt(2) + 4,     // chestplate
+                baseDefense,                          // helmet
+                baseDefense + rng.nextInt(3) + 4      // body
+        );
+
+        int enchantmentValue = switch (miningLevel)
+        {
+            case Stone    -> 3 + rng.nextInt(8);
+            case Iron     -> 8 + rng.nextInt(10);
+            case Diamond  -> 6 + rng.nextInt(10);
+            case Netherite -> 10 + rng.nextInt(10);
+            default       -> 10 + rng.nextInt(10);
+        };
+
+        float toughness = switch (miningLevel)
+        {
+            case Diamond  -> 1.0f + rng.nextFloat() * 2.0f;    // 1.0 - 3.0
+            case Netherite -> 2.0f + rng.nextFloat() * 2.0f;   // 2.0 - 4.0
+            default       -> 0.0f;
+        };
+
+        float knockbackResistance = switch (miningLevel)
+        {
+            case Netherite -> 0.05f + rng.nextFloat() * 0.1f;  // 0.05 - 0.15
+            case Diamond  -> rng.nextFloat() < 0.3f ? 0.05f : 0.0f;
+            default       -> 0.0f;
+        };
+
+        // TODO: custom repair tag and equipment asset for dynamic armor
+        TagKey<Item> repairItems = switch (miningLevel)
+        {
+            case Stone    -> ItemTags.REPAIRS_IRON_ARMOR;
+            case Iron     -> ItemTags.REPAIRS_IRON_ARMOR;
+            case Diamond  -> ItemTags.REPAIRS_DIAMOND_ARMOR;
+            case Netherite -> ItemTags.REPAIRS_NETHERITE_ARMOR;
+            default       -> ItemTags.REPAIRS_LEATHER_ARMOR;
+        };
+
+        return new ArmorMaterial(
+                durabilityMultiplier,
+                defense,
+                enchantmentValue,
+                SoundEvents.ARMOR_EQUIP_IRON,
+                toughness,
+                knockbackResistance,
+                repairItems,
+                EquipmentAssets.IRON  // placeholder — need to figure out dynamic equipment assets
+        );
     }
 
     // =========================================================================
