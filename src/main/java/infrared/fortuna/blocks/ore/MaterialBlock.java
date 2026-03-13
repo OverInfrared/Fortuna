@@ -40,7 +40,7 @@ public class MaterialBlock extends FortunaBlock implements IFortunaRecipe
         if (weatherState == null || weatherState == WeatherState.UNAFFECTED) {
             addRequiredTexture("particle", blockTexture);
             addOverlayTexture("overlay", blockTexture, 0);
-            addRequiredTint(material.getColor().getRGB());
+            addRequiredTint(material.getMainColor().getRGB());
         } else {
             // Delegate to WeatheringMaterialBlock's logic by reusing the same switch
             setupWeatheredTextures(blockTexture, aloneName, weatherState);

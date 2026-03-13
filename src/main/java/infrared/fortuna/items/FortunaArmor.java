@@ -32,7 +32,7 @@ public class FortunaArmor extends FortunaItem implements IFortunaRecipe, IFortun
         OreMaterial material = dynamicProperties.material();
 
         addRequiredTexture(armorType.getItemTexture(material.getArmorVariant()));
-        addRequiredTint(material.getColor().getRGB());
+        addRequiredTint(material.getMainColor().getRGB());
     }
     public DynamicArmorType getArmorType()
     {
@@ -71,7 +71,7 @@ public class FortunaArmor extends FortunaItem implements IFortunaRecipe, IFortun
     @Override
     public JsonObject getEquipmentAsset()
     {
-        int color = dynamicProperties.material().getColor().getRGB();
+        int color = dynamicProperties.material().getMainColor().getRGB();
         String texture = DynamicArmorType.getEquipmentTexture(dynamicProperties.material().getArmorVariant());
 
         JsonObject dyeable = new JsonObject();
@@ -102,6 +102,12 @@ public class FortunaArmor extends FortunaItem implements IFortunaRecipe, IFortun
     }
 
     @Override
+    public OreMaterial getMaterial()
+    {
+        return dynamicProperties.material();
+    }
+
+    @Override
     public String getItemString()
     {
         String[] vanillaTrimMaterials = { "quartz", "iron", "netherite", "redstone", "copper", "gold", "emerald", "diamond", "lapis", "amethyst", "resin" };
@@ -126,7 +132,7 @@ public class FortunaArmor extends FortunaItem implements IFortunaRecipe, IFortun
         fallbackModel.addProperty("model", "%s:item/%s".formatted(Fortuna.MOD_ID, getRegistryName()));
 
         JsonArray fallbackTints = new JsonArray();
-        fallbackTints.add(buildConstantTint(dynamicProperties.material().getColor().getRGB()));
+        fallbackTints.add(buildConstantTint(dynamicProperties.material().getMainColor().getRGB()));
         fallbackModel.add("tints", fallbackTints);
 
         JsonObject select = new JsonObject();
@@ -148,7 +154,7 @@ public class FortunaArmor extends FortunaItem implements IFortunaRecipe, IFortun
         trimModel.addProperty("model", "%s:item/%s_%s_trim".formatted(Fortuna.MOD_ID, getRegistryName(), trim));
 
         JsonArray tints = new JsonArray();
-        tints.add(buildConstantTint(dynamicProperties.material().getColor().getRGB()));
+        tints.add(buildConstantTint(dynamicProperties.material().getMainColor().getRGB()));
         trimModel.add("tints", tints);
 
         JsonObject caseEntry = new JsonObject();

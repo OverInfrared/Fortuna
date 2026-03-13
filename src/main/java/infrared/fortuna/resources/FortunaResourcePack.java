@@ -10,6 +10,7 @@ import infrared.fortuna.equipment.IFortunaEquipment;
 import infrared.fortuna.items.FortunaArmor;
 import infrared.fortuna.items.FortunaItem;
 import infrared.fortuna.items.ModItems;
+import infrared.fortuna.materials.Material;
 import infrared.fortuna.materials.OreMaterial;
 import infrared.fortuna.util.PaletteGenerator;
 import infrared.fortuna.util.Utilities;
@@ -107,7 +108,7 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
             OreMaterial material = findMaterial(name);
             if (material == null) return null;
 
-            byte[] png = PaletteGenerator.generateTrimPalette(material.getColor());
+            byte[] png = PaletteGenerator.generateTrimPalette(material.getMainColor());
             return () -> new ByteArrayInputStream(png);
         }
 
@@ -275,12 +276,14 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     {
         JsonObject lang = new JsonObject();
 
-        for (infrared.fortuna.materials.Material mat : Fortuna.initializedMaterials)
+        Set<String> emitted = new HashSet<>();
+        for (Item item : ModItems.getRegisteredItem().values())
         {
-            if (mat instanceof OreMaterial oreMat)
+            if (item instanceof IFortunaEquipment equipment)
             {
-                String capitalized = Utilities.capitalize(oreMat.getName()) + " Material";
-                lang.addProperty("trim_material.%s.%s".formatted(Fortuna.MOD_ID, oreMat.getName()), capitalized);
+                String key = equipment.getLangKey();
+                if (emitted.add(key))
+                    lang.addProperty(key, equipment.getLangValue());
             }
         }
 
@@ -299,11 +302,11 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
         }
 
         // Try dynamic trims
-        for (infrared.fortuna.materials.Material mat : Fortuna.initializedMaterials)
+        for (Material mat : Fortuna.initializedMaterials)
         {
-            if (mat instanceof OreMaterial oreMat)
+            if (mat instanceof Material material)
             {
-                String result = tryResolveTrim(name, oreMat.getName());
+                String result = tryResolveTrim(name, material.getName());
                 if (result != null) return result;
             }
         }

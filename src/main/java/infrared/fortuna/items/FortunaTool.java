@@ -32,7 +32,7 @@ public class FortunaTool extends FortunaItem implements IFortunaRecipe
         addRequiredTexture(dynamicToolType.getHiltTexture());
         addRequiredTexture(dynamicToolType.getMaterialTexture(dynamicProperties.material().getToolVariant()));
         addRequiredTint(Color.white.getRGB());
-        addRequiredTint(material.getColor().getRGB());
+        addRequiredTint(material.getMainColor().getRGB());
     }
 
     public DynamicToolType getToolType()

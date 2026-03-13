@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.blocks.ModBlocks;
+import infrared.fortuna.equipment.IFortunaEquipment;
 import infrared.fortuna.items.FortunaArmor;
 import infrared.fortuna.items.FortunaItem;
 import infrared.fortuna.items.ModItems;
@@ -224,11 +225,13 @@ public class FortunaDataPack implements PackResources, ModPackResources
         if (prefix.startsWith("trim_material/"))
         {
             String materialName = entry.replace(".json", "");
-            OreMaterial material = Fortuna.findMaterial(materialName);
-            if (material == null) return null;
-            String json = generateTrimMaterial(material);
-            Fortuna.LOGGER.info("Serving trim_material: {} -> {}", materialName, json);
-            return generateTrimMaterial(material);
+            for (Item item : ModItems.getRegisteredItem().values())
+            {
+                if (item instanceof IFortunaEquipment equipment &&
+                        equipment.getEquipmentName().equals(materialName))
+                    return equipment.getTrimMaterialJson().toString();
+            }
+            return null;
         }
 
         return null;
@@ -300,22 +303,6 @@ public class FortunaDataPack implements PackResources, ModPackResources
         tag.addProperty("replace", false);
         tag.add("values", values);
         return tag.toString();
-    }
-
-    private String generateTrimMaterial(OreMaterial material)
-    {
-        JsonObject assetName = new JsonObject();
-        assetName.addProperty("asset_name", material.getName());
-
-        JsonObject description = new JsonObject();
-        description.addProperty("color", String.format("#%06X", material.getColor().getRGB() & 0xFFFFFF));
-        description.addProperty("translate", "trim_material.%s.%s".formatted(Fortuna.MOD_ID, material.getName()));
-
-        JsonObject trimMaterial = new JsonObject();
-        trimMaterial.addProperty("asset_name", material.getName());
-        trimMaterial.add("description", description);
-
-        return trimMaterial.toString();
     }
 
     private String generateTrimMaterialsTag()

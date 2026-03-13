@@ -4,17 +4,15 @@ import infrared.fortuna.util.Utilities;
 import net.minecraft.util.ColorRGBA;
 
 import java.awt.*;
-import java.util.Random;
+import java.util.*;
+import java.util.List;
 
 public abstract class Material
 {
     protected String name = null;
     protected Random rng;
 
-    protected Color mainColor = Color.white;
-    protected Color secondaryColor = Color.white;
-    protected Color borderColor = Color.white;
-    protected Color bottomBorderColor = Color.white;
+    protected Map<String, Color> materialColors = new HashMap<>(Map.of("main", Color.white, "secondary", Color.white));
 
     public Material(long seed)
     {
@@ -26,34 +24,17 @@ public abstract class Material
         return name;
     }
 
-    public Color getColor()
-    {
-        return mainColor;
-    }
+    public Color getMainColor()      { return getColor("main"); }
+    public Color getSecondaryColor() { return getColor("secondary"); }
 
-    public ColorRGBA getColorRGBA()
-    {
-        return new ColorRGBA(mainColor.getRGB());
-    }
+    public void setColor(String name, Color color) { materialColors.put(name, color); }
+    public Color getColor(String name) { return materialColors.getOrDefault(name, Color.WHITE); }
 
-    public Color getSecondaryColor()
-    {
-        return secondaryColor;
-    }
-
-    public Color getBorderColor()
-    {
-        return borderColor;
-    }
-
-    public Color getBottomBorderColor()
-    {
-        return bottomBorderColor;
-    }
+    public ColorRGBA getMainColorRGBA() { return new ColorRGBA(getMainColor().getRGB()); }
 
     public Color getTransitionColor(float transition, float saturation, float brightness)
     {
-        Color color = Utilities.lerpColor(mainColor, secondaryColor, transition);
+        Color color = Utilities.lerpColor(getMainColor(), getSecondaryColor(), transition);
         float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
         return Color.getHSBColor(hsb[0], hsb[1] * saturation, hsb[2] * brightness);
     }

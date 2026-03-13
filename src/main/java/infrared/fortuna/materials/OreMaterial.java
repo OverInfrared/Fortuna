@@ -585,13 +585,13 @@ public class OreMaterial extends Material
                     default -> 0.4f + (float) Math.pow(rng.nextFloat(), 1.5f) * 0.8f;
                 };
 
-                mainColor = Color.getHSBColor(hue, saturation, brightness);
+                setColor("main", Color.getHSBColor(hue, saturation, brightness));
                 if (oreOverlay == MaterialOreOverlay.Copper) {
                     float oxidizedShift = 0.4f + rng.nextFloat() * 0.2f;
                     float oxidizedHue = (hue + oxidizedShift) % 1.0f;
                     float oxidizedSaturation = Math.clamp(saturation + (rng.nextFloat() * 0.2f - 0.1f), 0.1f, 0.9f);
                     float oxidizedBrightness = Math.clamp(brightness + (rng.nextFloat() * 0.2f - 0.1f), 0.4f, 1.0f);
-                    secondaryColor = Color.getHSBColor(oxidizedHue, oxidizedSaturation, oxidizedBrightness);
+                    setColor("secondary", Color.getHSBColor(oxidizedHue, oxidizedSaturation, oxidizedBrightness));
                 }
             }
             case Gem, Special -> {
@@ -602,11 +602,13 @@ public class OreMaterial extends Material
                 float brightness = rng.nextFloat() < 0.2f
                         ? 0.85f + rng.nextFloat() * 0.15f
                         : 0.6f + rng.nextFloat() * 0.4f;
-                mainColor = Color.getHSBColor(hue, saturation, brightness);
+                setColor("main", Color.getHSBColor(hue, saturation, brightness));
             }
         }
 
-        borderColor = oreBase.getBorderColor();
-        bottomBorderColor = oreBase.getBottomBorderColor();
+        Color mainColor = getMainColor();
+        setColor("main_white", Utilities.brightenColorByFactor(mainColor, 0.75f));
+        setColor("main_light", Utilities.brightenColorByFactor(mainColor, 0.85f));
+        setColor("main_dark",  Utilities.nudgeColor(mainColor, 0.15f, 0f, 0f));
     }
 }

@@ -61,7 +61,7 @@ public class FallingOreBlock extends FallingFortunaBlock implements IFortunaReci
         addRequiredTint(base.getBorderColor().getRGB());
 
         addOverlayTexture("overlay", materialOreOverlay.getTexture(), 2);
-        addRequiredTint(material.getColor().getRGB());
+        addRequiredTint(material.getMainColor().getRGB());
 
         if (materialOreOverlay.hasSecondary() && materialOreOverlay.hasTertiary())
         {
@@ -73,7 +73,7 @@ public class FallingOreBlock extends FallingFortunaBlock implements IFortunaReci
         else if (materialOreOverlay.hasSecondary())
         {
             addOverlayTexture("overlaytransition", materialOreOverlay.getSecondary(), 3);
-            Color color = Utilities.lerpColor(material.getColor(), base.getBottomBorderColor(), 0.2f);
+            Color color = Utilities.lerpColor(material.getMainColor(), base.getBottomBorderColor(), 0.2f);
             float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
             color = Color.getHSBColor(hsb[0], hsb[1] * 0.2f, 1f);
             addRequiredTint(color.getRGB());

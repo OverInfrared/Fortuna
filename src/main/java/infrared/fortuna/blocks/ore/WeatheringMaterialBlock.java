@@ -40,7 +40,7 @@ public class WeatheringMaterialBlock extends FortunaBlock implements WeatheringC
             case UNAFFECTED -> {
                 addRequiredTexture("particle",blockTexture);
                 addOverlayTexture("overlay", blockTexture, 0);
-                addRequiredTint(material.getColor().getRGB());
+                addRequiredTint(material.getMainColor().getRGB());
             }
             case EXPOSED -> {
                 String aloneName = blockTexture.substring(0, "_block".length());

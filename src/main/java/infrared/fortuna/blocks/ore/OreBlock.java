@@ -62,7 +62,7 @@ public class OreBlock extends FortunaBlock implements IFortunaRecipe
         addRequiredTint(base.getBorderColor().getRGB());
 
         addOverlayTexture("overlay", materialOreOverlay.getTexture(), 2);
-        addRequiredTint(material.getColor().getRGB());
+        addRequiredTint(material.getMainColor().getRGB());
 
         if (materialOreOverlay.hasSecondary() && materialOreOverlay.hasTertiary())
         {
@@ -74,7 +74,7 @@ public class OreBlock extends FortunaBlock implements IFortunaRecipe
         else if (materialOreOverlay.hasSecondary())
         {
             addOverlayTexture("overlaytransition", materialOreOverlay.getSecondary(), 3);
-            Color color = Utilities.lerpColor(material.getColor(), base.getBottomBorderColor(), 0.2f);
+            Color color = Utilities.lerpColor(material.getMainColor(), base.getBottomBorderColor(), 0.2f);
             float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
             color = Color.getHSBColor(hsb[0], hsb[1] * 0.3f, hsb[2]);
             addRequiredTint(color.getRGB());

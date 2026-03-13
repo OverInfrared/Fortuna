@@ -39,7 +39,7 @@ public class RawMaterialBlock extends FortunaBlock implements IFortunaRecipe
             addOverlayTexture("overlaytransition", blockTexture + "_transition", 2);
         }
 
-        addRequiredTint(fortunaProps.material().getColor().getRGB());
+        addRequiredTint(fortunaProps.material().getMainColor().getRGB());
         addRequiredTint(fortunaProps.material().getSecondaryColor().getRGB());
         addRequiredTint(fortunaProps.material().getTransitionColor(0.5f, 0.5f, 1f).getRGB());
     }

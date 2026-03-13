@@ -26,7 +26,7 @@ public class RawItem extends FortunaItem implements IFortunaRecipe
         MaterialOreRaw rawOre = material.getMaterialType();
 
         addRequiredTexture(rawOre.isOxidizable() ? rawOre.getTexture() + "_base" : rawOre.getTexture());
-        addRequiredTint(material.getColor().getRGB());
+        addRequiredTint(material.getMainColor().getRGB());
 
         if (rawOre.isOxidizable())
         {

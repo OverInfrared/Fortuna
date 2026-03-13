@@ -33,7 +33,7 @@ public abstract class FallingFortunaBlock extends ColoredFallingBlock implements
     protected IntProvider xpRange;
 
     public FallingFortunaBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties) {
-        super(dynamicProperties.material().getColorRGBA(), properties.setId(dynamicProperties.resourceKey()));
+        super(dynamicProperties.material().getMainColorRGBA(), properties.setId(dynamicProperties.resourceKey()));
         this.dynamicProperties = dynamicProperties;
     }
 
