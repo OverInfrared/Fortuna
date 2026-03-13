@@ -1,10 +1,12 @@
 package infrared.fortuna.materials;
 
 import infrared.fortuna.Utilities;
+import infrared.fortuna.enums.FortunaArmorType;
 import infrared.fortuna.enums.MaterialType;
 import infrared.fortuna.enums.MiningLevel;
 import infrared.fortuna.enums.ToolType;
 import infrared.fortuna.enums.ore.*;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
@@ -15,9 +17,11 @@ import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.item.equipment.ArmorMaterial;
 import net.minecraft.world.item.equipment.ArmorMaterials;
 import net.minecraft.world.item.equipment.ArmorType;
+import net.minecraft.world.item.equipment.EquipmentAssets;
 import net.minecraft.world.level.block.Block;
 
 import java.awt.*;
+import java.util.Map;
 
 public class OreMaterial extends Material
 {
@@ -85,7 +89,8 @@ public class OreMaterial extends Material
         toolVariant = rng.nextInt(ToolType.getVariantCount());
 
         makeArmor = true;
-        armorMaterial =
+        armorMaterial = chooseArmorMaterial();
+        armorVariant = rng.nextInt(FortunaArmorType.getVariantCount());
 
         name = chooseName();
 
@@ -117,7 +122,9 @@ public class OreMaterial extends Material
     public ToolMaterial getToolMaterial()       { return toolMaterial; }
     public int getToolVariant()                 { return toolVariant; }
 
-    public boolean getHasArmor()
+    public boolean getHasArmor()                { return makeArmor; }
+    public ArmorMaterial getArmorMaterial()     { return armorMaterial; }
+    public int getArmorVariant()                { return armorVariant; }
 
     // =========================================================================
     // Registry name helpers
@@ -341,7 +348,7 @@ public class OreMaterial extends Material
     }
 
     // =========================================================================
-    // Tool properties
+    // Armor properties
     // =========================================================================
 
     private ArmorMaterial chooseArmorMaterial()
@@ -351,20 +358,18 @@ public class OreMaterial extends Material
 
         int durabilityMultiplier = switch (miningLevel)
         {
-            case Stone    -> 8 + rng.nextInt(6);       // 8 - 13
-            case Iron     -> 12 + rng.nextInt(8);      // 12 - 19
-            case Diamond  -> 25 + rng.nextInt(15);     // 25 - 39
-            case Netherite -> 30 + rng.nextInt(15);    // 30 - 44
-            default       -> 4 + rng.nextInt(4);       // 4 - 7
+            case Iron      -> 12 + rng.nextInt(8);      // 12 - 19
+            case Diamond   -> 25 + rng.nextInt(15);     // 25 - 39
+            case Netherite -> 30 + rng.nextInt(15);     // 30 - 44
+            default        -> 4 + rng.nextInt(4);       // 4 - 7
         };
 
         int baseDefense = switch (miningLevel)
         {
-            case Stone    -> 1;
-            case Iron     -> 2;
-            case Diamond  -> 3;
+            case Iron      -> 2;
+            case Diamond   -> 3;
             case Netherite -> 3;
-            default       -> 1;
+            default        -> 1;
         };
 
         Map<ArmorType, Integer> defense = ArmorMaterials.makeDefense(
@@ -377,35 +382,33 @@ public class OreMaterial extends Material
 
         int enchantmentValue = switch (miningLevel)
         {
-            case Stone    -> 3 + rng.nextInt(8);
-            case Iron     -> 8 + rng.nextInt(10);
-            case Diamond  -> 6 + rng.nextInt(10);
+            case Iron      -> 8 + rng.nextInt(10);
+            case Diamond   -> 6 + rng.nextInt(10);
             case Netherite -> 10 + rng.nextInt(10);
-            default       -> 10 + rng.nextInt(10);
+            default        -> 10 + rng.nextInt(10);
         };
 
         float toughness = switch (miningLevel)
         {
-            case Diamond  -> 1.0f + rng.nextFloat() * 2.0f;    // 1.0 - 3.0
-            case Netherite -> 2.0f + rng.nextFloat() * 2.0f;   // 2.0 - 4.0
-            default       -> 0.0f;
+            case Diamond   -> 1.0f + rng.nextFloat() * 2.0f;
+            case Netherite -> 2.0f + rng.nextFloat() * 2.0f;
+            default        -> 0.0f;
         };
 
         float knockbackResistance = switch (miningLevel)
         {
-            case Netherite -> 0.05f + rng.nextFloat() * 0.1f;  // 0.05 - 0.15
-            case Diamond  -> rng.nextFloat() < 0.3f ? 0.05f : 0.0f;
-            default       -> 0.0f;
+            case Netherite -> 0.05f + rng.nextFloat() * 0.1f;
+            case Diamond   -> rng.nextFloat() < 0.3f ? 0.05f : 0.0f;
+            default        -> 0.0f;
         };
 
         // TODO: custom repair tag and equipment asset for dynamic armor
         TagKey<Item> repairItems = switch (miningLevel)
         {
-            case Stone    -> ItemTags.REPAIRS_IRON_ARMOR;
-            case Iron     -> ItemTags.REPAIRS_IRON_ARMOR;
-            case Diamond  -> ItemTags.REPAIRS_DIAMOND_ARMOR;
+            case Iron      -> ItemTags.REPAIRS_IRON_ARMOR;
+            case Diamond   -> ItemTags.REPAIRS_DIAMOND_ARMOR;
             case Netherite -> ItemTags.REPAIRS_NETHERITE_ARMOR;
-            default       -> ItemTags.REPAIRS_LEATHER_ARMOR;
+            default        -> ItemTags.REPAIRS_LEATHER_ARMOR;
         };
 
         return new ArmorMaterial(
@@ -416,7 +419,7 @@ public class OreMaterial extends Material
                 toughness,
                 knockbackResistance,
                 repairItems,
-                EquipmentAssets.IRON  // placeholder — need to figure out dynamic equipment assets
+                EquipmentAssets.IRON  // placeholder
         );
     }
 
