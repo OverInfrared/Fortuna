@@ -8,6 +8,7 @@ import net.minecraft.world.item.Item;
 import org.jspecify.annotations.Nullable;
 
 import java.awt.*;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Random;
 import java.util.TreeMap;
@@ -81,17 +82,22 @@ public class Utilities
 
     public static @Nullable IFortunaBlock findBlock(String registryName)
     {
-        for (IFortunaBlock block : ModBlocks.getRegisteredBlocks())
-            if (block.getRegistryName().equals(registryName))
-                return block;
+        Map<String, IFortunaBlock> blocks = ModBlocks.getRegisteredBlocks();
+        if (blocks.containsKey(registryName))
+            return blocks.get(registryName);
         return null;
     }
 
     public static @Nullable FortunaItem findItem(String registryName)
     {
-        for (Item item : ModItems.getRegisteredItem())
-            if (item instanceof FortunaItem fortunaItem && fortunaItem.getRegistryName().equals(registryName))
+        Map<String, Item> items = ModItems.getRegisteredItem();
+        if (items.containsKey(registryName))
+        {
+            Item item = items.get(registryName);
+            if (item instanceof FortunaItem fortunaItem)
                 return fortunaItem;
+        }
+
         return null;
     }
 

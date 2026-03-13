@@ -1,4 +1,4 @@
-package infrared.fortuna.resources.enums.ore;
+package infrared.fortuna.enums.ore;
 
 public enum MaterialOreIngot
 {

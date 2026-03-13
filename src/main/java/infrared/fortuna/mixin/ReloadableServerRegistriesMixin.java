@@ -1,6 +1,6 @@
 package infrared.fortuna.mixin;
 
-import infrared.fortuna.resources.FortunaDataPack;
+import infrared.fortuna.data.FortunaDataPack;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.server.ReloadableServerRegistries;

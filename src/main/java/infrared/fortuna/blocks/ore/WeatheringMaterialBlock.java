@@ -1,17 +1,25 @@
 package infrared.fortuna.blocks.ore;
 
+import com.google.gson.JsonObject;
+import infrared.fortuna.Utilities;
 import infrared.fortuna.blocks.FortunaBlock;
-import infrared.fortuna.resources.DynamicProperties;
-import infrared.fortuna.resources.enums.ore.MaterialOreBlock;
-import infrared.fortuna.resources.materials.OreMaterial;
+import infrared.fortuna.DynamicProperties;
+import infrared.fortuna.enums.ore.MaterialOreBlock;
+import infrared.fortuna.materials.OreMaterial;
+import infrared.fortuna.recipes.FortunaRecipeProvider;
+import infrared.fortuna.recipes.IFortunaRecipe;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class WeatheringMaterialBlock extends FortunaBlock implements WeatheringCopper
+import java.util.*;
+
+public class WeatheringMaterialBlock extends FortunaBlock implements WeatheringCopper, IFortunaRecipe
 {
     private final WeatherState weatherState;
 
@@ -95,5 +103,48 @@ public class WeatheringMaterialBlock extends FortunaBlock implements WeatheringC
                 level.setBlockAndUpdate(pos, nextBlock.withPropertiesOf(state));
             }
         });
+    }
+
+    @Override
+    public Map<String, JsonObject> getRecipes(HolderLookup.Provider registries)
+    {
+        if (weatherState != WeatherState.UNAFFECTED)
+            return new HashMap<>();
+
+        FortunaRecipeProvider helper = new FortunaRecipeProvider(registries);
+
+        Item ingot = Utilities.findItem(getDynamicProperties().material().getRefinedRegistryName());
+        if (ingot == null)
+            return new HashMap<>();
+
+        Item blockItem = this.asItem();
+
+        Map<String, JsonObject> recipes = new LinkedHashMap<>();
+
+        // 9 ingots -> material block, excluding oxidized waxed blocks
+        if (!getRegistryName().contains("waxed"))
+            recipes.put(getRegistryName(),
+                    helper.shapedNineToBlock(blockItem, ingot));
+
+        // material block -> 9 ingots
+        recipes.put(getRegistryName() + "_unpack",
+                helper.shapelessNineFromBlock(ingot, blockItem));
+
+        return recipes;
+    }
+
+    @Override
+    public Set<String> getRecipeNames()
+    {
+        if (weatherState != WeatherState.UNAFFECTED)
+            return Collections.emptySet();
+
+        Set<String> recipes = new HashSet<>();
+        recipes.add(getRegistryName() + "_unpack");
+
+        if (!getRegistryName().contains("waxed"))
+            recipes.add(getRegistryName());
+
+        return recipes;
     }
 }

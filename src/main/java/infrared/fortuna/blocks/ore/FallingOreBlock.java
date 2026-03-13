@@ -6,10 +6,12 @@ import infrared.fortuna.Fortuna;
 import infrared.fortuna.Utilities;
 import infrared.fortuna.blocks.FallingFortunaBlock;
 import infrared.fortuna.blocks.FortunaBlockLootProvider;
-import infrared.fortuna.resources.DynamicProperties;
-import infrared.fortuna.resources.enums.ore.MaterialOreBase;
-import infrared.fortuna.resources.enums.ore.MaterialOreOverlay;
-import infrared.fortuna.resources.materials.OreMaterial;
+import infrared.fortuna.DynamicProperties;
+import infrared.fortuna.enums.ore.MaterialOreBase;
+import infrared.fortuna.enums.ore.MaterialOreOverlay;
+import infrared.fortuna.materials.OreMaterial;
+import infrared.fortuna.recipes.FortunaRecipeProvider;
+import infrared.fortuna.recipes.IFortunaRecipe;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -23,8 +25,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootTable;
 
 import java.awt.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
-public class FallingOreBlock extends FallingFortunaBlock
+public class FallingOreBlock extends FallingFortunaBlock implements IFortunaRecipe
 {
     public FallingOreBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties)
     {
@@ -99,5 +105,36 @@ public class FallingOreBlock extends FallingFortunaBlock
                 .encodeStart(registries.createSerializationContext(JsonOps.INSTANCE), table)
                 .getOrThrow()
                 .getAsJsonObject();
+    }
+
+    @Override
+    public Map<String, JsonObject> getRecipes(HolderLookup.Provider registries)
+    {
+        FortunaRecipeProvider helper = new FortunaRecipeProvider(registries);
+
+        Item ingot = Utilities.findItem(dynamicProperties.material().getRefinedRegistryName());
+        if (ingot == null)
+            return new HashMap<>();
+
+        Item oreItem = this.asItem();
+
+        Map<String, JsonObject> recipes = new LinkedHashMap<>();
+
+        recipes.put(getRegistryName() + "_smelting",
+                helper.smelting(oreItem, ingot, 0.7f, 200));
+
+        recipes.put(getRegistryName() + "_blasting",
+                helper.blasting(oreItem, ingot, 0.7f, 100));
+
+        return recipes;
+    }
+
+    @Override
+    public Set<String> getRecipeNames()
+    {
+        return Set.of(
+                getRegistryName() + "_smelting",
+                getRegistryName() + "_blasting"
+        );
     }
 }

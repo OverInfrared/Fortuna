@@ -1,15 +1,16 @@
-package infrared.fortuna.resources;
+package infrared.fortuna.data;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.Utilities;
+import infrared.fortuna.blocks.FortunaBlock;
 import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.blocks.ModBlocks;
 import infrared.fortuna.items.FortunaItem;
 import infrared.fortuna.items.ModItems;
 import infrared.fortuna.recipes.IFortunaRecipe;
-import infrared.fortuna.resources.enums.MiningLevel;
+import infrared.fortuna.enums.MiningLevel;
 import net.fabricmc.fabric.api.resource.v1.pack.ModPackResources;
 import net.fabricmc.fabric.impl.resource.pack.ModResourcePackCreator;
 import net.fabricmc.loader.api.FabricLoader;
@@ -127,18 +128,21 @@ public class FortunaDataPack implements PackResources, ModPackResources
         if (!namespace.equals(Fortuna.MOD_ID))
             return;
 
+        Map<String, IFortunaBlock> blocks = ModBlocks.getRegisteredBlocks();
+        Map<String, Item>          items  = ModItems.getRegisteredItem();
+
         if (prefix.contains("loot_table"))
-            for (IFortunaBlock block : ModBlocks.getRegisteredBlocks())
+            for (IFortunaBlock block : blocks.values())
                 emitData(resourceOutput, prefix, "loot_table/blocks/" + block.getRegistryName() + ".json", namespace);
 
         if (prefix.contains("recipe"))
         {
-            for (IFortunaBlock block : ModBlocks.getRegisteredBlocks())
+            for (IFortunaBlock block : blocks.values())
                 if (block instanceof IFortunaRecipe recipeSource)
                     for (String name : recipeSource.getRecipeNames())
                         emitData(resourceOutput, prefix, "recipe/" + name + ".json", namespace);
 
-            for (Item item : ModItems.getRegisteredItem())
+            for (Item item : items.values())
                 if (item instanceof FortunaItem fortunaItem &&
                     fortunaItem instanceof IFortunaRecipe recipeSource)
                         for (String name : recipeSource.getRecipeNames())
@@ -178,7 +182,8 @@ public class FortunaDataPack implements PackResources, ModPackResources
         String path = prefix + entry;
 
         if (prefix.startsWith("tags/block/"))
-            return switch (path) {
+            return switch (path)
+            {
                 case "tags/block/mineable/pickaxe.json"   -> generateToolTag(BlockTags.MINEABLE_WITH_PICKAXE);
                 case "tags/block/mineable/axe.json"       -> generateToolTag(BlockTags.MINEABLE_WITH_AXE);
                 case "tags/block/mineable/shovel.json"    -> generateToolTag(BlockTags.MINEABLE_WITH_SHOVEL);
@@ -191,38 +196,42 @@ public class FortunaDataPack implements PackResources, ModPackResources
         if (prefix.startsWith("loot_table/blocks"))
         {
             String blockName = entry.replace(".json", "");
-            IFortunaBlock block = Utilities.findBlock(blockName);
+            IFortunaBlock block = ModBlocks.getRegisteredBlocks().get(blockName);
             if (block == null) return null;
             return block.getLoot(registryLookup).toString();
         }
 
         if (prefix.startsWith("recipe/"))
         {
-            // Dodo speed up lookup by making registered blocks and items a map with a registry name for faster lookup. Because this is bad.
             String recipeName = entry.replace(".json", "");
-            for (IFortunaBlock block : ModBlocks.getRegisteredBlocks())
-            {
-                if (block instanceof IFortunaRecipe recipeSource)
-                {
-                    Map<String, JsonObject> recipes = recipeSource.getRecipes(registryLookup);
-                    JsonObject json = recipes.get(recipeName);
-                    if (json != null)
-                        return json.toString();
-                }
-            }
+            return resolveRecipe(recipeName);
+        }
 
-            for (Item item : ModItems.getRegisteredItem())
+        return null;
+    }
+
+    private @Nullable String resolveRecipe(String recipeName)
+    {
+        for (IFortunaBlock block : ModBlocks.getRegisteredBlocks().values())
+        {
+            if (block instanceof IFortunaRecipe recipeSource &&
+                    recipeSource.getRecipeNames().contains(recipeName))
             {
-                if (item instanceof FortunaItem fortunaItem &&
-                    fortunaItem instanceof IFortunaRecipe recipeSource)
-                {
-                    Map<String, JsonObject> recipes = recipeSource.getRecipes(registryLookup);
-                    JsonObject json = recipes.get(recipeName);
-                    if (json != null)
-                        return json.toString();
-                }
+                JsonObject json = recipeSource.getRecipes(registryLookup).get(recipeName);
+                if (json != null)
+                    return json.toString();
             }
-            return null;
+        }
+
+        for (Item item : ModItems.getRegisteredItem().values())
+        {
+            if (item instanceof IFortunaRecipe recipeSource &&
+                    recipeSource.getRecipeNames().contains(recipeName))
+            {
+                JsonObject json = recipeSource.getRecipes(registryLookup).get(recipeName);
+                if (json != null)
+                    return json.toString();
+            }
         }
 
         return null;
@@ -231,7 +240,7 @@ public class FortunaDataPack implements PackResources, ModPackResources
     private String generateToolTag(TagKey<Block> toolTag)
     {
         JsonArray values = new JsonArray();
-        for (IFortunaBlock block : ModBlocks.getRegisteredBlocks())
+        for (IFortunaBlock block : ModBlocks.getRegisteredBlocks().values())
             if (block.getRequiredTool().equals(toolTag))
                 values.add("%s:%s".formatted(Fortuna.MOD_ID, block.getRegistryName()));
 
@@ -244,7 +253,7 @@ public class FortunaDataPack implements PackResources, ModPackResources
     private String generateMiningLevelTag(MiningLevel requiredLevel)
     {
         JsonArray values = new JsonArray();
-        for (IFortunaBlock block : ModBlocks.getRegisteredBlocks())
+        for (IFortunaBlock block : ModBlocks.getRegisteredBlocks().values())
             if (block.getMiningLevel().ordinal() == requiredLevel.ordinal())
                 values.add("%s:%s".formatted(Fortuna.MOD_ID, block.getRegistryName()));
 

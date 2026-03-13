@@ -1,4 +1,4 @@
-package infrared.fortuna.resources.materials;
+package infrared.fortuna.materials;
 
 import infrared.fortuna.Utilities;
 import infrared.fortuna.blocks.FortunaBlock;

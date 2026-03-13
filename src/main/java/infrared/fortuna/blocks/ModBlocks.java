@@ -4,11 +4,11 @@ import infrared.fortuna.Fortuna;
 import infrared.fortuna.Utilities;
 import infrared.fortuna.blocks.ore.*;
 import infrared.fortuna.items.ModItems;
-import infrared.fortuna.resources.DynamicProperties;
-import infrared.fortuna.resources.enums.MaterialType;
-import infrared.fortuna.resources.enums.ore.MaterialOreBase;
-import infrared.fortuna.resources.enums.ore.MaterialOreOverlay;
-import infrared.fortuna.resources.materials.OreMaterial;
+import infrared.fortuna.DynamicProperties;
+import infrared.fortuna.enums.MaterialType;
+import infrared.fortuna.enums.ore.MaterialOreBase;
+import infrared.fortuna.enums.ore.MaterialOreOverlay;
+import infrared.fortuna.materials.OreMaterial;
 import net.fabricmc.fabric.api.registry.OxidizableBlocksRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -24,21 +24,20 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ModBlocks
 {
-    private static final List<IFortunaBlock> registeredBlocks = new ArrayList<>();
+    // Map of dynamic registry name to fortuna block.
+    private static final Map<String, IFortunaBlock> registeredBlocks = new LinkedHashMap<>();
 
     private static void registerBlock(IFortunaBlock fortunaBlock)
     {
         ModItems.registerBlock(fortunaBlock);
         Registry.register(BuiltInRegistries.BLOCK, fortunaBlock.getResourceKey(), (Block) fortunaBlock);
-        registeredBlocks.add(fortunaBlock);
+        registeredBlocks.put(fortunaBlock.getDynamicProperties().registryName(), fortunaBlock);
     }
 
     private static void registerBlocks(List<IFortunaBlock> fortunaBlocks)
@@ -126,7 +125,10 @@ public class ModBlocks
         String displayPrefix = Arrays.stream(prefix.split("_"))
                 .filter(s -> !s.isEmpty())
                 .map(Utilities::capitalize)
-                .collect(Collectors.joining(" ")) + " ";
+                .collect(Collectors.joining(" "));
+
+        if (!displayPrefix.isEmpty())
+            displayPrefix += " ";
 
         Component displayName = Component.literal("%sBlock of %s".formatted(displayPrefix, Utilities.capitalize(material.getName())));
 
@@ -136,7 +138,7 @@ public class ModBlocks
         if (oxidizable)
             return new WeatheringMaterialBlock(blockDynamicProperties, blockProperties, weatherState);
         else
-            return new MaterialBlock(blockDynamicProperties, blockProperties);
+            return new MaterialBlock(blockDynamicProperties, blockProperties, weatherState);
     }
 
     private static List<IFortunaBlock> createWeatheredBlocks(OreMaterial material)
@@ -156,7 +158,7 @@ public class ModBlocks
         for (int i = 0; i < 4; i++)
         {
             weatheringBlocks[i] = createMaterialBlock(material, true,  prefixes[i],      states[i]);
-            waxedBlocks[i]      = createMaterialBlock(material, false, waxedPrefixes[i], WeatheringCopper.WeatherState.UNAFFECTED);
+            waxedBlocks[i]      = createMaterialBlock(material, false, waxedPrefixes[i], states[i]);
         }
 
         OxidizableBlocksRegistry.registerOxidizableBlockPair((Block) weatheringBlocks[0], (Block) weatheringBlocks[1]);
@@ -172,7 +174,7 @@ public class ModBlocks
                 .collect(Collectors.toList());
     }
 
-    public static List<IFortunaBlock> getRegisteredBlocks()
+    public static Map<String, IFortunaBlock> getRegisteredBlocks()
     {
         return registeredBlocks;
     }

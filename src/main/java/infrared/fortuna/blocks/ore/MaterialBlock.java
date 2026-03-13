@@ -5,42 +5,29 @@ import infrared.fortuna.Utilities;
 import infrared.fortuna.blocks.FortunaBlock;
 import infrared.fortuna.recipes.FortunaRecipeProvider;
 import infrared.fortuna.recipes.IFortunaRecipe;
-import infrared.fortuna.resources.DynamicProperties;
-import infrared.fortuna.resources.enums.ore.MaterialOreBlock;
-import infrared.fortuna.resources.materials.OreMaterial;
+import infrared.fortuna.DynamicProperties;
+import infrared.fortuna.enums.ore.MaterialOreBlock;
+import infrared.fortuna.materials.OreMaterial;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.WeatheringCopper;
+import net.minecraft.world.level.block.WeatheringCopper.WeatherState;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class MaterialBlock extends FortunaBlock implements IFortunaRecipe
 {
+    private final WeatherState weatherState;
+
     public MaterialBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties)
     {
-        super(dynamicProperties, properties);
-
-        OreMaterial material = dynamicProperties.material();
-
-        requiredMiningLevel = material.getMiningLevel();
-
-        MaterialOreBlock block = material.getMaterialBlock();
-
-        String blockTexture = block.getTexture();
-
-        addRequiredTexture("particle",blockTexture);
-        addOverlayTexture("overlay", blockTexture, 0);
-
-        addRequiredTint(material.getColor().getRGB());
+        this(dynamicProperties, properties, WeatherState.UNAFFECTED);
     }
 
-    public MaterialBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, WeatheringCopper.WeatherState weatherState)
+    public MaterialBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, WeatherState weatherState)
     {
         super(dynamicProperties, properties);
+        this.weatherState = weatherState;
 
         OreMaterial material = dynamicProperties.material();
 
@@ -50,7 +37,7 @@ public class MaterialBlock extends FortunaBlock implements IFortunaRecipe
         String blockTexture = block.getTexture();
         String aloneName = blockTexture.replace("_block", "");
 
-        if (weatherState == null || weatherState == WeatheringCopper.WeatherState.UNAFFECTED) {
+        if (weatherState == null || weatherState == WeatherState.UNAFFECTED) {
             addRequiredTexture("particle", blockTexture);
             addOverlayTexture("overlay", blockTexture, 0);
             addRequiredTint(material.getColor().getRGB());
@@ -60,7 +47,7 @@ public class MaterialBlock extends FortunaBlock implements IFortunaRecipe
         }
     }
 
-    private void setupWeatheredTextures(String blockTexture, String aloneName, WeatheringCopper.WeatherState weatherState)
+    private void setupWeatheredTextures(String blockTexture, String aloneName, WeatherState weatherState)
     {
         switch (weatherState) {
             case EXPOSED -> {
@@ -92,6 +79,9 @@ public class MaterialBlock extends FortunaBlock implements IFortunaRecipe
     @Override
     public Map<String, JsonObject> getRecipes(HolderLookup.Provider registries)
     {
+        if (weatherState != WeatherState.UNAFFECTED)
+            return new HashMap<>();
+
         FortunaRecipeProvider helper = new FortunaRecipeProvider(registries);
 
         Item ingot = Utilities.findItem(getDynamicProperties().material().getRefinedRegistryName());
@@ -102,9 +92,10 @@ public class MaterialBlock extends FortunaBlock implements IFortunaRecipe
 
         Map<String, JsonObject> recipes = new LinkedHashMap<>();
 
-        // 9 ingots -> material block
-        recipes.put(getRegistryName(),
-                helper.shapedNineToBlock(blockItem, ingot));
+        // 9 ingots -> material block, excluding oxidized waxed blocks
+        if (!getRegistryName().contains("waxed"))
+            recipes.put(getRegistryName(),
+                    helper.shapedNineToBlock(blockItem, ingot));
 
         // material block -> 9 ingots
         recipes.put(getRegistryName() + "_unpack",
@@ -116,9 +107,15 @@ public class MaterialBlock extends FortunaBlock implements IFortunaRecipe
     @Override
     public Set<String> getRecipeNames()
     {
-        return Set.of(
-                getRegistryName(),
-                getRegistryName() + "_unpack"
-        );
+        if (weatherState != WeatherState.UNAFFECTED)
+            return Collections.emptySet();
+
+        Set<String> recipes = new HashSet<>();
+        recipes.add(getRegistryName() + "_unpack");
+
+        if (!getRegistryName().contains("waxed"))
+            recipes.add(getRegistryName());
+
+        return recipes;
     }
 }

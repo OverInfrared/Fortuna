@@ -1,12 +1,10 @@
 package infrared.fortuna;
 
 import infrared.fortuna.blocks.IFortunaBlock;
-import infrared.fortuna.resources.materials.Material;
+import infrared.fortuna.materials.Material;
 import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry;
 import net.minecraft.client.color.block.BlockColor;
 import net.minecraft.world.level.block.Block;
-
-import java.awt.*;
 
 public class FortunaColorProvider
 {

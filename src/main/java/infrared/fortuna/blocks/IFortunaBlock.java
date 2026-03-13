@@ -5,9 +5,9 @@ import com.google.gson.JsonObject;
 import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
 import com.mojang.serialization.JsonOps;
 import infrared.fortuna.Fortuna;
-import infrared.fortuna.resources.DynamicProperties;
-import infrared.fortuna.resources.enums.MiningLevel;
-import infrared.fortuna.resources.materials.OreMaterial;
+import infrared.fortuna.DynamicProperties;
+import infrared.fortuna.enums.MiningLevel;
+import infrared.fortuna.materials.OreMaterial;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -17,12 +17,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraft.world.level.storage.loot.entries.LootItem;
-import net.minecraft.world.level.storage.loot.functions.ApplyExplosionDecay;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
-import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 
 import java.util.List;
 

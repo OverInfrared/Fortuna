@@ -1,12 +1,13 @@
-package infrared.fortuna.items;
+package infrared.fortuna.items.ore;
 
 import com.google.gson.JsonObject;
 import infrared.fortuna.Utilities;
+import infrared.fortuna.items.FortunaItem;
 import infrared.fortuna.recipes.FortunaRecipeProvider;
 import infrared.fortuna.recipes.IFortunaRecipe;
-import infrared.fortuna.resources.DynamicProperties;
-import infrared.fortuna.resources.enums.ore.MaterialOreRaw;
-import infrared.fortuna.resources.materials.OreMaterial;
+import infrared.fortuna.DynamicProperties;
+import infrared.fortuna.enums.ore.MaterialOreRaw;
+import infrared.fortuna.materials.OreMaterial;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.world.item.Item;
 

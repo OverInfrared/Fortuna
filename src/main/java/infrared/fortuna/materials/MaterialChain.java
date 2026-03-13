@@ -1,7 +1,7 @@
-package infrared.fortuna.resources.materials;
+package infrared.fortuna.materials;
 
 import infrared.fortuna.Utilities.WeightedRandom;
-import infrared.fortuna.resources.enums.MiningLevel;
+import infrared.fortuna.enums.MiningLevel;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -19,7 +19,7 @@ public class MaterialChain
         Random chainRNG = new Random(seed);
 
         WeightedRandom<Integer> countRNG = new WeightedRandom<Integer>(chainRNG.nextLong())
-                .add(20, 1).add(40, 2).add(15, 3).add(7, 4).add(3, 5);
+                .add(10, 1).add(50, 2).add(30, 3).add(7, 4).add(3, 5);
 
         WeightedRandom<Integer> fuelsRNG = new WeightedRandom<Integer>(chainRNG.nextLong())
                 .add(10, 1).add(50, 2).add(30, 3).add(3, 4).add(1, 5);

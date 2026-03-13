@@ -5,10 +5,8 @@ import infrared.fortuna.Fortuna;
 import infrared.fortuna.Utilities;
 import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.blocks.ModBlocks;
-import infrared.fortuna.items.FortunaBlockItem;
 import infrared.fortuna.items.FortunaItem;
 import infrared.fortuna.items.ModItems;
-import infrared.fortuna.resources.materials.Material;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.*;
@@ -97,14 +95,14 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     {
         if (packType != PackType.CLIENT_RESOURCES) return;
 
-        for (IFortunaBlock block : ModBlocks.getRegisteredBlocks())
+        for (IFortunaBlock block : ModBlocks.getRegisteredBlocks().values())
         {
             emitIfMatch(resourceOutput, prefix, "blockstates/" + block.getRegistryName() + ".json");
             emitIfMatch(resourceOutput, prefix, "models/block/" + block.getRegistryName() + ".json");
             emitIfMatch(resourceOutput, prefix, "items/" + block.getRegistryName() + ".json");
         }
 
-        for (Item item : ModItems.getRegisteredItem())
+        for (Item item : ModItems.getRegisteredItem().values())
         {
             if (!(item instanceof FortunaItem fortunaItem))
                 continue;

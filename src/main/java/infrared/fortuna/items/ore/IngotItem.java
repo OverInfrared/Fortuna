@@ -1,7 +1,8 @@
-package infrared.fortuna.items;
+package infrared.fortuna.items.ore;
 
-import infrared.fortuna.resources.DynamicProperties;
-import infrared.fortuna.resources.materials.OreMaterial;
+import infrared.fortuna.DynamicProperties;
+import infrared.fortuna.items.FortunaItem;
+import infrared.fortuna.materials.OreMaterial;
 import net.minecraft.world.item.Item;
 
 public class IngotItem extends FortunaItem

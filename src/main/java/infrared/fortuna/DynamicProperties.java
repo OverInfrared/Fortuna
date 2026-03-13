@@ -1,6 +1,6 @@
-package infrared.fortuna.resources;
+package infrared.fortuna;
 
-import infrared.fortuna.resources.materials.Material;
+import infrared.fortuna.materials.Material;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 

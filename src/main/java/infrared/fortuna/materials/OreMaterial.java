@@ -1,8 +1,9 @@
-package infrared.fortuna.resources.materials;
+package infrared.fortuna.materials;
 
 import infrared.fortuna.Utilities;
-import infrared.fortuna.resources.enums.*;
-import infrared.fortuna.resources.enums.ore.*;
+import infrared.fortuna.enums.MaterialType;
+import infrared.fortuna.enums.MiningLevel;
+import infrared.fortuna.enums.ore.*;
 import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.util.valueproviders.UniformInt;
 
@@ -176,11 +177,11 @@ public class OreMaterial extends Material
     private MaterialOreOverlay chooseOreOverlay()
     {
         Utilities.WeightedRandom<MaterialOreOverlay> overlayRandom = new Utilities.WeightedRandom<MaterialOreOverlay>(rng.nextLong())
-                .add(10, MaterialOreOverlay.Iron).add(10, MaterialOreOverlay.Diamond).add(10, MaterialOreOverlay.Coal)
-                .add(10, MaterialOreOverlay.Redstone).add(10, MaterialOreOverlay.Emerald).add(10, MaterialOreOverlay.Gold).add(10, MaterialOreOverlay.Lapis);
+                .add(8, MaterialOreOverlay.Iron).add(8, MaterialOreOverlay.Diamond).add(8, MaterialOreOverlay.Coal)
+                .add(8, MaterialOreOverlay.Redstone).add(8, MaterialOreOverlay.Emerald).add(8, MaterialOreOverlay.Gold).add(8, MaterialOreOverlay.Lapis);
 
         if (materialType == MaterialType.Ingot)
-            overlayRandom.add(10, MaterialOreOverlay.Copper);
+            overlayRandom.add(20, MaterialOreOverlay.Copper);
 
         return overlayRandom.next();
     }
@@ -205,8 +206,11 @@ public class OreMaterial extends Material
 
     private MaterialOreGem chooseOreGem()
     {
-        MaterialOreGem[] values = MaterialOreGem.values();
-        return values[rng.nextInt(values.length)];
+        Utilities.WeightedRandom<MaterialOreGem> gemRNG = new Utilities.WeightedRandom<MaterialOreGem>(rng.nextLong())
+                .add(10, MaterialOreGem.Diamond).add(10, MaterialOreGem.Emerald).add(8, MaterialOreGem.Lapis)
+                .add(7, MaterialOreGem.Resin).add(4, MaterialOreGem.Prismarine).add(4, MaterialOreGem.Amethyst);
+
+        return gemRNG.next();
     }
 
     private MaterialOreBlock chooseOreBlock()
@@ -280,7 +284,8 @@ public class OreMaterial extends Material
             "sel", "gal", "nor", "ryn", "val", "tor", "mer", "ash", "bel", "cal",
             "dar", "el", "fal", "gor", "hal", "jor", "kel", "lor", "mor", "nal",
             "or", "pel", "quil", "ran", "sar", "tur", "ul", "vor", "wyn", "xer",
-            "yor", "zen", "br", "cr", "dr", "gr", "kr", "pr", "tr", "vr", "run"
+            "yor", "zen", "br", "cr", "dr", "gr", "kr", "pr", "tr", "vr", "run",
+            "mi", "ar", "la", "fa", "r", "gl",
     };
 
     private static final String[] VOWELS = {
@@ -293,12 +298,12 @@ public class OreMaterial extends Material
 
     private static final String[] INFIX = {
             "r", "l", "n", "m", "th", "sh", "k", "z", "v", "d", "dr", "vr", "ll", "rr",
-            "rn", "lm", "nd", "rk", "zl", "str", "nth", "ph", "x"
+            "rn", "lm", "nd", "rk", "zl", "str", "nth", "ph", "x", "thr"
     };
 
     private static final String[] CORE = {
             "an", "or", "ir", "el", "ar", "en", "ul", "os", "is", "um",
-            "ath", "eth", "orn", "yr", "al", "er", "il", "on", "ur", "ys", "st"
+            "ath", "eth", "orn", "yr", "al", "er", "il", "on", "ur", "ys", "st", "thr"
     };
 
     private static final String[] STONE_END = {
@@ -329,6 +334,14 @@ public class OreMaterial extends Material
         name = name.replace("vvv", "v");
         name = name.replace("xxx", "x");
 
+        // Double vowels can be fun, but make it rarer.
+        String[] doubleVowels = {"aa", "ee", "ii", "oo", "uu"};
+        for (String dv : doubleVowels)
+        {
+            if (name.contains(dv) && rng.nextFloat() < 2f / 3f)
+                name = name.replace(dv, dv.substring(0, 1));
+        }
+
         return name;
     }
 
@@ -354,14 +367,14 @@ public class OreMaterial extends Material
                 ? pick(RARE_PREFIX, rng)
                 : pick(PREFIX, rng);
 
-
-        Utilities.WeightedRandom<Integer> patternRNG = new Utilities.WeightedRandom<Integer>(rng.nextLong()).add(10, 0).add(2, 1).add(7, 2);
+        Utilities.WeightedRandom<Integer> patternRNG = new Utilities.WeightedRandom<Integer>(rng.nextLong()).add(10, 0).add(2, 1).add(7, 2).add(2, 3);
 
         switch (patternRNG.next())
         {
             case 0 -> name = prefix + chooseVowel() + end;
             case 1 -> name = prefix + chooseVowel() + pick(INFIX, rng) + chooseVowel() + end;
-            default -> name = prefix + pick(CORE, rng) + end;
+            case 2 -> name = prefix + pick(CORE, rng) + end;
+            default -> name = chooseVowel() + pick(INFIX, rng) + end;
         }
 
         return cleanupName(name);
@@ -393,7 +406,7 @@ public class OreMaterial extends Material
                 float hue = getHue();
 
                 Utilities.WeightedRandom<Integer> modeRNG = new Utilities.WeightedRandom<Integer>(rng.nextLong())
-                        .add(1, 0).add(2, 1).add(3, 2);
+                        .add(1, 0).add(3, 1).add(3, 2);
 
                 int mode = modeRNG.next();
                 float saturation = switch (mode)
@@ -405,9 +418,9 @@ public class OreMaterial extends Material
 
                 float brightness = switch (mode)
                 {
-                    case 0 -> 0.2f + (float) Math.pow(rng.nextFloat(), 1.5f) * 0.75f;
-                    case 1 -> 0.6f + rng.nextFloat() * 0.4f;
-                    default -> 0.4f + (float) Math.pow(rng.nextFloat(), 1.5f) * 0.6f;
+                    case 0 -> 0.2f + (float) Math.pow(rng.nextFloat(), 1.5f);
+                    case 1 -> 0.6f + Math.max(rng.nextFloat() * 0.5f, 0.4f);
+                    default -> 0.4f + (float) Math.pow(rng.nextFloat(), 1.5f) * 0.8f;
                 };
 
                 mainColor = Color.getHSBColor(hue, saturation, brightness);
@@ -426,7 +439,7 @@ public class OreMaterial extends Material
                         : 0.4f + rng.nextFloat() * 0.5f;             // normal gem range
                 float brightness = rng.nextFloat() < 0.2f
                         ? 0.85f + rng.nextFloat() * 0.15f            // 0.85 - 1.0, extra bright for pale gems
-                        : 0.6f + rng.nextFloat() * 0.35f;
+                        : 0.6f + rng.nextFloat() * 0.4f;
                 mainColor = Color.getHSBColor(hue, saturation, brightness);
             }
         }

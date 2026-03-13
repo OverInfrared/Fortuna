@@ -2,12 +2,10 @@ package infrared.fortuna;
 
 import infrared.fortuna.blocks.ModBlocks;
 import infrared.fortuna.items.ModItems;
-import infrared.fortuna.resources.FortunaDataPack;
-import infrared.fortuna.resources.FortunaResourcePack;
-import infrared.fortuna.resources.materials.Material;
-import infrared.fortuna.resources.materials.MaterialChain;
-import infrared.fortuna.resources.enums.MiningLevel;
-import infrared.fortuna.resources.materials.OreMaterial;
+import infrared.fortuna.materials.Material;
+import infrared.fortuna.materials.MaterialChain;
+import infrared.fortuna.enums.MiningLevel;
+import infrared.fortuna.materials.OreMaterial;
 import net.fabricmc.api.ModInitializer;
 
 import org.slf4j.Logger;
@@ -28,7 +26,7 @@ public class Fortuna implements ModInitializer
 	{
 		// cool seed 321312312
 		// cool copper seed 453294812
-		long seed = 375671235465452312L;
+		long seed = 3756757562312L;
 
 		LOGGER.info("Starting generation for Overworld");
 		initializeOverworld(seed);

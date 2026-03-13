@@ -1,4 +1,4 @@
-package infrared.fortuna.resources.enums;
+package infrared.fortuna.enums;
 
 public enum MaterialType
 {
