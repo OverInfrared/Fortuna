@@ -11,36 +11,31 @@ import java.awt.*;
 
 public class OreMaterial extends Material
 {
-    // The level required to mine the material
+    // === Core identity ===
     private final MiningLevel miningLevel;
-
-    // What the material is
     private final MaterialType materialType;
 
-    // The background base for the ore, i.e. stone, diorite, sand.
+    // === Ore appearance ===
     private final MaterialOreBase oreBase;
-
-    // The ore textures to overlay on the base, i.e. copper, diamond, lapis.
     private final MaterialOreOverlay oreOverlay;
 
-    // If the material supports an ingot, which texture to use.
+    // === Item/block textures ===
     private final MaterialOreIngot oreIngot;
-
-    // If the material supports an ingot, which raw material texture to use.
     private final MaterialOreRaw oreRaw;
-
-    // If the material is a gem, which texture
     private final MaterialOreGem oreGem;
-
-    // Textures for the materials refined block.
     private final MaterialOreBlock materialBlock;
 
+    // === Block properties ===
     private final float materialMineTime;
     private final float materialHardness;
 
+    // === Drop properties ===
     private final IntProvider xpRange;
-
     private final MaterialOreDrops drops;
+
+    // =========================================================================
+    // Constructor
+    // =========================================================================
 
     public OreMaterial(long seed, MiningLevel level)
     {
@@ -48,7 +43,6 @@ public class OreMaterial extends Material
 
         materialType = chooseMaterialRaw(level);
 
-        // Ore generation randomness.
         miningLevel = level;
         oreBase = chooseOreBase();
         oreOverlay = chooseOreOverlay();
@@ -62,7 +56,7 @@ public class OreMaterial extends Material
         materialHardness = chooseHardness();
 
         int minXp = 1 + miningLevel.ordinal();
-        int maxXp = minXp + 1 + rng.nextInt(4); // max is min+1 to min+4
+        int maxXp = minXp + 1 + rng.nextInt(4);
         xpRange = UniformInt.of(minXp, maxXp);
 
         drops = chooseDropCountType();
@@ -72,64 +66,31 @@ public class OreMaterial extends Material
         generateOreColors();
     }
 
-    public MiningLevel getMiningLevel()
-    {
-        return miningLevel;
-    }
+    // =========================================================================
+    // Public getters
+    // =========================================================================
 
-    public MaterialType getType()
-    {
-        return materialType;
-    }
+    public MiningLevel getMiningLevel()         { return miningLevel; }
+    public MaterialType getType()               { return materialType; }
 
-    public MaterialOreBase getBase()
-    {
-        return oreBase;
-    }
+    public MaterialOreBase getBase()            { return oreBase; }
+    public MaterialOreOverlay getOverlay()      { return oreOverlay; }
 
-    public MaterialOreOverlay getOverlay()
-    {
-        return oreOverlay;
-    }
+    public MaterialOreIngot getIngot()          { return oreIngot; }
+    public MaterialOreRaw getMaterialType()     { return oreRaw; }
+    public MaterialOreGem getGem()              { return oreGem; }
+    public MaterialOreBlock getMaterialBlock()  { return materialBlock; }
 
-    public MaterialOreIngot getIngot()
-    {
-        return oreIngot;
-    }
+    public float getMaterialMineTime()          { return materialMineTime; }
+    public float getMaterialHardness()          { return materialHardness; }
 
-    public MaterialOreRaw getMaterialType()
-    {
-        return oreRaw;
-    }
+    public IntProvider getXpRange()             { return xpRange; }
+    public MaterialOreDrops getDropType()       { return drops; }
 
-    public MaterialOreGem getGem()
-    {
-        return oreGem;
-    }
+    // =========================================================================
+    // Registry name helpers
+    // =========================================================================
 
-    public MaterialOreBlock getMaterialBlock()
-    {
-        return materialBlock;
-    }
-
-    public float getMaterialMineTime()
-    {
-        return materialMineTime;
-    }
-
-    public float getMaterialHardness()
-    {
-        return materialHardness;
-    }
-
-    public IntProvider getXpRange()
-    {
-        return xpRange;
-    }
-
-    public MaterialOreDrops getDropType() { return drops; }
-
-    // This is a soft connection and is pretty dangerous, ohh well. I'll fix it when I have to.
     public String getRawRegistryName()
     {
         return materialType == MaterialType.Ingot ? "raw_%s".formatted(name) : name;
@@ -139,6 +100,10 @@ public class OreMaterial extends Material
     {
         return materialType == MaterialType.Ingot ? "%s_ingot".formatted(name) : name;
     }
+
+    // =========================================================================
+    // Material generation
+    // =========================================================================
 
     private MaterialType chooseMaterialRaw(MiningLevel level)
     {
@@ -230,32 +195,13 @@ public class OreMaterial extends Material
             }
             case Special -> {
                 MaterialOreBlock[] values = new MaterialOreBlock[] { MaterialOreBlock.Gold, MaterialOreBlock.Netherite, MaterialOreBlock.Amethyst,
-                                                                     MaterialOreBlock.Diamond, MaterialOreBlock.Amethyst, MaterialOreBlock.Emerald, MaterialOreBlock.Lapis, };
+                        MaterialOreBlock.Diamond, MaterialOreBlock.Amethyst, MaterialOreBlock.Emerald, MaterialOreBlock.Lapis, };
                 yield values[rng.nextInt(values.length)];
             }
             case null, default -> {
                 yield MaterialOreBlock.Lapis;
             }
         };
-    }
-
-    private float chooseMiningTime()
-    {
-        float hardnessAddition = rng.nextFloat() * 3.5f;
-
-        return switch (oreBase) {
-            case Sand, Gravel   -> 0.5f + hardnessAddition;   // 0.5 - 1.0, soft
-            case Stone, Andesite,
-                 Diorite, Granite -> 1.5f + hardnessAddition; // 1.5 - 3.0, normal stone
-            case Tuff            -> 0.5f + hardnessAddition;  // 2.0 - 3.5, slightly harder
-            case Deepslate       -> 3.0f + hardnessAddition;  // 3.0 - 5.0, hard
-            case Netherrack      -> hardnessAddition;         // 1.0 - 2.0, medium
-        };
-    }
-
-    private float chooseHardness()
-    {
-        return 1f + rng.nextFloat() * 5.0f;
     }
 
     private MaterialOreDrops chooseDropCountType()
@@ -278,7 +224,33 @@ public class OreMaterial extends Material
         };
     }
 
-    // Todo replace with more sophisticated naming system.
+    // =========================================================================
+    // Block properties
+    // =========================================================================
+
+    private float chooseMiningTime()
+    {
+        float hardnessAddition = rng.nextFloat() * 3.5f;
+
+        return switch (oreBase) {
+            case Sand, Gravel   -> 0.5f + hardnessAddition;
+            case Stone, Andesite,
+                 Diorite, Granite -> 1.5f + hardnessAddition;
+            case Tuff            -> 0.5f + hardnessAddition;
+            case Deepslate       -> 3.0f + hardnessAddition;
+            case Netherrack      -> hardnessAddition;
+        };
+    }
+
+    private float chooseHardness()
+    {
+        return 1f + rng.nextFloat() * 5.0f;
+    }
+
+    // =========================================================================
+    // Name generation
+    // =========================================================================
+
     private static final String[] PREFIX = {
             "fer", "aur", "vel", "zar", "thal", "kor", "lum", "myr", "dra", "vor",
             "sel", "gal", "nor", "ryn", "val", "tor", "mer", "ash", "bel", "cal",
@@ -334,7 +306,6 @@ public class OreMaterial extends Material
         name = name.replace("vvv", "v");
         name = name.replace("xxx", "x");
 
-        // Double vowels can be fun, but make it rarer.
         String[] doubleVowels = {"aa", "ee", "ii", "oo", "uu"};
         for (String dv : doubleVowels)
         {
@@ -380,9 +351,12 @@ public class OreMaterial extends Material
         return cleanupName(name);
     }
 
+    // =========================================================================
+    // Color generation
+    // =========================================================================
+
     public float getHue()
     {
-        // Distinct base hues spread evenly around the color wheel
         float[] baseHues = {
                 0.0f,   // red
                 0.08f,  // orange
@@ -435,10 +409,10 @@ public class OreMaterial extends Material
             case Gem, Special -> {
                 float hue = getHue();
                 float saturation = rng.nextFloat() < 0.2f
-                        ? 0.05f + rng.nextFloat() * 0.2f             // 0.0 - 0.2, near white/crystal
-                        : 0.4f + rng.nextFloat() * 0.5f;             // normal gem range
+                        ? 0.05f + rng.nextFloat() * 0.2f
+                        : 0.4f + rng.nextFloat() * 0.5f;
                 float brightness = rng.nextFloat() < 0.2f
-                        ? 0.85f + rng.nextFloat() * 0.15f            // 0.85 - 1.0, extra bright for pale gems
+                        ? 0.85f + rng.nextFloat() * 0.15f
                         : 0.6f + rng.nextFloat() * 0.4f;
                 mainColor = Color.getHSBColor(hue, saturation, brightness);
             }
