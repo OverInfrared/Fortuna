@@ -6,6 +6,8 @@ import infrared.fortuna.enums.MaterialType;
 import infrared.fortuna.enums.MiningLevel;
 import infrared.fortuna.enums.DynamicToolType;
 import infrared.fortuna.enums.ore.*;
+import infrared.fortuna.worldgen.OreSpawnEntry;
+import infrared.fortuna.worldgen.SpawnProfile;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -22,6 +24,8 @@ import net.minecraft.world.item.equipment.trim.TrimMaterial;
 import net.minecraft.world.level.block.Block;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class OreMaterial extends Material
@@ -58,6 +62,9 @@ public class OreMaterial extends Material
     private final ArmorMaterial armorMaterial;
     private final int armorVariant;
     private final ResourceKey<TrimMaterial> trimMaterialKey;
+
+    // === Ore generation properties ===
+    private final List<OreSpawnEntry> spawnEntries;
 
     // =========================================================================
     // Constructor
@@ -98,7 +105,35 @@ public class OreMaterial extends Material
         trimMaterialKey = ResourceKey.create(Registries.TRIM_MATERIAL,
                 Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, name));
 
+        spawnEntries = chooseSpawnEntries();
+
         generateOreColors();
+
+        logSpawnEntries();
+    }
+
+    public void logSpawnEntries()
+    {
+        Fortuna.LOGGER.info("=== Ore Generation: {} ({}) ===", name, miningLevel);
+        Fortuna.LOGGER.info("  Base: {}, Type: {}", oreBase, materialType);
+
+        for (int i = 0; i < spawnEntries.size(); i++)
+        {
+            OreSpawnEntry entry = spawnEntries.get(i);
+            String frequency = entry.isRare()
+                    ? "1 in %d chunks".formatted(entry.getRarity())
+                    : "%d per chunk".formatted(entry.getCount());
+
+            Fortuna.LOGGER.info("  [{}] {} | size:{} | {} | y:{} to {} | {}",
+                    i,
+                    entry.getProfile(),
+                    entry.getVeinSize(),
+                    frequency,
+                    entry.getMinHeight(),
+                    entry.getMaxHeight(),
+                    entry.usesTriangleDistribution() ? "triangle" : "uniform"
+            );
+        }
     }
 
     // =========================================================================
@@ -131,6 +166,8 @@ public class OreMaterial extends Material
     public int getArmorVariant()                          { return armorVariant; }
     public ResourceKey<TrimMaterial> getTrimMaterialKey() { return trimMaterialKey; }
 
+    public List<OreSpawnEntry> getSpawnEntries() { return spawnEntries; }
+
     // =========================================================================
     // Registry name helpers
     // =========================================================================
@@ -153,6 +190,12 @@ public class OreMaterial extends Material
     {
         return switch (level)
         {
+            case Copper ->
+            {
+                Utilities.WeightedRandom<MaterialType> copperRandom = new Utilities.WeightedRandom<MaterialType>(rng.nextLong())
+                        .add(80, MaterialType.Ingot).add(20, MaterialType.Gem);
+                yield copperRandom.next();
+            }
             case Iron ->
             {
                 Utilities.WeightedRandom<MaterialType> ironRandom = new Utilities.WeightedRandom<MaterialType>(rng.nextLong())
@@ -171,7 +214,6 @@ public class OreMaterial extends Material
                         .add(33, MaterialType.Ingot).add(33, MaterialType.Gem).add(33, MaterialType.Special);
                 yield netherRandom.next();
             }
-            default -> MaterialType.Ingot;
         };
     }
 
@@ -302,51 +344,51 @@ public class OreMaterial extends Material
 
         int baseDurability = switch (miningLevel)
         {
+            case Copper   -> 80 + rng.nextInt(120);      // 80 - 199
             case Iron     -> 180 + rng.nextInt(150);     // 180 - 329
             case Diamond  -> 800 + rng.nextInt(1200);    // 800 - 1999
             case Netherite -> 1500 + rng.nextInt(1000);  // 1500 - 2499
-            default       -> 40 + rng.nextInt(40);       // 40 - 79
         };
 
         float baseSpeed = switch (miningLevel)
         {
+            case Copper   -> 3.5f + rng.nextFloat() * 2.0f;    // 3.5 - 5.5
             case Iron     -> 5.0f + rng.nextFloat() * 2.0f;    // 5.0 - 7.0
             case Diamond  -> 7.0f + rng.nextFloat() * 2.5f;    // 7.0 - 9.5
             case Netherite -> 8.0f + rng.nextFloat() * 2.0f;   // 8.0 - 10.0
-            default       -> 1.5f + rng.nextFloat() * 1.5f;    // 1.5 - 3.0
         };
 
         float baseAttackDamage = switch (miningLevel)
         {
-            case Iron     -> 1.5f + rng.nextFloat();    // 1.5 - 2.5
+            case Copper   -> 0.5f + rng.nextFloat();            // 0.5 - 1.5
+            case Iron     -> 1.5f + rng.nextFloat();            // 1.5 - 2.5
             case Diamond  -> 2.5f + rng.nextFloat() * 1.5f;    // 2.5 - 4.0
             case Netherite -> 3.5f + rng.nextFloat() * 1.5f;   // 3.5 - 5.0
-            default       -> rng.nextFloat() * 0.5f;           // 0.0 - 0.5
         };
 
         int baseEnchantment = switch (miningLevel)
         {
+            case Copper   -> 10 + rng.nextInt(8);     // 10 - 17
             case Iron     -> 8 + rng.nextInt(10);     // 8 - 17
             case Diamond  -> 6 + rng.nextInt(10);     // 6 - 15
             case Netherite -> 10 + rng.nextInt(10);   // 10 - 19
-            default       -> 10 + rng.nextInt(10);    // 10 - 19
         };
 
         TagKey<Block> incorrectBlocks = switch (miningLevel)
         {
+            case Copper   -> BlockTags.INCORRECT_FOR_STONE_TOOL;
             case Iron     -> BlockTags.INCORRECT_FOR_IRON_TOOL;
             case Diamond  -> BlockTags.INCORRECT_FOR_DIAMOND_TOOL;
             case Netherite -> BlockTags.INCORRECT_FOR_NETHERITE_TOOL;
-            default       -> BlockTags.INCORRECT_FOR_WOODEN_TOOL;
         };
 
         // TODO: generate a custom repair item tag once item tags are dynamic
         TagKey<Item> repairItems = switch (miningLevel)
         {
+            case Copper   -> ItemTags.STONE_TOOL_MATERIALS;
             case Iron     -> ItemTags.IRON_TOOL_MATERIALS;
             case Diamond  -> ItemTags.DIAMOND_TOOL_MATERIALS;
             case Netherite -> ItemTags.NETHERITE_TOOL_MATERIALS;
-            default       -> ItemTags.WOODEN_TOOL_MATERIALS;
         };
 
         return new ToolMaterial(incorrectBlocks, baseDurability, baseSpeed, baseAttackDamage, baseEnchantment, repairItems);
@@ -358,39 +400,39 @@ public class OreMaterial extends Material
 
     private ArmorMaterial chooseArmorMaterial()
     {
-        if (!makeTools)
+        if (!makeArmor)
             return null;
 
         int durabilityMultiplier = switch (miningLevel)
         {
-            case Iron      -> 12 + rng.nextInt(8);      // 12 - 19
-            case Diamond   -> 25 + rng.nextInt(15);     // 25 - 39
-            case Netherite -> 30 + rng.nextInt(15);     // 30 - 44
-            default        -> 4 + rng.nextInt(4);       // 4 - 7
+            case Copper    -> 8 + rng.nextInt(6);        // 8 - 13
+            case Iron      -> 12 + rng.nextInt(8);       // 12 - 19
+            case Diamond   -> 25 + rng.nextInt(15);      // 25 - 39
+            case Netherite -> 30 + rng.nextInt(15);      // 30 - 44
         };
 
         int baseDefense = switch (miningLevel)
         {
+            case Copper    -> 1;
             case Iron      -> 2;
             case Diamond   -> 3;
             case Netherite -> 3;
-            default        -> 1;
         };
 
         Map<ArmorType, Integer> defense = ArmorMaterials.makeDefense(
-                baseDefense,                             // boots
-                baseDefense + rng.nextInt(2) + 3, // leggings
-                baseDefense + rng.nextInt(2) + 4, // chestplate
-                baseDefense,                            // helmet
-                baseDefense + rng.nextInt(3) + 4 // body
+                baseDefense,
+                baseDefense + rng.nextInt(2) + 3,
+                baseDefense + rng.nextInt(2) + 4,
+                baseDefense,
+                baseDefense + rng.nextInt(3) + 4
         );
 
         int enchantmentValue = switch (miningLevel)
         {
+            case Copper    -> 10 + rng.nextInt(8);
             case Iron      -> 8 + rng.nextInt(10);
             case Diamond   -> 6 + rng.nextInt(10);
             case Netherite -> 10 + rng.nextInt(10);
-            default        -> 10 + rng.nextInt(10);
         };
 
         float toughness = switch (miningLevel)
@@ -407,13 +449,13 @@ public class OreMaterial extends Material
             default        -> 0.0f;
         };
 
-        // TODO: custom repair tag and equipment asset for dynamic armor
+        // TODO: generate a custom repair item tag once item tags are dynamic
         TagKey<Item> repairItems = switch (miningLevel)
         {
+            case Copper    -> ItemTags.REPAIRS_COPPER_ARMOR;
             case Iron      -> ItemTags.REPAIRS_IRON_ARMOR;
             case Diamond   -> ItemTags.REPAIRS_DIAMOND_ARMOR;
             case Netherite -> ItemTags.REPAIRS_NETHERITE_ARMOR;
-            default        -> ItemTags.REPAIRS_LEATHER_ARMOR;
         };
 
         ResourceKey<EquipmentAsset> armorAssetKey = ResourceKey.create(
@@ -431,6 +473,202 @@ public class OreMaterial extends Material
                 repairItems,
                 armorAssetKey
         );
+    }
+
+    // =========================================================================
+    // Ore generation
+    // =========================================================================
+
+    private List<OreSpawnEntry> chooseSpawnEntries()
+    {
+        List<OreSpawnEntry> entries = new ArrayList<>();
+
+        boolean isSurfaceBlock = oreBase == MaterialOreBase.Sand || oreBase == MaterialOreBase.Gravel;
+
+        // Primary placement — every ore gets one
+        entries.add(choosePrimaryEntry());
+
+        // Surface ores get an additional surface-specific placement
+        if (isSurfaceBlock && rng.nextFloat() < 0.7f)
+            entries.add(chooseSurfaceEntry());
+
+        // Deep placement — stone-based ores can get an additional deep vein
+        if (!isSurfaceBlock && rng.nextFloat() < 0.5f)
+            entries.add(chooseDeepEntry());
+
+        // Secondary placement — a smaller supplementary distribution
+        if (rng.nextFloat() < 0.75f)
+            entries.add(chooseSecondaryEntry());
+
+        // Scattered underground for surface ores — so they're not only near the top
+        if (isSurfaceBlock && rng.nextFloat() < 0.6f)
+            entries.add(chooseScatteredEntry());
+
+        // Deposit — rare large vein
+        float depositChance = switch (miningLevel)
+        {
+            case Copper    -> 0.7f;
+            case Iron      -> 0.6f;
+            case Diamond   -> 0.35f;
+            case Netherite -> 0.2f;
+        };
+
+        if (rng.nextFloat() < depositChance)
+            entries.add(chooseDepositEntry(isSurfaceBlock));
+
+        return entries;
+    }
+
+    private OreSpawnEntry choosePrimaryEntry()
+    {
+        return switch (miningLevel)
+        {
+            case Copper ->
+            {
+                int veinSize = 8 + rng.nextInt(10);         // 8-17
+                int count = 10 + rng.nextInt(14);           // 10-23
+                int minHeight = -16 + rng.nextInt(20);      // -16 to 3
+                int maxHeight = 80 + rng.nextInt(50);       // 80 to 129
+                yield new OreSpawnEntry(SpawnProfile.Spread, veinSize, count, 0, minHeight, maxHeight, true);
+            }
+            case Iron ->
+            {
+                int veinSize = 6 + rng.nextInt(8);
+                int count = 8 + rng.nextInt(12);
+                int minHeight = -24 + rng.nextInt(20);
+                int maxHeight = 56 + rng.nextInt(40);
+                yield new OreSpawnEntry(SpawnProfile.Spread, veinSize, count, 0, minHeight, maxHeight, true);
+            }
+            case Diamond ->
+            {
+                int veinSize = 3 + rng.nextInt(6);
+                int count = 4 + rng.nextInt(5);
+                int minHeight = -80 + rng.nextInt(20);
+                int maxHeight = -20 + rng.nextInt(60);
+                yield new OreSpawnEntry(SpawnProfile.Deep, veinSize, count, 0, minHeight, maxHeight, true);
+            }
+            case Netherite ->
+            {
+                int veinSize = 2 + rng.nextInt(4);
+                int count = 2 + rng.nextInt(3);
+                int minHeight = -80 + rng.nextInt(10);
+                int maxHeight = -30 + rng.nextInt(30);
+                yield new OreSpawnEntry(SpawnProfile.Deep, veinSize, count, 0, minHeight, maxHeight, true);
+            }
+        };
+    }
+
+    private OreSpawnEntry chooseDeepEntry()
+    {
+        int veinSize = switch (miningLevel)
+        {
+            case Copper   -> 6 + rng.nextInt(8);
+            case Iron     -> 5 + rng.nextInt(6);
+            case Diamond  -> 3 + rng.nextInt(5);
+            case Netherite -> 2 + rng.nextInt(4);
+        };
+
+        int count = switch (miningLevel)
+        {
+            case Copper   -> 8 + rng.nextInt(10);
+            case Iron     -> 6 + rng.nextInt(8);
+            case Diamond  -> 3 + rng.nextInt(5);
+            case Netherite -> 2 + rng.nextInt(3);
+        };
+
+        int minHeight = -64 + rng.nextInt(10);
+        int maxHeight = -10 + rng.nextInt(20);
+
+        return new OreSpawnEntry(SpawnProfile.Deep, veinSize, count, 0, minHeight, maxHeight, true);
+    }
+
+    private OreSpawnEntry chooseSurfaceEntry()
+    {
+        int veinSize = switch (miningLevel)
+        {
+            case Copper   -> 6 + rng.nextInt(8);
+            case Iron     -> 5 + rng.nextInt(6);
+            case Diamond  -> 3 + rng.nextInt(4);
+            case Netherite -> 2 + rng.nextInt(3);
+        };
+
+        int count = switch (miningLevel)
+        {
+            case Copper   -> 6 + rng.nextInt(8);
+            case Iron     -> 4 + rng.nextInt(6);
+            case Diamond  -> 2 + rng.nextInt(3);
+            case Netherite -> 1 + rng.nextInt(2);
+        };
+
+        int minHeight = 40 + rng.nextInt(20);
+        int maxHeight = 80 + rng.nextInt(50);
+
+        return new OreSpawnEntry(SpawnProfile.Surface, veinSize, count, 0, minHeight, maxHeight, false);
+    }
+
+    private OreSpawnEntry chooseSecondaryEntry()
+    {
+        // Smaller scattered placement for additional findability
+        SpawnProfile profile = rng.nextFloat() < 0.4f ? SpawnProfile.Scattered : SpawnProfile.Pocket;
+
+        if (profile == SpawnProfile.Scattered)
+        {
+            int veinSize = 2 + rng.nextInt(4);      // 2-5
+            int count = 3 + rng.nextInt(5);          // 3-7
+            return new OreSpawnEntry(SpawnProfile.Scattered, veinSize, count, 0, -64, 256, false);
+        }
+        else
+        {
+            // Pocket — narrow band, decent density
+            int veinSize = 4 + rng.nextInt(6);       // 4-9
+            int count = 4 + rng.nextInt(6);           // 4-9
+            int center = -40 + rng.nextInt(80);       // -40 to 39
+            int spread = 8 + rng.nextInt(12);         // 8 to 19
+            return new OreSpawnEntry(SpawnProfile.Pocket, veinSize, count, 0, center - spread, center + spread, true);
+        }
+    }
+
+    private OreSpawnEntry chooseScatteredEntry()
+    {
+        // For surface ores, a smaller chance deeper underground
+        int veinSize = 2 + rng.nextInt(3);           // 2-4
+        int rarity = 4 + rng.nextInt(6);             // 1 in 4-9 chunks
+        return new OreSpawnEntry(SpawnProfile.Scattered, veinSize, 0, rarity, -20, 60, false);
+    }
+
+    private OreSpawnEntry chooseDepositEntry(boolean isSurfaceBlock)
+    {
+        int veinSize = switch (miningLevel)
+        {
+            case Copper   -> 25 + rng.nextInt(35);
+            case Iron     -> 20 + rng.nextInt(30);
+            case Diamond  -> 15 + rng.nextInt(20);
+            case Netherite -> 10 + rng.nextInt(15);
+        };
+
+        int rarity = switch (miningLevel)
+        {
+            case Copper   -> 4 + rng.nextInt(4);
+            case Iron     -> 6 + rng.nextInt(4);
+            case Diamond  -> 8 + rng.nextInt(6);
+            case Netherite -> 12 + rng.nextInt(8);
+        };
+
+        int minHeight;
+        int maxHeight;
+
+        if (isSurfaceBlock)
+        {
+            minHeight = 30 + rng.nextInt(20);
+            maxHeight = 70 + rng.nextInt(40);
+        }
+        else
+        {
+            minHeight = -64 + rng.nextInt(30);
+            maxHeight = -10 + rng.nextInt(40);
+        }
+
+        return new OreSpawnEntry(SpawnProfile.Deposit, veinSize, 0, rarity, minHeight, maxHeight, true);
     }
 
     // =========================================================================

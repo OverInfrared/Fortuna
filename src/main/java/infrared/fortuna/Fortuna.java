@@ -6,8 +6,16 @@ import infrared.fortuna.materials.Material;
 import infrared.fortuna.materials.MaterialChain;
 import infrared.fortuna.enums.MiningLevel;
 import infrared.fortuna.materials.OreMaterial;
+import infrared.fortuna.worldgen.OreSpawnEntry;
 import net.fabricmc.api.ModInitializer;
 
+import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
+import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.levelgen.GenerationStep;
+import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +60,8 @@ public class Fortuna implements ModInitializer
 				initializedMaterials.add(material);
 			}
 		}
+
+		registerBiomeModifications();
 	}
 
 	public static OreMaterial findMaterial(String name)
@@ -60,5 +70,29 @@ public class Fortuna implements ModInitializer
 			if (mat instanceof OreMaterial oreMat && oreMat.getName().equals(name))
 				return oreMat;
 		return null;
+	}
+
+	private void registerBiomeModifications()
+	{
+		for (infrared.fortuna.materials.Material mat : initializedMaterials)
+		{
+			if (!(mat instanceof OreMaterial oreMat))
+				continue;
+
+			List<OreSpawnEntry> entries = oreMat.getSpawnEntries();
+			for (int i = 0; i < entries.size(); i++)
+			{
+				ResourceKey<PlacedFeature> key = ResourceKey.create(
+						Registries.PLACED_FEATURE,
+						Identifier.fromNamespaceAndPath(MOD_ID, "%s_ore_%d".formatted(oreMat.getName(), i))
+				);
+
+				BiomeModifications.addFeature(
+						BiomeSelectors.foundInOverworld(),
+						GenerationStep.Decoration.UNDERGROUND_ORES,
+						key
+				);
+			}
+		}
 	}
 }

@@ -6,8 +6,9 @@ import net.minecraft.world.level.block.Block;
 
 public enum MiningLevel
 {
-    Iron(BlockTags.NEEDS_STONE_TOOL),
-    Diamond(BlockTags.NEEDS_IRON_TOOL),
+    Copper(BlockTags.NEEDS_STONE_TOOL),
+    Iron(BlockTags.NEEDS_IRON_TOOL),
+    Diamond(BlockTags.NEEDS_DIAMOND_TOOL),
     Netherite(BlockTags.NEEDS_DIAMOND_TOOL);
 
     private final TagKey<Block> requiredTool;
