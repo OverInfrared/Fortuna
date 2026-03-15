@@ -1,4 +1,4 @@
-package infrared.fortuna.enums;
+package infrared.fortuna.items;
 
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.equipment.ArmorType;

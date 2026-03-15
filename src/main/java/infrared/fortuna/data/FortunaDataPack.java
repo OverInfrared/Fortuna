@@ -5,17 +5,15 @@ import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.blocks.ModBlocks;
-import infrared.fortuna.enums.ore.MaterialOreBase;
 import infrared.fortuna.equipment.IFortunaEquipment;
 import infrared.fortuna.items.FortunaArmor;
 import infrared.fortuna.items.FortunaItem;
 import infrared.fortuna.items.ModItems;
 import infrared.fortuna.materials.Material;
-import infrared.fortuna.materials.OreMaterial;
+import infrared.fortuna.materials.ore.OreMaterial;
 import infrared.fortuna.recipes.IFortunaRecipe;
-import infrared.fortuna.enums.MiningLevel;
-import infrared.fortuna.worldgen.OreSpawnEntry;
-import infrared.fortuna.worldgen.SpawnProfile;
+import infrared.fortuna.materials.ore.MiningLevel;
+import infrared.fortuna.worldgen.OreConfiguredFeature;
 import net.fabricmc.fabric.api.resource.v1.pack.ModPackResources;
 import net.fabricmc.fabric.impl.resource.pack.ModResourcePackCreator;
 import net.fabricmc.loader.api.FabricLoader;
@@ -358,14 +356,13 @@ public class FortunaDataPack implements PackResources, ModPackResources
             if (!(mat instanceof OreMaterial oreMat))
                 continue;
 
-            List<OreSpawnEntry> entries = oreMat.getSpawnEntries();
+            List<OreConfiguredFeature> entries = oreMat.getSpawnEntries();
             for (int i = 0; i < entries.size(); i++)
             {
                 if (!featureName.equals("%s_ore_%d".formatted(oreMat.getName(), i)))
                     continue;
 
-                OreSpawnEntry spawn = entries.get(i);
-                return generateConfiguredFeature(oreMat, spawn);
+                return entries.get(i).generateConfiguredFeature();
             }
         }
         return null;
@@ -378,152 +375,17 @@ public class FortunaDataPack implements PackResources, ModPackResources
             if (!(mat instanceof OreMaterial oreMat))
                 continue;
 
-            List<OreSpawnEntry> entries = oreMat.getSpawnEntries();
+            List<OreConfiguredFeature> entries = oreMat.getSpawnEntries();
             for (int i = 0; i < entries.size(); i++)
             {
                 if (!featureName.equals("%s_ore_%d".formatted(oreMat.getName(), i)))
                     continue;
 
-                OreSpawnEntry spawn = entries.get(i);
+                OreConfiguredFeature spawn = entries.get(i);
                 return generatePlacedFeature(oreMat, spawn, i);
             }
         }
         return null;
-    }
-
-    private String generateConfiguredFeature(OreMaterial material, OreSpawnEntry spawn)
-    {
-        String oreName = "%s:%s_ore".formatted(Fortuna.MOD_ID, material.getName());
-
-        JsonArray targets = new JsonArray();
-
-        MaterialOreBase base = material.getBase();
-
-        if (base == MaterialOreBase.Sand)
-        {
-            targets.add(buildTarget("minecraft:block_match", "minecraft:sand", oreName));
-        }
-        else if (base == MaterialOreBase.Gravel)
-        {
-            targets.add(buildTarget("minecraft:block_match", "minecraft:gravel", oreName));
-        }
-        else
-        {
-            // Stone-based ore targets stone_ore_replaceables
-            targets.add(buildTagTarget("minecraft:stone_ore_replaceables", oreName));
-
-            // If stone base, also target deepslate
-            if (base == MaterialOreBase.Stone)
-            {
-                String deepslateName = "%s:deepslate_%s_ore".formatted(Fortuna.MOD_ID, material.getName());
-                targets.add(buildTagTarget("minecraft:deepslate_ore_replaceables", deepslateName));
-            }
-        }
-
-        float discardChance = spawn.getProfile() == SpawnProfile.Deep ? 0.5f : 0.0f;
-
-        JsonObject config = new JsonObject();
-        config.addProperty("size", spawn.getVeinSize());
-        config.add("targets", targets);
-        config.addProperty("discard_chance_on_air_exposure", discardChance);
-
-        JsonObject feature = new JsonObject();
-        feature.addProperty("type", "minecraft:ore");
-        feature.add("config", config);
-
-        return feature.toString();
-    }
-
-    private String generatePlacedFeature(OreMaterial material, OreSpawnEntry spawn, int index)
-    {
-        String featureRef = "%s:%s_ore_%d".formatted(Fortuna.MOD_ID, material.getName(), index);
-
-        JsonArray placement = new JsonArray();
-
-        // Count or rarity
-        if (spawn.isRare())
-        {
-            JsonObject rarityFilter = new JsonObject();
-            rarityFilter.addProperty("type", "minecraft:rarity_filter");
-            rarityFilter.addProperty("chance", spawn.getRarity());
-            placement.add(rarityFilter);
-        }
-        else
-        {
-            JsonObject count = new JsonObject();
-            count.addProperty("type", "minecraft:count");
-            count.addProperty("count", spawn.getCount());
-            placement.add(count);
-        }
-
-        // In square
-        JsonObject inSquare = new JsonObject();
-        inSquare.addProperty("type", "minecraft:in_square");
-        placement.add(inSquare);
-
-        // Height range
-        JsonObject heightRange = new JsonObject();
-        heightRange.addProperty("type", "minecraft:height_range");
-
-        JsonObject height = new JsonObject();
-        if (spawn.usesTriangleDistribution())
-            height.addProperty("type", "minecraft:trapezoid");
-        else
-            height.addProperty("type", "minecraft:uniform");
-
-        JsonObject minInclusive = new JsonObject();
-        minInclusive.addProperty("absolute", spawn.getMinHeight());
-        height.add("min_inclusive", minInclusive);
-
-        JsonObject maxInclusive = new JsonObject();
-        maxInclusive.addProperty("absolute", spawn.getMaxHeight());
-        height.add("max_inclusive", maxInclusive);
-
-        heightRange.add("height", height);
-        placement.add(heightRange);
-
-        // Biome filter
-        JsonObject biomeFilter = new JsonObject();
-        biomeFilter.addProperty("type", "minecraft:biome");
-        placement.add(biomeFilter);
-
-        JsonObject placedFeature = new JsonObject();
-        placedFeature.addProperty("feature", featureRef);
-        placedFeature.add("placement", placement);
-
-        return placedFeature.toString();
-    }
-
-    private JsonObject buildTagTarget(String tag, String blockName)
-    {
-        JsonObject target = new JsonObject();
-        target.addProperty("predicate_type", "minecraft:tag_match");
-        target.addProperty("tag", tag);
-
-        JsonObject state = new JsonObject();
-        state.addProperty("Name", blockName);
-
-        JsonObject entry = new JsonObject();
-        entry.add("target", target);
-        entry.add("state", state);
-
-        return entry;
-    }
-
-    private JsonObject buildTarget(String predicateType, String blockMatch, String blockName)
-    {
-        JsonObject target = new JsonObject();
-        target.addProperty("predicate_type", predicateType);
-        target.addProperty("block", blockMatch);
-
-        JsonObject state = new JsonObject();
-        state.addProperty("Name", blockName);
-
-        JsonObject entry = new JsonObject();
-        entry.add("target", target);
-        entry.add("state", state);
-
-        return entry;
     }
 
     public static void setRegistryLookup(HolderLookup.Provider lookup)

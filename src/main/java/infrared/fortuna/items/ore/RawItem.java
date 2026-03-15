@@ -6,8 +6,8 @@ import infrared.fortuna.items.FortunaItem;
 import infrared.fortuna.recipes.FortunaRecipeProvider;
 import infrared.fortuna.recipes.IFortunaRecipe;
 import infrared.fortuna.DynamicProperties;
-import infrared.fortuna.enums.ore.MaterialOreRaw;
-import infrared.fortuna.materials.OreMaterial;
+import infrared.fortuna.materials.ore.MaterialOreRaw;
+import infrared.fortuna.materials.ore.OreMaterial;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.world.item.Item;
 

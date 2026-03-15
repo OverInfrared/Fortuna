@@ -4,9 +4,9 @@ import infrared.fortuna.blocks.ModBlocks;
 import infrared.fortuna.items.ModItems;
 import infrared.fortuna.materials.Material;
 import infrared.fortuna.materials.MaterialChain;
-import infrared.fortuna.enums.MiningLevel;
-import infrared.fortuna.materials.OreMaterial;
-import infrared.fortuna.worldgen.OreSpawnEntry;
+import infrared.fortuna.materials.ore.MiningLevel;
+import infrared.fortuna.materials.ore.OreMaterial;
+import infrared.fortuna.worldgen.OreConfiguredFeature;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
@@ -79,7 +79,7 @@ public class Fortuna implements ModInitializer
 			if (!(mat instanceof OreMaterial oreMat))
 				continue;
 
-			List<OreSpawnEntry> entries = oreMat.getSpawnEntries();
+			List<OreConfiguredFeature> entries = oreMat.getSpawnEntries();
 			for (int i = 0; i < entries.size(); i++)
 			{
 				ResourceKey<PlacedFeature> key = ResourceKey.create(
