@@ -7,6 +7,7 @@ import infrared.fortuna.materials.MaterialChain;
 import infrared.fortuna.materials.ore.MiningLevel;
 import infrared.fortuna.materials.ore.OreMaterial;
 import infrared.fortuna.worldgen.OreConfiguredFeature;
+import infrared.fortuna.worldgen.OrePlacedFeature;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
@@ -74,18 +75,20 @@ public class Fortuna implements ModInitializer
 
 	private void registerBiomeModifications()
 	{
-		for (infrared.fortuna.materials.Material mat : initializedMaterials)
+		for (Material mat : initializedMaterials)
 		{
 			if (!(mat instanceof OreMaterial oreMat))
 				continue;
 
-			List<OreConfiguredFeature> entries = oreMat.getSpawnEntries();
-			for (int i = 0; i < entries.size(); i++)
+			List<OrePlacedFeature> features = oreMat.getPlacedFeatures();
+			for (int i = 0; i < features.size(); i++)
 			{
 				ResourceKey<PlacedFeature> key = ResourceKey.create(
 						Registries.PLACED_FEATURE,
 						Identifier.fromNamespaceAndPath(MOD_ID, "%s_ore_%d".formatted(oreMat.getName(), i))
 				);
+
+				Fortuna.LOGGER.info("Registering placed feature: {}", key.identifier());
 
 				BiomeModifications.addFeature(
 						BiomeSelectors.foundInOverworld(),

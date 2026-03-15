@@ -13,12 +13,15 @@ public class OreConfiguredFeature implements IConfiguredFeature
     private final String materialName;
     private final MaterialOreBase materialBase;
 
-    public OreConfiguredFeature(int veinSize, float discardChance, String materialName, MaterialOreBase base)
+    private final String identifier;
+
+    public OreConfiguredFeature(int veinSize, float discardChance, String materialName, MaterialOreBase base, String identifier)
     {
         this.size = veinSize;
         this.discardChance = discardChance;
         this.materialName = materialName;
         this.materialBase = base;
+        this.identifier = identifier;
     }
 
     public int getVeinSize()               { return size; }
@@ -61,6 +64,12 @@ public class OreConfiguredFeature implements IConfiguredFeature
         feature.add("config", config);
 
         return feature.toString();
+    }
+
+    @Override
+    public String getFeatureName()
+    {
+        return "%s:%s_ore_%s".formatted(Fortuna.MOD_ID, materialName, identifier);
     }
 
     private JsonObject buildTarget(String predicateType, String blockMatch, String blockName)

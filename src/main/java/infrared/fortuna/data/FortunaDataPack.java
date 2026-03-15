@@ -14,6 +14,7 @@ import infrared.fortuna.materials.ore.OreMaterial;
 import infrared.fortuna.recipes.IFortunaRecipe;
 import infrared.fortuna.materials.ore.MiningLevel;
 import infrared.fortuna.worldgen.OreConfiguredFeature;
+import infrared.fortuna.worldgen.OreFeatureType;
 import net.fabricmc.fabric.api.resource.v1.pack.ModPackResources;
 import net.fabricmc.fabric.impl.resource.pack.ModResourcePackCreator;
 import net.fabricmc.loader.api.FabricLoader;
@@ -162,13 +163,13 @@ public class FortunaDataPack implements PackResources, ModPackResources
         if (prefix.contains("worldgen/configured_feature"))
             for (Material mat : Fortuna.initializedMaterials)
                 if (mat instanceof OreMaterial oreMat)
-                    for (int i = 0; i < oreMat.getSpawnEntries().size(); i++)
-                        emitData(resourceOutput, prefix, "worldgen/configured_feature/%s_ore_%d.json".formatted(oreMat.getName(), i), namespace);
+                    for (OreFeatureType type : oreMat.getConfiguredFeatures().keySet())
+                        emitData(resourceOutput, prefix, "worldgen/configured_feature/%s_ore_%s.json".formatted(oreMat.getName(), type.getName()), namespace);
 
         if (prefix.contains("worldgen/placed_feature"))
             for (Material mat : Fortuna.initializedMaterials)
                 if (mat instanceof OreMaterial oreMat)
-                    for (int i = 0; i < oreMat.getSpawnEntries().size(); i++)
+                    for (int i = 0; i < oreMat.getPlacedFeatures().size(); i++)
                         emitData(resourceOutput, prefix, "worldgen/placed_feature/%s_ore_%d.json".formatted(oreMat.getName(), i), namespace);
     }
 
@@ -251,13 +252,19 @@ public class FortunaDataPack implements PackResources, ModPackResources
         if (prefix.startsWith("worldgen/configured_feature/"))
         {
             String featureName = entry.replace(".json", "");
-            return resolveConfiguredFeature(featureName);
+            String result = resolveConfiguredFeature(featureName);
+            if (result != null)
+                Fortuna.LOGGER.info("Serving configured_feature: {} -> {}", featureName, result);
+            return result;
         }
 
         if (prefix.startsWith("worldgen/placed_feature/"))
         {
             String featureName = entry.replace(".json", "");
-            return resolvePlacedFeature(featureName);
+            String result = resolvePlacedFeature(featureName);
+            if (result != null)
+                Fortuna.LOGGER.info("Serving placed_feature: {} -> {}", featureName, result);
+            return result;
         }
 
         return null;
@@ -356,13 +363,11 @@ public class FortunaDataPack implements PackResources, ModPackResources
             if (!(mat instanceof OreMaterial oreMat))
                 continue;
 
-            List<OreConfiguredFeature> entries = oreMat.getSpawnEntries();
-            for (int i = 0; i < entries.size(); i++)
+            for (var entry : oreMat.getConfiguredFeatures().entrySet())
             {
-                if (!featureName.equals("%s_ore_%d".formatted(oreMat.getName(), i)))
-                    continue;
-
-                return entries.get(i).generateConfiguredFeature();
+                String expectedName = "%s_ore_%s".formatted(oreMat.getName(), entry.getKey().getName());
+                if (featureName.equals(expectedName))
+                    return entry.getValue().generateConfiguredFeature();
             }
         }
         return null;
@@ -375,14 +380,11 @@ public class FortunaDataPack implements PackResources, ModPackResources
             if (!(mat instanceof OreMaterial oreMat))
                 continue;
 
-            List<OreConfiguredFeature> entries = oreMat.getSpawnEntries();
-            for (int i = 0; i < entries.size(); i++)
+            for (int i = 0; i < oreMat.getPlacedFeatures().size(); i++)
             {
-                if (!featureName.equals("%s_ore_%d".formatted(oreMat.getName(), i)))
-                    continue;
-
-                OreConfiguredFeature spawn = entries.get(i);
-                return generatePlacedFeature(oreMat, spawn, i);
+                String expectedName = "%s_ore_%d".formatted(oreMat.getName(), i);
+                if (featureName.equals(expectedName))
+                    return oreMat.getPlacedFeatures().get(i).generatePlacedFeature();
             }
         }
         return null;

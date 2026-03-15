@@ -5,10 +5,7 @@ import infrared.fortuna.materials.Material;
 import infrared.fortuna.util.Utilities;
 import infrared.fortuna.materials.MaterialType;
 import infrared.fortuna.items.DynamicToolType;
-import infrared.fortuna.worldgen.OreConfiguredFeature;
-import infrared.fortuna.worldgen.OreFeatureType;
-import infrared.fortuna.worldgen.OrePlacedFeature;
-import infrared.fortuna.worldgen.SpawnProfile;
+import infrared.fortuna.worldgen.*;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -25,7 +22,7 @@ import net.minecraft.world.item.equipment.trim.TrimMaterial;
 import net.minecraft.world.level.block.Block;
 
 import java.awt.*;
-import java.util.EnumMap;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +65,7 @@ public class OreMaterial extends Material
     // === Ore generation properties ===
     private final boolean doGeneration;
     private final Map<OreFeatureType, OreConfiguredFeature> configuredFeatures = new HashMap<>();
-    private final List<OrePlacedFeature> placedFeatures;
+    private final List<OrePlacedFeature> placedFeatures = new ArrayList<>();
 
     // =========================================================================
     // Constructor
@@ -111,7 +108,7 @@ public class OreMaterial extends Material
 
         doGeneration = true;
         createConfiguredFeatures();
-        placedFeatures = choosePlacedFeatures();
+        choosePlacedFeatures();
 
         generateOreColors();
     }
@@ -483,40 +480,41 @@ public class OreMaterial extends Material
         float discardChance = Math.clamp(base + (rng.nextFloat() - 0.5f) * 0.8f, 0.05f, 0.95f);
 
         // Medium features is like the base feature, loot at iron_ore feature or diamond_ore_medium
-        OreConfiguredFeature mediumFeature = new OreConfiguredFeature(baseVeinSize, discardChance, name, oreBase);
+        OreConfiguredFeature mediumFeature = new OreConfiguredFeature(baseVeinSize, discardChance, name, oreBase, OreFeatureType.Medium.getName());
         configuredFeatures.put(OreFeatureType.Medium, mediumFeature);
 
         int smallVeinSize = largerVeins ?
                 baseVeinSize / 2 :
                 Math.max(baseVeinSize - (1 + rng.nextInt(5)), 1);
 
-        OreConfiguredFeature smallFeature = new OreConfiguredFeature(smallVeinSize, discardChance, name, oreBase);
+        OreConfiguredFeature smallFeature = new OreConfiguredFeature(smallVeinSize, discardChance, name, oreBase, OreFeatureType.Small.getName());
         configuredFeatures.put(OreFeatureType.Small, smallFeature);
 
         int largeVeinSize = largerVeins ?
                 baseVeinSize * 2 :
                 baseVeinSize + (1 + rng.nextInt(3));
 
-        OreConfiguredFeature largeFeature = new OreConfiguredFeature(largeVeinSize, discardChance, name, oreBase);
+        OreConfiguredFeature largeFeature = new OreConfiguredFeature(largeVeinSize, discardChance, name, oreBase, OreFeatureType.Large.getName());
         configuredFeatures.put(OreFeatureType.Large, largeFeature);
 
-        OreConfiguredFeature buriedFeature = new OreConfiguredFeature(baseVeinSize, 1.0f, name, oreBase);
+        OreConfiguredFeature buriedFeature = new OreConfiguredFeature(baseVeinSize, 1.0f, name, oreBase, OreFeatureType.Buried.getName());
         configuredFeatures.put(OreFeatureType.Buried, buriedFeature);
     }
 
     public record HeightRange(int min, int max) {}
 
-    private List<OrePlacedFeature> choosePlacedFeatures()
+    private void choosePlacedFeatures()
     {
         final int MIN_Y = -64;
         final int MAX_Y = 384;
 
         HeightRange oreRange = switch (oreBase)
         {
-            case Diorite, Andesite, Granite -> new HeightRange(0, 128);
-            case Sand     -> new HeightRange(50, 80);
-            case Tuff     -> new HeightRange(MIN_Y, 0);
-            default       -> new HeightRange(MIN_Y, MAX_Y);
+            case Diorite, Andesite, Granite -> new HeightRange(0, 96);
+            case Sand     -> new HeightRange(50, 75);
+            case Tuff     -> new HeightRange(-64, 0);
+            case Gravel   -> new HeightRange(-64, 80);
+            default       -> new HeightRange(-64, 128);
         };
 
         int rangeSize = oreRange.max() - oreRange.min();
@@ -534,170 +532,51 @@ public class OreMaterial extends Material
         float idealBias = Math.clamp(baseIdeal + (rng.nextFloat() - 0.5f) * 1.2f, -0.5f, 0.9f);
         int idealHeight = oreRange.min() + (int)(rangeSize * idealBias);
 
-        // For trapezoid, the ideal height is the midpoint
-        // So min and max are equidistant from it
-        int spread = halfRange + rng.nextInt(halfRange / 2 + 1);
+        int minSpread = rangeSize / 6;
+        int maxSpread = rangeSize / 3;
+        int spread = minSpread + rng.nextInt(maxSpread - minSpread + 1);
+
         int bottomEnd = idealHeight - spread;
         int topEnd = idealHeight + spread;
 
         // Ensure top end is at least 15 blocks inside the ore range
         topEnd = Math.max(topEnd, oreRange.min() + 15);
 
+        FeatureProbability newProbability = chooseFeatureProbability();
 
+        OreFeatureType targetFeatureType = rng.nextFloat() < 0.6f
+                ? OreFeatureType.Medium
+                : OreFeatureType.Small;
 
-        OrePlacedFeature generalFeature = new OrePlacedFeature()
+        IConfiguredFeature targetFeature = configuredFeatures.get(targetFeatureType);
+
+        // Every ore gets one trapezoid placement.
+        OrePlacedFeature generalFeature = new OrePlacedFeature(idealHeight, topEnd, bottomEnd, newProbability, DisperseType.Trapezoid, targetFeature);
+        placedFeatures.add(generalFeature);
     }
 
-    private OreConfiguredFeature choosePrimaryEntry()
+    private FeatureProbability chooseFeatureProbability()
     {
-        return switch (miningLevel)
+        float baseCount = switch (miningLevel)
         {
-            case Copper ->
-            {
-                int veinSize = 8 + rng.nextInt(10);         // 8-17
-                int count = 10 + rng.nextInt(14);           // 10-23
-                int minHeight = -16 + rng.nextInt(20);      // -16 to 3
-                int maxHeight = 80 + rng.nextInt(50);       // 80 to 129
-                yield new OreConfiguredFeature(SpawnProfile.Spread, veinSize, count, 0, minHeight, maxHeight, true);
-            }
-            case Iron ->
-            {
-                int veinSize = 6 + rng.nextInt(8);
-                int count = 8 + rng.nextInt(12);
-                int minHeight = -24 + rng.nextInt(20);
-                int maxHeight = 56 + rng.nextInt(40);
-                yield new OreConfiguredFeature(SpawnProfile.Spread, veinSize, count, 0, minHeight, maxHeight, true);
-            }
-            case Diamond ->
-            {
-                int veinSize = 3 + rng.nextInt(6);
-                int count = 4 + rng.nextInt(5);
-                int minHeight = -80 + rng.nextInt(20);
-                int maxHeight = -20 + rng.nextInt(60);
-                yield new OreConfiguredFeature(SpawnProfile.Deep, veinSize, count, 0, minHeight, maxHeight, true);
-            }
-            case Netherite ->
-            {
-                int veinSize = 2 + rng.nextInt(4);
-                int count = 2 + rng.nextInt(3);
-                int minHeight = -80 + rng.nextInt(10);
-                int maxHeight = -30 + rng.nextInt(30);
-                yield new OreConfiguredFeature(SpawnProfile.Deep, veinSize, count, 0, minHeight, maxHeight, true);
-            }
-        };
-    }
-
-    private OreConfiguredFeature chooseDeepEntry()
-    {
-        int veinSize = switch (miningLevel)
-        {
-            case Copper   -> 6 + rng.nextInt(8);
-            case Iron     -> 5 + rng.nextInt(6);
-            case Diamond  -> 3 + rng.nextInt(5);
-            case Netherite -> 2 + rng.nextInt(4);
+            case Copper    -> 12f;
+            case Iron      -> 8f;
+            case Diamond   -> 3f;
+            case Netherite -> 1f;
         };
 
-        int count = switch (miningLevel)
+        float roll = baseCount + (rng.nextFloat() - 0.5f) * baseCount * 1.5f;
+
+        if (roll < 1f)
         {
-            case Copper   -> 8 + rng.nextInt(10);
-            case Iron     -> 6 + rng.nextInt(8);
-            case Diamond  -> 3 + rng.nextInt(5);
-            case Netherite -> 2 + rng.nextInt(3);
-        };
-
-        int minHeight = -64 + rng.nextInt(10);
-        int maxHeight = -10 + rng.nextInt(20);
-
-        return new OreConfiguredFeature(SpawnProfile.Deep, veinSize, count, 0, minHeight, maxHeight, true);
-    }
-
-    private OreConfiguredFeature chooseSurfaceEntry()
-    {
-        int veinSize = switch (miningLevel)
-        {
-            case Copper   -> 6 + rng.nextInt(8);
-            case Iron     -> 5 + rng.nextInt(6);
-            case Diamond  -> 3 + rng.nextInt(4);
-            case Netherite -> 2 + rng.nextInt(3);
-        };
-
-        int count = switch (miningLevel)
-        {
-            case Copper   -> 6 + rng.nextInt(8);
-            case Iron     -> 4 + rng.nextInt(6);
-            case Diamond  -> 2 + rng.nextInt(3);
-            case Netherite -> 1 + rng.nextInt(2);
-        };
-
-        int minHeight = 40 + rng.nextInt(20);
-        int maxHeight = 80 + rng.nextInt(50);
-
-        return new OreConfiguredFeature(SpawnProfile.Surface, veinSize, count, 0, minHeight, maxHeight, false);
-    }
-
-    private OreConfiguredFeature chooseSecondaryEntry()
-    {
-        // Smaller scattered placement for additional findability
-        SpawnProfile profile = rng.nextFloat() < 0.4f ? SpawnProfile.Scattered : SpawnProfile.Pocket;
-
-        if (profile == SpawnProfile.Scattered)
-        {
-            int veinSize = 2 + rng.nextInt(4);      // 2-5
-            int count = 3 + rng.nextInt(5);          // 3-7
-            return new OreConfiguredFeature(SpawnProfile.Scattered, veinSize, count, 0, -64, 256, false);
+            // Negative/low roll becomes rarity filter
+            int rarity = Math.max(2, (int)(Math.abs(roll) + 2));
+            return new FeatureProbability(rarity, FeatureProbability.CountType.Rarity);
         }
         else
         {
-            // Pocket — narrow band, decent density
-            int veinSize = 4 + rng.nextInt(6);       // 4-9
-            int count = 4 + rng.nextInt(6);           // 4-9
-            int center = -40 + rng.nextInt(80);       // -40 to 39
-            int spread = 8 + rng.nextInt(12);         // 8 to 19
-            return new OreConfiguredFeature(SpawnProfile.Pocket, veinSize, count, 0, center - spread, center + spread, true);
+            return new FeatureProbability(Math.round(roll), FeatureProbability.CountType.Count);
         }
-    }
-
-    private OreConfiguredFeature chooseScatteredEntry()
-    {
-        // For surface ores, a smaller chance deeper underground
-        int veinSize = 2 + rng.nextInt(3);           // 2-4
-        int rarity = 4 + rng.nextInt(6);             // 1 in 4-9 chunks
-        return new OreConfiguredFeature(SpawnProfile.Scattered, veinSize, 0, rarity, -20, 60, false);
-    }
-
-    private OreConfiguredFeature chooseDepositEntry(boolean isSurfaceBlock)
-    {
-        int veinSize = switch (miningLevel)
-        {
-            case Copper   -> 25 + rng.nextInt(35);
-            case Iron     -> 20 + rng.nextInt(30);
-            case Diamond  -> 15 + rng.nextInt(20);
-            case Netherite -> 10 + rng.nextInt(15);
-        };
-
-        int rarity = switch (miningLevel)
-        {
-            case Copper   -> 4 + rng.nextInt(4);
-            case Iron     -> 6 + rng.nextInt(4);
-            case Diamond  -> 8 + rng.nextInt(6);
-            case Netherite -> 12 + rng.nextInt(8);
-        };
-
-        int minHeight;
-        int maxHeight;
-
-        if (isSurfaceBlock)
-        {
-            minHeight = 30 + rng.nextInt(20);
-            maxHeight = 70 + rng.nextInt(40);
-        }
-        else
-        {
-            minHeight = -64 + rng.nextInt(30);
-            maxHeight = -10 + rng.nextInt(40);
-        }
-
-        return new OreConfiguredFeature(SpawnProfile.Deposit, veinSize, 0, rarity, minHeight, maxHeight, true);
     }
 
     // =========================================================================

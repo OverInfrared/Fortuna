@@ -5,5 +5,10 @@ public enum OreFeatureType
     Small,
     Medium,
     Large,
-    Buried
+    Buried;
+
+    public String getName()
+    {
+        return this.name().toLowerCase();
+    }
 }
