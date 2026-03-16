@@ -1,0 +1,77 @@
+package infrared.fortuna.blocks;
+
+import com.google.gson.JsonObject;
+import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
+import infrared.fortuna.DynamicProperties;
+import infrared.fortuna.util.Utilities;
+import infrared.fortuna.materials.ore.MiningLevel;
+import infrared.fortuna.materials.ore.OreMaterial;
+import infrared.fortuna.recipes.FortunaRecipeProvider;
+import infrared.fortuna.recipes.IFortunaRecipe;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.state.properties.BlockSetType;
+
+import java.util.*;
+
+public class FortunaDoorBlock extends DoorBlock implements IFortunaBlock, IFortunaRecipe
+{
+    protected final DynamicProperties<Block, OreMaterial> dynamicProperties;
+    protected MiningLevel requiredMiningLevel;
+
+    private final List<Pair<String, String>> requiredTextures = new ArrayList<>();
+    private final List<RequiredElement> requiredElements = new ArrayList<>();
+    private final List<Integer> requiredTints = new ArrayList<>();
+
+    public FortunaDoorBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, BlockSetType blockSetType)
+    {
+        super(blockSetType, properties);
+        this.dynamicProperties = dynamicProperties;
+        this.requiredMiningLevel = dynamicProperties.material().getMiningLevel();
+
+        addRequiredTexture("particle", "door_top");
+        addOverlayTexture("top", "door_top", 0);
+        addOverlayTexture("bottom", "door_bottom", 0);
+        addRequiredTint(dynamicProperties.material().getMainColor().getRGB());
+    }
+
+    @Override
+    public List<Pair<String, String>> getRequiredTextures() { return requiredTextures; }
+
+    @Override
+    public List<RequiredElement> getRequiredElements() { return requiredElements; }
+
+    @Override
+    public List<Integer> getRequiredTints() { return requiredTints; }
+
+    @Override
+    public DynamicProperties<Block, OreMaterial> getDynamicProperties() { return dynamicProperties; }
+
+    @Override
+    public MiningLevel getMiningLevel() { return requiredMiningLevel; }
+
+    @Override
+    public Map<String, JsonObject> getRecipes(HolderLookup.Provider registries)
+    {
+        FortunaRecipeProvider helper = new FortunaRecipeProvider(registries);
+
+        Item ingot = Utilities.findItem(dynamicProperties.material().getRefinedRegistryName());
+        if (ingot == null)
+            return new HashMap<>();
+
+        Map<String, JsonObject> recipes = new LinkedHashMap<>();
+
+        recipes.put(getRegistryName(),
+                helper.shapedDoor(this.asItem(), ingot));
+
+        return recipes;
+    }
+
+    @Override
+    public Set<String> getRecipeNames()
+    {
+        return Set.of(getRegistryName());
+    }
+}

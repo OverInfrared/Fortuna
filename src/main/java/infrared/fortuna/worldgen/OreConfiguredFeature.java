@@ -33,25 +33,16 @@ public class OreConfiguredFeature implements IConfiguredFeature
 
         JsonArray targets = new JsonArray();
 
-        if (materialBase == MaterialOreBase.Sand)
+        if (materialBase == MaterialOreBase.Stone)
         {
-            targets.add(buildTarget("minecraft:block_match", "minecraft:sand", oreName));
-        }
-        else if (materialBase == MaterialOreBase.Gravel)
-        {
-            targets.add(buildTarget("minecraft:block_match", "minecraft:gravel", oreName));
+            targets.add(buildTagTarget("minecraft:stone_ore_replaceables", oreName));
+
+            String deepslateName = "%s:deepslate_%s_ore".formatted(Fortuna.MOD_ID, materialName);
+            targets.add(buildTagTarget("minecraft:deepslate_ore_replaceables", deepslateName));
         }
         else
         {
-            // Stone-based ore targets stone_ore_replaceables
-            targets.add(buildTagTarget("minecraft:stone_ore_replaceables", oreName));
-
-            // If stone base, also target deepslate
-            if (materialBase == MaterialOreBase.Stone)
-            {
-                String deepslateName = "%s:deepslate_%s_ore".formatted(Fortuna.MOD_ID, materialName);
-                targets.add(buildTagTarget("minecraft:deepslate_ore_replaceables", deepslateName));
-            }
+            targets.add(buildTarget("minecraft:block_match", "minecraft:" + materialBase.getBlockId(), oreName));
         }
 
         JsonObject config = new JsonObject();

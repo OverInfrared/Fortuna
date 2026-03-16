@@ -67,6 +67,13 @@ public class OreMaterial extends Material
     private final Map<OreFeatureType, OreConfiguredFeature> configuredFeatures = new HashMap<>();
     private final List<OrePlacedFeature> placedFeatures = new ArrayList<>();
 
+    // === Tertiary Blocks ===
+    private final boolean hasNugget;
+    private final boolean hasDoor;
+    private final boolean hasTrapdoor;
+    private final boolean hasBars;
+    private final boolean hasChain;
+
     // =========================================================================
     // Constructor
     // =========================================================================
@@ -110,6 +117,12 @@ public class OreMaterial extends Material
         createConfiguredFeatures();
         choosePlacedFeatures();
 
+        hasNugget = materialType == MaterialType.Ingot;
+        hasDoor = materialType == MaterialType.Ingot && rng.nextFloat() < 0.5f;
+        hasTrapdoor = hasDoor && rng.nextFloat() < 0.8f;
+        hasBars = materialType == MaterialType.Ingot && rng.nextFloat() < 0.4f;
+        hasChain = hasBars;
+
         generateOreColors();
     }
 
@@ -145,6 +158,12 @@ public class OreMaterial extends Material
     public boolean doesGeneration()                                          { return doGeneration; }
     public Map<OreFeatureType, OreConfiguredFeature> getConfiguredFeatures() { return configuredFeatures; }
     public List<OrePlacedFeature> getPlacedFeatures()                        { return placedFeatures; }
+
+    public boolean hasNugget()   { return hasNugget; }
+    public boolean hasDoor()     { return hasDoor; }
+    public boolean hasTrapdoor() { return hasTrapdoor; }
+    public boolean hasBars()     { return hasBars; }
+    public boolean hasChain()    { return hasChain; }
 
     // =========================================================================
     // Registry name helpers
@@ -197,9 +216,52 @@ public class OreMaterial extends Material
 
     private MaterialOreBase chooseOreBase()
     {
-        Utilities.WeightedRandom<MaterialOreBase> baseRandom = new Utilities.WeightedRandom<MaterialOreBase>(rng.nextLong())
-                .add(70, MaterialOreBase.Stone).add(6, MaterialOreBase.Andesite).add(6, MaterialOreBase.Diorite)
-                .add(6, MaterialOreBase.Granite).add(6, MaterialOreBase.Tuff).add(3, MaterialOreBase.Sand).add(3, MaterialOreBase.Gravel);
+        Utilities.WeightedRandom<MaterialOreBase> baseRandom = new Utilities.WeightedRandom<MaterialOreBase>(rng.nextLong());
+
+        switch (miningLevel)
+        {
+            case Copper ->
+            {
+                baseRandom.add(40, MaterialOreBase.Stone)
+                        .add(12, MaterialOreBase.Andesite)
+                        .add(12, MaterialOreBase.Diorite)
+                        .add(12, MaterialOreBase.Granite)
+                        .add(2, MaterialOreBase.Tuff)
+                        .add(12, MaterialOreBase.Sand)
+                        .add(10, MaterialOreBase.Gravel);
+            }
+            case Iron ->
+            {
+                baseRandom.add(55, MaterialOreBase.Stone)
+                        .add(8, MaterialOreBase.Andesite)
+                        .add(8, MaterialOreBase.Diorite)
+                        .add(8, MaterialOreBase.Granite)
+                        .add(6, MaterialOreBase.Tuff)
+                        .add(8, MaterialOreBase.Sand)
+                        .add(7, MaterialOreBase.Gravel);
+            }
+            case Diamond ->
+            {
+                baseRandom.add(60, MaterialOreBase.Stone)
+                        .add(5, MaterialOreBase.Andesite)
+                        .add(5, MaterialOreBase.Diorite)
+                        .add(5, MaterialOreBase.Granite)
+                        .add(12, MaterialOreBase.Tuff)
+                        .add(3, MaterialOreBase.Sand)
+                        .add(10, MaterialOreBase.Gravel);
+            }
+            case Netherite ->
+            {
+                baseRandom.add(50, MaterialOreBase.Stone)
+                        .add(3, MaterialOreBase.Andesite)
+                        .add(3, MaterialOreBase.Diorite)
+                        .add(3, MaterialOreBase.Granite)
+                        .add(25, MaterialOreBase.Tuff)
+                        .add(1, MaterialOreBase.Sand)
+                        .add(15, MaterialOreBase.Gravel);
+            }
+        }
+
         return baseRandom.next();
     }
 
@@ -461,7 +523,7 @@ public class OreMaterial extends Material
     {
         boolean largerVeins = switch (miningLevel)
         {
-            case Copper -> rng.nextFloat() < 0.5f;
+            case Copper -> rng.nextFloat() < 0.7f;
             case Iron -> rng.nextFloat() < 0.2f;
             default -> false;
         };
@@ -473,9 +535,9 @@ public class OreMaterial extends Material
         float base = switch (miningLevel)
         {
             case Copper    -> 0.0f;
-            case Iron      -> 0.4f;
-            case Diamond   -> 0.6f;
-            case Netherite -> 0.7f;
+            case Iron      -> 0.1f;
+            case Diamond   -> 0.3f;
+            case Netherite -> 0.5f;
         };
         float discardChance = Math.clamp(base + (rng.nextFloat() - 0.5f) * 0.8f, 0.05f, 0.95f);
 
@@ -505,9 +567,6 @@ public class OreMaterial extends Material
 
     private void choosePlacedFeatures()
     {
-        final int MIN_Y = -64;
-        final int MAX_Y = 384;
-
         HeightRange oreRange = switch (oreBase)
         {
             case Diorite, Andesite, Granite -> new HeightRange(0, 96);
@@ -518,18 +577,20 @@ public class OreMaterial extends Material
         };
 
         int rangeSize = oreRange.max() - oreRange.min();
-        int halfRange = rangeSize / 2;
 
         // Mining level biases ideal height — higher tiers tend deeper
         float baseIdeal = switch (miningLevel)
         {
             case Copper    -> 0.7f;
-            case Iron      -> 0.4f;
-            case Diamond   -> 0.0f;
-            case Netherite -> -0.3f;
+            case Iron      -> 0.5f;
+            case Diamond   -> 0.2f;
+            case Netherite -> 0.1f;
         };
 
-        float idealBias = Math.clamp(baseIdeal + (rng.nextFloat() - 0.5f) * 1.2f, -0.5f, 0.9f);
+        // Power curve — squaring the random offset makes extreme values much rarer
+        float offset = rng.nextFloat() - 0.5f;
+        float curved = Math.signum(offset) * (float) Math.pow(Math.abs(offset) * 2f, 2.0) / 2f;
+        float idealBias = Math.clamp(baseIdeal + curved * 0.6f, 0f, 1f);
         int idealHeight = oreRange.min() + (int)(rangeSize * idealBias);
 
         int minSpread = rangeSize / 6;
@@ -542,7 +603,8 @@ public class OreMaterial extends Material
         // Ensure top end is at least 15 blocks inside the ore range
         topEnd = Math.max(topEnd, oreRange.min() + 15);
 
-        FeatureProbability newProbability = chooseFeatureProbability();
+        int totalRange = topEnd - bottomEnd;
+        FeatureProbability probability = chooseFeatureProbability(totalRange);
 
         OreFeatureType targetFeatureType = rng.nextFloat() < 0.6f
                 ? OreFeatureType.Medium
@@ -551,32 +613,95 @@ public class OreMaterial extends Material
         IConfiguredFeature targetFeature = configuredFeatures.get(targetFeatureType);
 
         // Every ore gets one trapezoid placement.
-        OrePlacedFeature generalFeature = new OrePlacedFeature(idealHeight, topEnd, bottomEnd, newProbability, DisperseType.Trapezoid, targetFeature);
+        OrePlacedFeature generalFeature = new OrePlacedFeature(idealHeight, topEnd, bottomEnd, probability, DisperseType.Trapezoid, targetFeature);
         placedFeatures.add(generalFeature);
-    }
 
-    private FeatureProbability chooseFeatureProbability()
-    {
-        float baseCount = switch (miningLevel)
+        // Extended uniform placement — flat distribution across a wider range
+        float extendedChance = switch (miningLevel)
         {
-            case Copper    -> 12f;
-            case Iron      -> 8f;
-            case Diamond   -> 3f;
-            case Netherite -> 1f;
+            case Copper    -> 0.7f;
+            case Iron      -> 0.6f;
+            case Diamond   -> 0.3f;
+            case Netherite -> 0.15f;
         };
 
-        float roll = baseCount + (rng.nextFloat() - 0.5f) * baseCount * 1.5f;
-
-        if (roll < 1f)
+        if (rng.nextFloat() < extendedChance)
         {
-            // Negative/low roll becomes rarity filter
-            int rarity = Math.max(2, (int)(Math.abs(roll) + 2));
+            // Wider range than the primary, uniform so no peak
+            int extendedBottom = oreRange.min() + rng.nextInt(rangeSize / 4);
+            int extendedTop = oreRange.max() - rng.nextInt(rangeSize / 4);
+            int extendedRange = extendedTop - extendedBottom;
+
+            // Lower density than primary — supplementary, not dominant
+            float extendedDensityScale = 0.3f + rng.nextFloat() * 0.3f; // 30-60% of primary density
+            FeatureProbability extendedProbability = chooseFeatureProbability((int)(extendedRange * extendedDensityScale));
+
+            IConfiguredFeature extendedFeature = configuredFeatures.get(OreFeatureType.Small);
+
+            OrePlacedFeature extended = new OrePlacedFeature(
+                    (extendedBottom + extendedTop) / 2, extendedTop, extendedBottom,
+                    extendedProbability, DisperseType.Uniform, extendedFeature);
+            placedFeatures.add(extended);
+        }
+
+        // Buried placement — fully hidden, no air exposure
+        float buriedChance = switch (miningLevel)
+        {
+            case Copper    -> 0.2f;
+            case Iron      -> 0.4f;
+            case Diamond   -> 0.6f;
+            case Netherite -> 0.8f;
+        };
+
+        if (rng.nextFloat() < buriedChance)
+        {
+            // Buried uses the same general height area but tighter
+            int buriedSpread = spread / 2 + rng.nextInt(spread / 3 + 1);
+            int buriedBottom = idealHeight - buriedSpread;
+            int buriedTop = idealHeight + buriedSpread;
+            int buriedRange = buriedTop - buriedBottom;
+
+            // Similar density to primary — buried ore is meant to reward deep mining
+            FeatureProbability buriedProbability = chooseFeatureProbability(buriedRange);
+
+            IConfiguredFeature buriedFeature = configuredFeatures.get(OreFeatureType.Buried);
+
+            OrePlacedFeature buried = new OrePlacedFeature(
+                    idealHeight, buriedTop, buriedBottom,
+                    buriedProbability, DisperseType.Trapezoid, buriedFeature);
+            placedFeatures.add(buried);
+        }
+    }
+
+    private FeatureProbability chooseFeatureProbability(int totalRange)
+    {
+        float density = switch (miningLevel)
+        {
+            case Copper    -> 0.10f + rng.nextFloat() * 0.15f;  // 0.10 - 0.25
+            case Iron      -> 0.08f + rng.nextFloat() * 0.12f;  // 0.08 - 0.20
+            case Diamond   -> 0.03f + rng.nextFloat() * 0.05f;  // 0.03 - 0.08
+            case Netherite -> 0.01f + rng.nextFloat() * 0.03f;  // 0.01 - 0.04
+        };
+
+        // In chooseFeatureProbability, scale density up for rare base blocks
+        float baseBlockMultiplier = switch (oreBase)
+        {
+            case Tuff                       -> 4.0f;
+            case Diorite, Andesite, Granite -> 2.5f;
+            case Sand                       -> 3.0f;
+            case Gravel                     -> 2.0f;
+            default                         -> 1.0f;
+        };
+
+        int count = Math.round(density * totalRange * baseBlockMultiplier);
+
+        if (count < 1)
+        {
+            int rarity = Math.max(2, Math.round(1f / (density * totalRange)));
             return new FeatureProbability(rarity, FeatureProbability.CountType.Rarity);
         }
-        else
-        {
-            return new FeatureProbability(Math.round(roll), FeatureProbability.CountType.Count);
-        }
+
+        return new FeatureProbability(count, FeatureProbability.CountType.Count);
     }
 
     // =========================================================================
