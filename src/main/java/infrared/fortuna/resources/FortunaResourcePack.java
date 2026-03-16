@@ -6,11 +6,8 @@ import infrared.fortuna.Fortuna;
 import infrared.fortuna.blocks.FortunaDoorBlock;
 import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.blocks.ModBlocks;
-import infrared.fortuna.items.DynamicArmorType;
+import infrared.fortuna.items.*;
 import infrared.fortuna.equipment.IFortunaEquipment;
-import infrared.fortuna.items.FortunaArmor;
-import infrared.fortuna.items.FortunaItem;
-import infrared.fortuna.items.ModItems;
 import infrared.fortuna.materials.Material;
 import infrared.fortuna.materials.ore.OreMaterial;
 import infrared.fortuna.util.PaletteGenerator;
@@ -159,6 +156,9 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
 
             if (block instanceof FortunaDoorBlock)
             {
+                // models/item not models/items
+                emitResource(resourceOutput, prefix, "models/item/" + block.getRegistryName() + ".json");
+
                 for (String suffix : FortunaDoorBlock.DOOR_MODELS)
                     emitResource(resourceOutput, prefix, "models/block/" + block.getRegistryName() + "_" + suffix + ".json");
             }
@@ -168,7 +168,7 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
         Set<String> emittedEquipment = new HashSet<>();
         for (Item item : ModItems.getRegisteredItem().values())
         {
-            if (item instanceof FortunaItem fortunaItem)
+            if (item instanceof IFortunaItem fortunaItem)
             {
                 emitResource(resourceOutput, prefix, "models/item/" + fortunaItem.getRegistryName() + ".json");
                 emitResource(resourceOutput, prefix, "items/" + fortunaItem.getRegistryName() + ".json");
@@ -176,11 +176,11 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
 
             if (item instanceof IFortunaEquipment equipment)
             {
-                String name = equipment.getEquipmentName();
-                if (emittedEquipment.add(name))
-                    emitResource(resourceOutput, prefix, "equipment/" + name + ".json");
-                if (emittedPalettes.add(name))
-                    emitResource(resourceOutput, prefix, "textures/trims/color_palettes/" + name + ".png");
+                String eName = equipment.getEquipmentName();
+                if (emittedEquipment.add(eName))
+                    emitResource(resourceOutput, prefix, "equipment/" + eName + ".json");
+                if (emittedPalettes.add(eName))
+                    emitResource(resourceOutput, prefix, "textures/trims/color_palettes/" + eName + ".png");
             }
         }
 
@@ -258,14 +258,11 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
 
         if (prefix.startsWith("models/item/"))
         {
-            // Check for trim variant models
             if (name.endsWith("_trim"))
-            {
                 return resolveTrimModel(name);
-            }
 
             Item item = ModItems.getRegisteredItem().get(name);
-            return item instanceof FortunaItem fortunaItem ? fortunaItem.getModelString() : null;
+            return item instanceof IFortunaItem fortunaItem ? fortunaItem.getModelString() : null;
         }
 
         if (prefix.startsWith("items/"))
@@ -274,7 +271,7 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
             if (block != null) return block.getItemString();
 
             Item item = ModItems.getRegisteredItem().get(name);
-            return item instanceof FortunaItem fortunaItem ? fortunaItem.getItemString() : null;
+            return item instanceof IFortunaItem fortunaItem ? fortunaItem.getItemString() : null;
         }
 
         if (prefix.startsWith("equipment/"))

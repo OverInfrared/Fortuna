@@ -2,6 +2,7 @@ package infrared.fortuna.items;
 
 import infrared.fortuna.Fortuna;
 
+import infrared.fortuna.items.ore.NuggetItem;
 import infrared.fortuna.util.Utilities;
 import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.DynamicProperties;
@@ -18,6 +19,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.DoubleHighBlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
 import net.minecraft.world.item.ItemStack;
@@ -43,6 +45,14 @@ public class ModItems
         registeredItems.put(block.getRegistryName(), blockItem);
     }
 
+    public static void registerDoorBlock(IFortunaBlock block)
+    {
+        ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, block.getRegistryName()));
+        FortunaDoubleHighBlockItem blockItem = new FortunaDoubleHighBlockItem((Block) block, new Item.Properties().setId(itemKey).useBlockDescriptionPrefix(),  block.getDisplayName(), block.getRegistryName());
+        Registry.register(BuiltInRegistries.ITEM, itemKey, blockItem);
+        registeredItems.put(block.getRegistryName(), blockItem);
+    }
+
     public static final ResourceKey<CreativeModeTab> CUSTOM_CREATIVE_TAB_KEY = ResourceKey.create(BuiltInRegistries.CREATIVE_MODE_TAB.key(), Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, "creative_tab"));
 
     // Initializes items for ores, raw material, refined material, tools, and armor items.
@@ -62,6 +72,9 @@ public class ModItems
 
             // Refined Ore Item
             registerItem(new IngotItem(createItemProperties(name, "ingot", material), new Properties().trimMaterial(material.getTrimMaterialKey())));
+
+            // Nugget Item
+            registerItem(new NuggetItem(createItemProperties(name, "nugget", material), new Properties()));
         }
 
         // Generate tool items

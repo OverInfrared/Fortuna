@@ -24,6 +24,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 import net.minecraft.world.level.block.state.properties.BlockSetType;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
+import net.minecraft.world.level.material.PushReaction;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -36,7 +37,11 @@ public class ModBlocks
 
     private static void registerBlock(IFortunaBlock fortunaBlock)
     {
-        ModItems.registerBlock(fortunaBlock);
+        if (fortunaBlock instanceof FortunaDoorBlock)
+            ModItems.registerDoorBlock(fortunaBlock);
+        else
+            ModItems.registerBlock(fortunaBlock);
+
         Registry.register(BuiltInRegistries.BLOCK, fortunaBlock.getResourceKey(), (Block) fortunaBlock);
         registeredBlocks.put(fortunaBlock.getDynamicProperties().registryName(), fortunaBlock);
     }
@@ -118,7 +123,7 @@ public class ModBlocks
             ResourceKey<Block> doorKey          = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, doorRegistryName));
 
             DynamicProperties<Block, OreMaterial> doorDynamicProperties = new DynamicProperties<>(doorRegistryName, Component.literal("%s Door".formatted(Utilities.capitalize(name))), doorKey, material);
-            Properties                            doorProperties        = BlockBehaviour.Properties.of().strength(material.getMaterialMineTime(), material.getMaterialHardness()).requiresCorrectToolForDrops().noOcclusion();
+            Properties                            doorProperties        = BlockBehaviour.Properties.of().strength(material.getMaterialMineTime(), material.getMaterialHardness()).requiresCorrectToolForDrops().noOcclusion().pushReaction(PushReaction.DESTROY);
 
             registerBlock(new FortunaDoorBlock(doorDynamicProperties, doorProperties, BlockSetType.IRON));
         }

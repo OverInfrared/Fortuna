@@ -1,5 +1,6 @@
 package infrared.fortuna.blocks;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
 import infrared.fortuna.DynamicProperties;
@@ -150,9 +151,70 @@ public class FortunaDoorBlock extends DoorBlock implements IFortunaBlock, IFortu
         textures.addProperty("bottom", "%s:block/door_bottom".formatted(Fortuna.MOD_ID));
 
         JsonObject model = new JsonObject();
-        model.addProperty("parent", "minecraft:block/door_%s".formatted(modelSuffix));
+        model.addProperty("parent", "%s:block/tinted_door_%s".formatted(Fortuna.MOD_ID, modelSuffix));
         model.add("textures", textures);
 
         return model.toString();
+    }
+
+    @Override
+    public JsonObject generateItemModel()
+    {
+        JsonObject model = new JsonObject();
+        model.addProperty("type", "minecraft:model");
+        model.addProperty("model", "%s:item/%s".formatted(Fortuna.MOD_ID, getRegistryName()));
+
+        JsonArray tints = new JsonArray();
+        for (int tint : getRequiredTints())
+            tints.add(buildTint(tint));
+        model.add("tints", tints);
+
+        JsonObject itemModel = new JsonObject();
+        itemModel.add("model", model);
+        return itemModel;
+    }
+
+    @Override
+    public JsonObject getLoot(HolderLookup.Provider registries)
+    {
+        String blockName = "%s:%s".formatted(Fortuna.MOD_ID, getRegistryName());
+
+        JsonObject halfCondition = new JsonObject();
+        halfCondition.addProperty("condition", "minecraft:block_state_property");
+        halfCondition.addProperty("block", blockName);
+        JsonObject properties = new JsonObject();
+        properties.addProperty("half", "lower");
+        halfCondition.add("properties", properties);
+
+        JsonArray entryConditions = new JsonArray();
+        entryConditions.add(halfCondition);
+
+        JsonObject entry = new JsonObject();
+        entry.addProperty("type", "minecraft:item");
+        entry.addProperty("name", blockName);
+        entry.add("conditions", entryConditions);
+
+        JsonArray entries = new JsonArray();
+        entries.add(entry);
+
+        JsonObject survives = new JsonObject();
+        survives.addProperty("condition", "minecraft:survives_explosion");
+
+        JsonArray poolConditions = new JsonArray();
+        poolConditions.add(survives);
+
+        JsonObject pool = new JsonObject();
+        pool.add("conditions", poolConditions);
+        pool.add("entries", entries);
+        pool.addProperty("rolls", 1.0);
+
+        JsonArray pools = new JsonArray();
+        pools.add(pool);
+
+        JsonObject lootTable = new JsonObject();
+        lootTable.addProperty("type", "minecraft:block");
+        lootTable.add("pools", pools);
+
+        return lootTable;
     }
 }

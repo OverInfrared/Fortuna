@@ -41,6 +41,7 @@ public class OreMaterial extends Material
     private final MaterialOreIngot oreIngot;
     private final MaterialOreRaw oreRaw;
     private final MaterialOreGem oreGem;
+    private final MaterialOreNugget oreNugget;
     private final MaterialOreBlock materialBlock;
 
     // === Block properties ===
@@ -92,6 +93,7 @@ public class OreMaterial extends Material
         oreIngot = chooseOreIngot();
         oreRaw = chooseOreRaw();
         oreGem = chooseOreGem();
+        oreNugget = chooseOreNugget();
         materialBlock = chooseOreBlock();
 
         materialMineTime = chooseMiningTime();
@@ -138,6 +140,7 @@ public class OreMaterial extends Material
     public MaterialOreIngot getIngot()         { return oreIngot; }
     public MaterialOreRaw getMaterialType()    { return oreRaw; }
     public MaterialOreGem getGem()             { return oreGem; }
+    public MaterialOreNugget getNugget()       { return oreNugget; }
     public MaterialOreBlock getMaterialBlock() { return materialBlock; }
 
     public float getMaterialMineTime() { return materialMineTime; }
@@ -159,7 +162,6 @@ public class OreMaterial extends Material
     public Map<OreFeatureType, OreConfiguredFeature> getConfiguredFeatures() { return configuredFeatures; }
     public List<OrePlacedFeature> getPlacedFeatures()                        { return placedFeatures; }
 
-    public boolean hasNugget()   { return hasNugget; }
     public boolean hasDoor()     { return hasDoor; }
     public boolean hasTrapdoor() { return hasTrapdoor; }
     public boolean hasBars()     { return hasBars; }
@@ -302,6 +304,12 @@ public class OreMaterial extends Material
                 .add(7, MaterialOreGem.Resin).add(4, MaterialOreGem.Prismarine).add(4, MaterialOreGem.Amethyst);
 
         return gemRNG.next();
+    }
+
+    private MaterialOreNugget chooseOreNugget()
+    {
+        MaterialOreNugget[] values = MaterialOreNugget.values();
+        return values[rng.nextInt(values.length)];
     }
 
     private MaterialOreBlock chooseOreBlock()

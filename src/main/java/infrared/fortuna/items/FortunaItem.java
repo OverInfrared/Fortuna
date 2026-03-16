@@ -13,12 +13,9 @@ import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class FortunaItem extends Item
+public abstract class FortunaItem extends Item implements IFortunaItem
 {
     protected final DynamicProperties<Item, OreMaterial> dynamicProperties;
-
-    private JsonObject itemJson;
-    private JsonObject modelJson;
 
     private final List<String> requiredTextures = new ArrayList<>();
     private final List<Integer> requiredTints = new ArrayList<>();
@@ -30,92 +27,24 @@ public abstract class FortunaItem extends Item
     }
 
     @Override
-    public Component getName(ItemStack itemStack)
-    {
-        return dynamicProperties.displayName();
-    }
+    public Component getName(ItemStack itemStack) { return dynamicProperties.displayName(); }
 
-    public Component getDisplayName()
-    {
-        return dynamicProperties.displayName();
-    }
+    @Override
+    public Component getDisplayName() { return dynamicProperties.displayName(); }
 
-    public String getRegistryName()
-    {
-        return dynamicProperties.registryName();
-    }
+    @Override
+    public String getRegistryName() { return dynamicProperties.registryName(); }
 
-    public ResourceKey<Item> getResourceKey()
-    {
-        return dynamicProperties.resourceKey();
-    }
+    public ResourceKey<Item> getResourceKey() { return dynamicProperties.resourceKey(); }
 
     public DynamicProperties<Item, OreMaterial> getDynamicProperties() { return dynamicProperties; }
 
-    protected void addRequiredTexture(String texture)
-    {
-        requiredTextures.add(texture);
-    }
+    protected void addRequiredTexture(String texture) { requiredTextures.add(texture); }
+    protected void addRequiredTint(int color) { requiredTints.add(color); }
 
-    protected void addRequiredTint(int color)
-    {
-        requiredTints.add(color);
-    }
+    @Override
+    public List<String> getRequiredTextures() { return requiredTextures; }
 
-    public String getItemString()
-    {
-        if (itemJson == null)
-            itemJson = generateItem();
-        return itemJson.toString();
-    }
-
-    private JsonObject generateItem()
-    {
-        JsonObject model = new JsonObject();
-        model.addProperty("type", "minecraft:model");
-        model.addProperty("model", "%s:item/%s".formatted(Fortuna.MOD_ID, dynamicProperties.registryName()));
-
-        JsonArray tints = new JsonArray();
-        for (int color : requiredTints)
-            tints.add(buildTint(color));
-
-        model.add("tints", tints);
-
-        JsonObject itemModel = new JsonObject();
-        itemModel.add("model", model);
-
-        return itemModel;
-    }
-
-    public String getModelString()
-    {
-        if (modelJson == null)
-            modelJson = generateModel();
-        return modelJson.toString();
-    }
-
-    private JsonObject generateModel()
-    {
-        JsonObject textures = new JsonObject();
-        for (int i = 0; i < requiredTextures.size(); i++)
-        {
-            String texture = requiredTextures.get(i);
-            textures.addProperty("layer" + i, "%s:item/%s".formatted(Fortuna.MOD_ID, texture));
-        }
-
-        JsonObject model = new JsonObject();
-        model.addProperty("parent", "minecraft:item/generated");
-        model.add("textures", textures);
-
-        return model;
-    }
-
-    private JsonObject buildTint(int color)
-    {
-        JsonObject border = new JsonObject();
-        border.addProperty("type", "minecraft:constant");
-        border.addProperty("value", color);
-        return border;
-    }
-
+    @Override
+    public List<Integer> getRequiredTints() { return requiredTints; }
 }
