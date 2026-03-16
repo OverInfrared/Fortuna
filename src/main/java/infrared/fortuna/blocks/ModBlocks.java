@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+import net.minecraft.world.level.block.state.properties.BlockSetType;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 
 import java.util.*;
@@ -110,6 +111,17 @@ public class ModBlocks
             registerBlocks(createWeatheredBlocks(material));
         else
             registerBlock(createMaterialBlock(material));
+
+        if (material.hasDoor())
+        {
+            String             doorRegistryName = "%s_door".formatted(name);
+            ResourceKey<Block> doorKey          = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, doorRegistryName));
+
+            DynamicProperties<Block, OreMaterial> doorDynamicProperties = new DynamicProperties<>(doorRegistryName, Component.literal("%s Door".formatted(Utilities.capitalize(name))), doorKey, material);
+            Properties                            doorProperties        = BlockBehaviour.Properties.of().strength(material.getMaterialMineTime(), material.getMaterialHardness()).requiresCorrectToolForDrops().noOcclusion();
+
+            registerBlock(new FortunaDoorBlock(doorDynamicProperties, doorProperties, BlockSetType.IRON));
+        }
     }
 
     private static IFortunaBlock createMaterialBlock(OreMaterial material)

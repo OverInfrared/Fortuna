@@ -3,6 +3,7 @@ package infrared.fortuna.blocks;
 import com.google.gson.JsonObject;
 import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
 import infrared.fortuna.DynamicProperties;
+import infrared.fortuna.Fortuna;
 import infrared.fortuna.util.Utilities;
 import infrared.fortuna.materials.ore.MiningLevel;
 import infrared.fortuna.materials.ore.OreMaterial;
@@ -27,13 +28,14 @@ public class FortunaDoorBlock extends DoorBlock implements IFortunaBlock, IFortu
 
     public FortunaDoorBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, BlockSetType blockSetType)
     {
-        super(blockSetType, properties);
+        super(blockSetType, properties.setId(dynamicProperties.resourceKey()));
         this.dynamicProperties = dynamicProperties;
         this.requiredMiningLevel = dynamicProperties.material().getMiningLevel();
 
         addRequiredTexture("particle", "door_top");
         addOverlayTexture("top", "door_top", 0);
         addOverlayTexture("bottom", "door_bottom", 0);
+        addRequiredTint(dynamicProperties.material().getMainColor().getRGB());
         addRequiredTint(dynamicProperties.material().getMainColor().getRGB());
     }
 
@@ -73,5 +75,84 @@ public class FortunaDoorBlock extends DoorBlock implements IFortunaBlock, IFortu
     public Set<String> getRecipeNames()
     {
         return Set.of(getRegistryName());
+    }
+
+    public static final String[] DOOR_MODELS = {
+            "bottom_left", "bottom_left_open",
+            "bottom_right", "bottom_right_open",
+            "top_left", "top_left_open",
+            "top_right", "top_right_open"
+    };
+
+    private static final int[][] ROTATIONS = {
+            // east, south, west, north — for each model pair (left/right × open/closed)
+            // {east, south, west, north}
+            {0, 90, 180, 270},     // bottom_left
+            {90, 180, 270, 0},     // bottom_left_open
+            {0, 90, 180, 270},     // bottom_right
+            {270, 0, 90, 180},     // bottom_right_open
+            {0, 90, 180, 270},     // top_left
+            {90, 180, 270, 0},     // top_left_open
+            {0, 90, 180, 270},     // top_right
+            {270, 0, 90, 180},     // top_right_open
+    };
+
+    @Override
+    public String getBlockStateString()
+    {
+        String name = dynamicProperties.registryName();
+        String[] facings = {"east", "south", "west", "north"};
+        String[] halves = {"lower", "upper"};
+        String[] hinges = {"left", "right"};
+        boolean[] opens = {false, true};
+
+        JsonObject variants = new JsonObject();
+
+        for (int f = 0; f < facings.length; f++)
+        {
+            for (String half : halves)
+            {
+                for (String hinge : hinges)
+                {
+                    for (boolean open : opens)
+                    {
+                        String modelSuffix = half.equals("lower") ? "bottom" : "top";
+                        modelSuffix += "_" + hinge;
+                        if (open) modelSuffix += "_open";
+
+                        int modelIndex = java.util.Arrays.asList(DOOR_MODELS).indexOf(modelSuffix);
+
+                        String key = "facing=%s,half=%s,hinge=%s,open=%s".formatted(
+                                facings[f], half, hinge, String.valueOf(open));
+
+                        JsonObject variant = new JsonObject();
+                        variant.addProperty("model", "%s:block/%s_%s".formatted(Fortuna.MOD_ID, name, modelSuffix));
+
+                        int rotation = ROTATIONS[modelIndex][f];
+                        if (rotation != 0)
+                            variant.addProperty("y", rotation);
+
+                        variants.add(key, variant);
+                    }
+                }
+            }
+        }
+
+        JsonObject blockstate = new JsonObject();
+        blockstate.add("variants", variants);
+        return blockstate.toString();
+    }
+
+    public String getDoorModelString(String modelSuffix)
+    {
+        JsonObject textures = new JsonObject();
+        textures.addProperty("top", "%s:block/door_top".formatted(Fortuna.MOD_ID));
+        textures.addProperty("bottom", "%s:block/door_bottom".formatted(Fortuna.MOD_ID));
+
+        JsonObject model = new JsonObject();
+        model.addProperty("parent", "minecraft:block/door_%s".formatted(modelSuffix));
+        model.add("textures", textures);
+
+        return model.toString();
     }
 }

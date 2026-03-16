@@ -87,6 +87,17 @@ public class FortunaRecipeProvider extends RecipeProvider
         return encodeRecipe(recipe);
     }
 
+    public JsonObject shapedDoor(ItemLike door, ItemLike material)
+    {
+        ShapedRecipe recipe = new ShapedRecipe("", CraftingBookCategory.MISC,
+                ShapedRecipePattern.of(
+                        Map.of('X', Ingredient.of(material)),
+                        "XX", "XX", "XX"
+                ),
+                door.asItem().getDefaultInstance().copyWithCount(3));
+        return encodeRecipe(recipe);
+    }
+
     private JsonObject encodeRecipe(Recipe<?> recipe)
     {
         return Recipe.CODEC
