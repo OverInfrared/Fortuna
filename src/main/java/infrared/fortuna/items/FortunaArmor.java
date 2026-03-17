@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import infrared.fortuna.DynamicProperties;
 import infrared.fortuna.Fortuna;
+import infrared.fortuna.materials.Material;
 import infrared.fortuna.util.Utilities;
 import infrared.fortuna.equipment.IFortunaEquipment;
 import infrared.fortuna.materials.ore.OreMaterial;
@@ -146,9 +147,9 @@ public class FortunaArmor extends FortunaItem implements IFortunaRecipe, IFortun
         }
 
         // Dynamic trim cases
-        for (infrared.fortuna.materials.Material mat : Fortuna.initializedMaterials)
+        for (Material mat : Fortuna.initializedMaterials)
         {
-            if (mat instanceof OreMaterial oreMat)
+            if (mat instanceof OreMaterial oreMat && oreMat.isTrimable())
                 cases.add(buildTrimCase(Fortuna.MOD_ID, oreMat.getName()));
         }
 

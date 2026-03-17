@@ -43,6 +43,7 @@ public class OreMaterial extends Material
     private MaterialOreGem oreGem          = MaterialOreGem.Diamond;
     private MaterialOreNugget oreNugget    = MaterialOreNugget.Iron;
     private MaterialOreBlock materialBlock = MaterialOreBlock.Iron;
+    private MaterialOreFuel oreFuel        = MaterialOreFuel.Coal;
 
     // === Block properties ===
     private float materialMineTime;
@@ -62,6 +63,7 @@ public class OreMaterial extends Material
     private ArmorMaterial armorMaterial;
     private int armorVariant;
     private ResourceKey<TrimMaterial> trimMaterialKey;
+    private boolean trimable = false;
 
     // === Ore generation properties ===
     private boolean doGeneration = true;
@@ -119,6 +121,7 @@ public class OreMaterial extends Material
 
         trimMaterialKey = ResourceKey.create(Registries.TRIM_MATERIAL,
                 Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, name));
+        trimable = true;
 
         doGeneration = true;
         createConfiguredFeatures();
@@ -133,7 +136,25 @@ public class OreMaterial extends Material
     }
 
     private void initFuel() {
+        oreBase = chooseOreBase();
+        oreOverlay = chooseOreOverlay();
 
+        oreFuel = chooseOreFuel();
+        materialBlock = chooseOreBlock();
+
+        materialMineTime = chooseMiningTime();
+        materialHardness = chooseHardness();
+
+        int minXp = 1 + miningLevel.ordinal();
+        int maxXp = minXp + 1 + rng.nextInt(4);
+        xpRange = UniformInt.of(minXp, maxXp);
+        drops = chooseDropCountType();
+
+        doGeneration = true;
+        createConfiguredFeatures();
+        choosePlacedFeatures();
+
+        generateOreColors();
     }
 
     // =========================================================================
@@ -146,9 +167,10 @@ public class OreMaterial extends Material
     public MaterialOreBase getBase()           { return oreBase; }
     public MaterialOreOverlay getOverlay()     { return oreOverlay; }
     public MaterialOreIngot getIngot()         { return oreIngot; }
+    public MaterialOreNugget getNugget()       { return oreNugget; }
     public MaterialOreRaw getMaterialType()    { return oreRaw; }
     public MaterialOreGem getGem()             { return oreGem; }
-    public MaterialOreNugget getNugget()       { return oreNugget; }
+    public MaterialOreFuel getFuel()           { return oreFuel; }
     public MaterialOreBlock getMaterialBlock() { return materialBlock; }
 
     public float getMaterialMineTime() { return materialMineTime; }
@@ -165,6 +187,7 @@ public class OreMaterial extends Material
     public ArmorMaterial getArmorMaterial()               { return armorMaterial; }
     public int getArmorVariant()                          { return armorVariant; }
     public ResourceKey<TrimMaterial> getTrimMaterialKey() { return trimMaterialKey; }
+    public boolean isTrimable()                           { return trimable; }
 
     public boolean doesGeneration()                                          { return doGeneration; }
     public Map<OreFeatureType, OreConfiguredFeature> getConfiguredFeatures() { return configuredFeatures; }
@@ -199,6 +222,16 @@ public class OreMaterial extends Material
 
         switch (miningLevel)
         {
+            case Stone ->
+            {
+                baseRandom.add(94, MaterialOreBase.Stone)
+                        .add(1, MaterialOreBase.Andesite)
+                        .add(1, MaterialOreBase.Diorite)
+                        .add(1, MaterialOreBase.Granite)
+                        .add(1, MaterialOreBase.Tuff)
+                        .add(1, MaterialOreBase.Sand)
+                        .add(1, MaterialOreBase.Gravel);
+            }
             case Copper ->
             {
                 baseRandom.add(40, MaterialOreBase.Stone)
@@ -253,6 +286,9 @@ public class OreMaterial extends Material
         if (materialType == MaterialType.Ingot)
             overlayRandom.add(20, MaterialOreOverlay.Copper);
 
+        if (materialType == MaterialType.Fuel)
+            overlayRandom.add(40, MaterialOreOverlay.Coal);
+
         return overlayRandom.next();
     }
 
@@ -283,6 +319,12 @@ public class OreMaterial extends Material
         return gemRNG.next();
     }
 
+    private MaterialOreFuel chooseOreFuel()
+    {
+        MaterialOreFuel[] values = MaterialOreFuel.values();
+        return values[rng.nextInt(values.length)];
+    }
+
     private MaterialOreNugget chooseOreNugget()
     {
         MaterialOreNugget[] values = MaterialOreNugget.values();
@@ -307,6 +349,10 @@ public class OreMaterial extends Material
             case Special -> {
                 MaterialOreBlock[] values = new MaterialOreBlock[] { MaterialOreBlock.Gold, MaterialOreBlock.Netherite, MaterialOreBlock.Amethyst,
                         MaterialOreBlock.Diamond, MaterialOreBlock.Amethyst, MaterialOreBlock.Emerald, MaterialOreBlock.Lapis, };
+                yield values[rng.nextInt(values.length)];
+            }
+            case Fuel -> {
+                MaterialOreBlock[] values = new MaterialOreBlock[] { MaterialOreBlock.Coal, MaterialOreBlock.Coal, MaterialOreBlock.Resin };
                 yield values[rng.nextInt(values.length)];
             }
             case null, default -> {
@@ -373,6 +419,7 @@ public class OreMaterial extends Material
             case Iron     -> 180 + rng.nextInt(150);     // 180 - 329
             case Diamond  -> 800 + rng.nextInt(1200);    // 800 - 1999
             case Netherite -> 1500 + rng.nextInt(1000);  // 1500 - 2499
+            case null, default -> 180 + rng.nextInt(150);
         };
 
         float baseSpeed = switch (miningLevel)
@@ -381,6 +428,7 @@ public class OreMaterial extends Material
             case Iron     -> 5.0f + rng.nextFloat() * 2.0f;    // 5.0 - 7.0
             case Diamond  -> 7.0f + rng.nextFloat() * 2.5f;    // 7.0 - 9.5
             case Netherite -> 8.0f + rng.nextFloat() * 2.0f;   // 8.0 - 10.0
+            case null, default -> 5.0f + rng.nextFloat() * 2.0f;
         };
 
         float baseAttackDamage = switch (miningLevel)
@@ -389,6 +437,7 @@ public class OreMaterial extends Material
             case Iron     -> 1.5f + rng.nextFloat();            // 1.5 - 2.5
             case Diamond  -> 2.5f + rng.nextFloat() * 1.5f;    // 2.5 - 4.0
             case Netherite -> 3.5f + rng.nextFloat() * 1.5f;   // 3.5 - 5.0
+            case null, default -> 1.5f + rng.nextFloat();
         };
 
         int baseEnchantment = switch (miningLevel)
@@ -397,6 +446,7 @@ public class OreMaterial extends Material
             case Iron     -> 8 + rng.nextInt(10);     // 8 - 17
             case Diamond  -> 6 + rng.nextInt(10);     // 6 - 15
             case Netherite -> 10 + rng.nextInt(10);   // 10 - 19
+            case null, default -> 8 + rng.nextInt(10);
         };
 
         TagKey<Block> incorrectBlocks = switch (miningLevel)
@@ -405,6 +455,7 @@ public class OreMaterial extends Material
             case Iron     -> BlockTags.INCORRECT_FOR_IRON_TOOL;
             case Diamond  -> BlockTags.INCORRECT_FOR_DIAMOND_TOOL;
             case Netherite -> BlockTags.INCORRECT_FOR_NETHERITE_TOOL;
+            case null, default -> BlockTags.INCORRECT_FOR_WOODEN_TOOL;
         };
 
         // TODO: generate a custom repair item tag once item tags are dynamic
@@ -414,6 +465,7 @@ public class OreMaterial extends Material
             case Iron     -> ItemTags.IRON_TOOL_MATERIALS;
             case Diamond  -> ItemTags.DIAMOND_TOOL_MATERIALS;
             case Netherite -> ItemTags.NETHERITE_TOOL_MATERIALS;
+            case null, default -> ItemTags.WOODEN_TOOL_MATERIALS;
         };
 
         return new ToolMaterial(incorrectBlocks, baseDurability, baseSpeed, baseAttackDamage, baseEnchantment, repairItems);
@@ -434,6 +486,7 @@ public class OreMaterial extends Material
             case Iron      -> 12 + rng.nextInt(8);       // 12 - 19
             case Diamond   -> 25 + rng.nextInt(15);      // 25 - 39
             case Netherite -> 30 + rng.nextInt(15);      // 30 - 44
+            case null, default -> 12 + rng.nextInt(8);
         };
 
         int baseDefense = switch (miningLevel)
@@ -442,6 +495,7 @@ public class OreMaterial extends Material
             case Iron      -> 2;
             case Diamond   -> 3;
             case Netherite -> 3;
+            case null, default -> 2;
         };
 
         Map<ArmorType, Integer> defense = ArmorMaterials.makeDefense(
@@ -458,20 +512,21 @@ public class OreMaterial extends Material
             case Iron      -> 8 + rng.nextInt(10);
             case Diamond   -> 6 + rng.nextInt(10);
             case Netherite -> 10 + rng.nextInt(10);
+            case null, default -> 8 + rng.nextInt(10);
         };
 
         float toughness = switch (miningLevel)
         {
             case Diamond   -> 1.0f + rng.nextFloat() * 2.0f;
             case Netherite -> 2.0f + rng.nextFloat() * 2.0f;
-            default        -> 0.0f;
+            case null, default -> 0.0f;
         };
 
         float knockbackResistance = switch (miningLevel)
         {
             case Netherite -> 0.05f + rng.nextFloat() * 0.1f;
             case Diamond   -> rng.nextFloat() < 0.3f ? 0.05f : 0.0f;
-            default        -> 0.0f;
+            case null, default -> 0.0f;
         };
 
         // TODO: generate a custom repair item tag once item tags are dynamic
@@ -481,6 +536,7 @@ public class OreMaterial extends Material
             case Iron      -> ItemTags.REPAIRS_IRON_ARMOR;
             case Diamond   -> ItemTags.REPAIRS_DIAMOND_ARMOR;
             case Netherite -> ItemTags.REPAIRS_NETHERITE_ARMOR;
+            case null, default -> ItemTags.WOODEN_TOOL_MATERIALS;
         };
 
         ResourceKey<EquipmentAsset> armorAssetKey = ResourceKey.create(
@@ -519,10 +575,10 @@ public class OreMaterial extends Material
 
         float base = switch (miningLevel)
         {
-            case Copper    -> 0.0f;
-            case Iron      -> 0.1f;
-            case Diamond   -> 0.3f;
-            case Netherite -> 0.5f;
+            case Stone, Copper -> 0.0f;
+            case Iron          -> 0.1f;
+            case Diamond       -> 0.3f;
+            case Netherite     -> 0.5f;
         };
         float discardChance = Math.clamp(base + (rng.nextFloat() - 0.5f) * 0.8f, 0.05f, 0.95f);
 
@@ -566,6 +622,7 @@ public class OreMaterial extends Material
         // Mining level biases ideal height — higher tiers tend deeper
         float baseIdeal = switch (miningLevel)
         {
+            case Stone     -> 0.6f;
             case Copper    -> 0.7f;
             case Iron      -> 0.5f;
             case Diamond   -> 0.2f;
@@ -604,6 +661,7 @@ public class OreMaterial extends Material
         // Extended uniform placement — flat distribution across a wider range
         float extendedChance = switch (miningLevel)
         {
+            case Stone     -> 1.0f;
             case Copper    -> 0.7f;
             case Iron      -> 0.6f;
             case Diamond   -> 0.3f;
@@ -632,6 +690,7 @@ public class OreMaterial extends Material
         // Buried placement — fully hidden, no air exposure
         float buriedChance = switch (miningLevel)
         {
+            case Stone     -> 0.0f;
             case Copper    -> 0.2f;
             case Iron      -> 0.4f;
             case Diamond   -> 0.6f;
@@ -662,6 +721,7 @@ public class OreMaterial extends Material
     {
         float density = switch (miningLevel)
         {
+            case Stone     -> 0.11f + rng.nextFloat() * 0.15f;
             case Copper    -> 0.10f + rng.nextFloat() * 0.15f;  // 0.10 - 0.25
             case Iron      -> 0.08f + rng.nextFloat() * 0.12f;  // 0.08 - 0.20
             case Diamond   -> 0.03f + rng.nextFloat() * 0.05f;  // 0.03 - 0.08
@@ -858,7 +918,7 @@ public class OreMaterial extends Material
                     setColor("secondary_dark",  Utilities.nudgeColor(getSecondaryColor(), 0.15f, 0f, 0f));
                 }
             }
-            case Gem, Special -> {
+            case Gem, Special, Fuel -> {
                 float hue = getHue();
                 float saturation = rng.nextFloat() < 0.2f
                         ? 0.05f + rng.nextFloat() * 0.2f

@@ -9,7 +9,9 @@ public enum MaterialOreBlock
     Gold("gold_block", false),
     Lapis("lapis_block", false),
     Netherite("netherite_block", false),
-    Amethyst("amethyst_block", false);
+    Amethyst("amethyst_block", false),
+    Coal("coal_block", false),
+    Resin("resin_block", false);
 
     private final String texture;
 

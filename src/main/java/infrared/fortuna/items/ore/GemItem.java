@@ -2,6 +2,7 @@ package infrared.fortuna.items.ore;
 
 import infrared.fortuna.DynamicProperties;
 import infrared.fortuna.items.FortunaItem;
+import infrared.fortuna.materials.MaterialType;
 import infrared.fortuna.materials.ore.OreMaterial;
 import net.minecraft.world.item.Item;
 
@@ -18,11 +19,18 @@ public class GemItem extends FortunaItem
         Color lightColor = dynamicProperties.material().getColor("main_light");
         Color darkColor = dynamicProperties.material().getColor("main_dark");
 
+        if (dynamicProperties.material().getType() == MaterialType.Fuel)
+        {
+            addRequiredTexture(dynamicProperties.material().getFuel().getTexture());
+            addRequiredTint(color.getRGB());
+            return;
+        }
+
         addRequiredTexture(dynamicProperties.material().getGem().getTexture() + "_neutral");
+        addRequiredTint(color.getRGB());
         addRequiredTexture(dynamicProperties.material().getGem().getTexture() + "_light");
         addRequiredTexture(dynamicProperties.material().getGem().getTexture() + "_white");
         addRequiredTexture(dynamicProperties.material().getGem().getTexture() + "_dark");
-        addRequiredTint(color.getRGB());
         addRequiredTint(lightColor.getRGB());
         addRequiredTint(whiteColor.getRGB());
         addRequiredTint(darkColor.getRGB());

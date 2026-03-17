@@ -20,12 +20,12 @@ public class MaterialChain
         WeightedRandom<Integer> countRNG = new WeightedRandom<Integer>(chainRNG.nextLong())
                 .add(5, 1).add(40, 2).add(40, 3).add(5, 4).add(1, 5);
 
-        WeightedRandom<Integer> fuelsRNG = new WeightedRandom<Integer>(chainRNG.nextLong())
-                .add(10, 1).add(50, 2).add(30, 3).add(3, 4).add(1, 5);
-
         // Create materials for that mining level.
         for (MiningLevel level : MiningLevel.values())
         {
+            if (level == MiningLevel.Stone)
+                continue;
+
             int materialCount = countRNG.next();
 
             List<OreMaterial> materials = new ArrayList<>();
@@ -53,6 +53,19 @@ public class MaterialChain
 
             chainedMaterials.put(level, materials);
         }
+
+        // Fuels
+        WeightedRandom<Integer> fuelsRNG = new WeightedRandom<Integer>(chainRNG.nextLong())
+                .add(10, 1).add(50, 2).add(30, 3).add(3, 4).add(1, 5);
+
+        int fuelCount = fuelsRNG.next();
+        List<OreMaterial> materials = new ArrayList<>();
+        for (int i = 0; i < fuelCount; i++)
+        {
+            OreMaterial fuelMaterial = new OreMaterial(chainRNG.nextLong(), MiningLevel.Stone, MaterialType.Fuel);
+            materials.add(fuelMaterial);
+        }
+        chainedMaterials.put(MiningLevel.Stone, materials);
     }
 
     private MaterialType chooseMaterialRaw(MiningLevel level, MaterialType lastType, int streak, Random rng)

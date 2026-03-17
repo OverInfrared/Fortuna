@@ -157,7 +157,7 @@ public class FortunaDataPack implements PackResources, ModPackResources
 
         if (prefix.contains("trim_material"))
             for (Material mat : Fortuna.initializedMaterials)
-                if (mat instanceof OreMaterial oreMat)
+                if (mat instanceof OreMaterial oreMat && oreMat.isTrimable())
                     emitData(resourceOutput, prefix, "trim_material/" + oreMat.getName() + ".json", namespace);
 
         if (prefix.contains("worldgen/configured_feature"))

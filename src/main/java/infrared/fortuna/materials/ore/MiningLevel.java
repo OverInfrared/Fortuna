@@ -6,6 +6,7 @@ import net.minecraft.world.level.block.Block;
 
 public enum MiningLevel
 {
+    Stone(null),
     Copper(BlockTags.NEEDS_STONE_TOOL),
     Iron(BlockTags.NEEDS_IRON_TOOL),
     Diamond(BlockTags.NEEDS_DIAMOND_TOOL),

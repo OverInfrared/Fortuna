@@ -76,6 +76,11 @@ public class ModItems
             // Nugget Item
             registerItem(new NuggetItem(createItemProperties(name, "nugget", material), new Properties()));
         }
+        else if (type == MaterialType.Fuel)
+        {
+            // Coal Item
+            registerItem(new GemItem(createItemProperties(name, material), new Properties()));
+        }
 
         // Generate tool items
         if (material.hasTools())
@@ -120,8 +125,21 @@ public class ModItems
 
     public static void initializeCreativeModeTab()
     {
+        Item iconItem = null;
+        for (Item item : ModItems.registeredItems.values())
+        {
+            if (item instanceof FortunaTool tool)
+            {
+                iconItem = tool;
+                break;
+            }
+        }
+        if (iconItem == null)
+            iconItem = ModItems.registeredItems.values().iterator().next();
+
+        Item finalIconItem = iconItem;
         CreativeModeTab creativeTab = FabricItemGroup.builder()
-                .icon(() -> new ItemStack(ModItems.registeredItems.values().iterator().next()))
+                .icon(() -> new ItemStack(finalIconItem))
                 .title(Component.literal("Fortuna"))
                 .displayItems((params, output) -> {
                     for (Item item : ModItems.registeredItems.values())
