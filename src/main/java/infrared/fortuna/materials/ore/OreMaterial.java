@@ -83,7 +83,6 @@ public class OreMaterial extends Material
     {
         super(seed);
         name = chooseName();
-
         materialType = chooseMaterialRaw(level);
 
         miningLevel = level;
@@ -95,6 +94,8 @@ public class OreMaterial extends Material
         oreGem = chooseOreGem();
         oreNugget = chooseOreNugget();
         materialBlock = chooseOreBlock();
+
+        generateOreColors();
 
         materialMineTime = chooseMiningTime();
         materialHardness = chooseHardness();
@@ -120,12 +121,10 @@ public class OreMaterial extends Material
         choosePlacedFeatures();
 
         hasNugget = materialType == MaterialType.Ingot;
-        hasDoor = materialType == MaterialType.Ingot && rng.nextFloat() < 0.5f;
-        hasTrapdoor = hasDoor && rng.nextFloat() < 0.8f;
-        hasBars = materialType == MaterialType.Ingot && rng.nextFloat() < 0.4f;
-        hasChain = hasBars;
-
-        generateOreColors();
+        hasDoor = materialType == MaterialType.Ingot;
+        hasTrapdoor = materialType == MaterialType.Ingot;
+        hasBars = materialType == MaterialType.Ingot;
+        hasChain = materialType == MaterialType.Ingot;
     }
 
     // =========================================================================

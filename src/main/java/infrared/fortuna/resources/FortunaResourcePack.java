@@ -3,10 +3,7 @@ package infrared.fortuna.resources;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
-import infrared.fortuna.blocks.FortunaDoorBlock;
-import infrared.fortuna.blocks.FortunaTrapDoorBlock;
-import infrared.fortuna.blocks.IFortunaBlock;
-import infrared.fortuna.blocks.ModBlocks;
+import infrared.fortuna.blocks.*;
 import infrared.fortuna.items.*;
 import infrared.fortuna.equipment.IFortunaEquipment;
 import infrared.fortuna.materials.Material;
@@ -246,29 +243,27 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
 
         if (prefix.startsWith("models/block/"))
         {
-            // Check for door model variants
-            for (IFortunaBlock block : ModBlocks.getRegisteredBlocks().values())
-            {
-                if (block instanceof FortunaDoorBlock doorBlock)
-                {
-                    for (String suffix : FortunaDoorBlock.DOOR_MODELS)
-                    {
-                        if (name.equals(doorBlock.getRegistryName() + "_" + suffix))
-                            return doorBlock.getDoorModelString(suffix);
-                    }
-                }
+            String registryName = separateBlockRegistryName(name);
+            IFortunaBlock block = ModBlocks.getRegisteredBlocks().get(registryName);
 
-                if (block instanceof FortunaTrapDoorBlock trapdoorBlock)
+            if (block instanceof FortunaDoorBlock doorBlock)
+            {
+                if (name.startsWith(doorBlock.getRegistryName() + "_"))
                 {
-                    for (String suffix : FortunaTrapDoorBlock.TRAPDOOR_MODELS)
-                    {
-                        if (name.equals(trapdoorBlock.getRegistryName() + "_" + suffix))
-                            return trapdoorBlock.getTrapdoorModelString(suffix);
-                    }
+                    String suffix = name.substring(doorBlock.getRegistryName().length() + 1);
+                    return doorBlock.getDoorModelString(suffix);
                 }
             }
 
-            IFortunaBlock block = ModBlocks.getRegisteredBlocks().get(name);
+            if (block instanceof FortunaTrapDoorBlock trapDoorBlock)
+            {
+                if (name.startsWith(trapDoorBlock.getRegistryName() + "_"))
+                {
+                    String suffix = name.substring(trapDoorBlock.getRegistryName().length() + 1);
+                    return trapDoorBlock.getTrapdoorModelString(suffix);
+                }
+            }
+
             return block != null ? block.getModelString() : null;
         }
 
@@ -292,16 +287,21 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
 
         if (prefix.startsWith("equipment/"))
         {
-            for (Item item : ModItems.getRegisteredItem().values())
-            {
-                if (item instanceof IFortunaEquipment equipment &&
-                        equipment.getEquipmentName().equals(name))
-                    return equipment.getEquipmentAsset().toString();
-            }
-            return null;
+            Item item = ModItems.getRegisteredItem().get(name + "_boots");
+            if (item instanceof IFortunaEquipment equipment && equipment.getEquipmentName().equals(name))
+                return equipment.getEquipmentAsset().toString();
         }
 
         return null;
+    }
+
+    private String separateBlockRegistryName(String variantName)
+    {
+        int index = variantName.indexOf("door_");
+        if (index != -1)
+            return variantName.substring(0, index + "door_".length() - 1); // remove the '_' before "door"
+
+        return variantName;
     }
 
     private String generateLang()
