@@ -29,63 +29,69 @@ import java.util.Map;
 
 public class OreMaterial extends Material
 {
-    // === Core identity ===
+    // === Core ===
     private final MiningLevel miningLevel;
     private final MaterialType materialType;
 
     // === Ore appearance ===
-    private final MaterialOreBase oreBase;
-    private final MaterialOreOverlay oreOverlay;
+    private MaterialOreBase oreBase       = MaterialOreBase.Stone;
+    private MaterialOreOverlay oreOverlay = MaterialOreOverlay.Iron;
 
     // === Item/block textures ===
-    private final MaterialOreIngot oreIngot;
-    private final MaterialOreRaw oreRaw;
-    private final MaterialOreGem oreGem;
-    private final MaterialOreNugget oreNugget;
-    private final MaterialOreBlock materialBlock;
+    private MaterialOreIngot oreIngot      = MaterialOreIngot.Iron;
+    private MaterialOreRaw oreRaw          = MaterialOreRaw.Iron;
+    private MaterialOreGem oreGem          = MaterialOreGem.Diamond;
+    private MaterialOreNugget oreNugget    = MaterialOreNugget.Iron;
+    private MaterialOreBlock materialBlock = MaterialOreBlock.Iron;
 
     // === Block properties ===
-    private final float materialMineTime;
-    private final float materialHardness;
+    private float materialMineTime;
+    private float materialHardness;
 
     // === Drop properties ===
-    private final IntProvider xpRange;
-    private final MaterialOreDrops drops;
+    private IntProvider xpRange;
+    private MaterialOreDrops drops;
 
     // === Tool properties ===
-    private final boolean makeTools;
-    private final ToolMaterial toolMaterial;
-    private final int toolVariant;
+    private boolean makeTools = false;
+    private ToolMaterial toolMaterial;
+    private int toolVariant;
 
     // === Armor properties ===
-    private final boolean makeArmor;
-    private final ArmorMaterial armorMaterial;
-    private final int armorVariant;
-    private final ResourceKey<TrimMaterial> trimMaterialKey;
+    private boolean makeArmor = false;
+    private ArmorMaterial armorMaterial;
+    private int armorVariant;
+    private ResourceKey<TrimMaterial> trimMaterialKey;
 
     // === Ore generation properties ===
-    private final boolean doGeneration;
+    private boolean doGeneration = true;
     private final Map<OreFeatureType, OreConfiguredFeature> configuredFeatures = new HashMap<>();
-    private final List<OrePlacedFeature> placedFeatures = new ArrayList<>();
+    private final List<OrePlacedFeature>                    placedFeatures     = new ArrayList<>();
 
     // === Tertiary Blocks ===
-    private final boolean hasNugget;
-    private final boolean hasDoor;
-    private final boolean hasTrapdoor;
-    private final boolean hasBars;
-    private final boolean hasChain;
+    private boolean hasDoor     = false;
+    private boolean hasTrapdoor = false;
+    private boolean hasBars     = false;
+    private boolean hasChain    = false;
 
     // =========================================================================
-    // Constructor
+    // Constructors
     // =========================================================================
 
-    public OreMaterial(long seed, MiningLevel level)
+    public OreMaterial(long seed, MiningLevel level, MaterialType materialType)
     {
         super(seed);
+        this.materialType = materialType;
+        this.miningLevel = level;
         name = chooseName();
-        materialType = chooseMaterialRaw(level);
 
-        miningLevel = level;
+        if (materialType == MaterialType.Ingot || materialType == MaterialType.Gem || materialType == MaterialType.Special)
+            initMaterial();
+        else
+            initFuel();
+    }
+
+    private void initMaterial() {
         oreBase = chooseOreBase();
         oreOverlay = chooseOreOverlay();
 
@@ -94,8 +100,6 @@ public class OreMaterial extends Material
         oreGem = chooseOreGem();
         oreNugget = chooseOreNugget();
         materialBlock = chooseOreBlock();
-
-        generateOreColors();
 
         materialMineTime = chooseMiningTime();
         materialHardness = chooseHardness();
@@ -120,11 +124,16 @@ public class OreMaterial extends Material
         createConfiguredFeatures();
         choosePlacedFeatures();
 
-        hasNugget = materialType == MaterialType.Ingot;
         hasDoor = materialType == MaterialType.Ingot;
         hasTrapdoor = materialType == MaterialType.Ingot;
         hasBars = materialType == MaterialType.Ingot;
         hasChain = materialType == MaterialType.Ingot;
+
+        generateOreColors();
+    }
+
+    private void initFuel() {
+
     }
 
     // =========================================================================
@@ -183,37 +192,6 @@ public class OreMaterial extends Material
     // =========================================================================
     // Material generation
     // =========================================================================
-
-    private MaterialType chooseMaterialRaw(MiningLevel level)
-    {
-        return switch (level)
-        {
-            case Copper ->
-            {
-                Utilities.WeightedRandom<MaterialType> copperRandom = new Utilities.WeightedRandom<MaterialType>(rng.nextLong())
-                        .add(80, MaterialType.Ingot).add(20, MaterialType.Gem);
-                yield copperRandom.next();
-            }
-            case Iron ->
-            {
-                Utilities.WeightedRandom<MaterialType> ironRandom = new Utilities.WeightedRandom<MaterialType>(rng.nextLong())
-                        .add(65, MaterialType.Ingot).add(35, MaterialType.Gem);
-                yield ironRandom.next();
-            }
-            case Diamond ->
-            {
-                Utilities.WeightedRandom<MaterialType> diamondRandom = new Utilities.WeightedRandom<MaterialType>(rng.nextLong())
-                        .add(35, MaterialType.Ingot).add(60, MaterialType.Gem).add(5, MaterialType.Special);
-                yield diamondRandom.next();
-            }
-            case Netherite ->
-            {
-                Utilities.WeightedRandom<MaterialType> netherRandom = new Utilities.WeightedRandom<MaterialType>(rng.nextLong())
-                        .add(33, MaterialType.Ingot).add(33, MaterialType.Gem).add(33, MaterialType.Special);
-                yield netherRandom.next();
-            }
-        };
-    }
 
     private MaterialOreBase chooseOreBase()
     {
@@ -721,7 +699,9 @@ public class OreMaterial extends Material
             "dar", "el", "fal", "gor", "hal", "jor", "kel", "lor", "mor", "nal",
             "or", "pel", "quil", "ran", "sar", "tur", "ul", "vor", "wyn", "xer",
             "yor", "zen", "br", "cr", "dr", "gr", "kr", "pr", "tr", "vr", "run",
-            "mi", "ar", "la", "fa", "r", "gl", "red"
+            "mi", "ar", "la", "fa", "r", "gl", "red", "a", "b", "c", "d", "e", "f",
+            "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",
+            "u", "v", "w", "x", "y", "z"
     };
 
     private static final String[] VOWELS = {
@@ -743,7 +723,7 @@ public class OreMaterial extends Material
     };
 
     private static final String[] STONE_END = {
-            "ite", "ore", "stone", "ar", "al", "or", "is", "yx", "ane", "oth", "urn"
+            "ite", "ore", "stone", "ar", "al", "or", "is", "yx", "ane", "oth", "urn", "al"
     };
 
     private static final String[] METAL_END = {
@@ -802,8 +782,11 @@ public class OreMaterial extends Material
                 ? pick(RARE_PREFIX, rng)
                 : pick(PREFIX, rng);
 
-        Utilities.WeightedRandom<Integer> patternRNG = new Utilities.WeightedRandom<Integer>(rng.nextLong())
-                .add(10, 0).add(1, 1).add(10, 2).add(3, 3).add(3, 4);
+        Utilities.WeightedRandom<Integer> patternRNG = new Utilities.WeightedRandom<Integer>(rng.nextLong());
+        if (materialType == MaterialType.Fuel)
+            patternRNG.add(3, 0).add(3, 3).add(3, 4);
+        else
+            patternRNG.add(10, 0).add(1, 1).add(10, 2).add(3, 3).add(3, 4);
 
         switch (patternRNG.next())
         {
@@ -890,6 +873,6 @@ public class OreMaterial extends Material
         Color mainColor = getMainColor();
         setColor("main_white", Utilities.brightenColorByFactor(mainColor, 0.75f));
         setColor("main_light", Utilities.brightenColorByFactor(mainColor, 0.85f));
-        setColor("main_dark",  Utilities.nudgeColor(mainColor, 0.15f, 0f, 0f));
+        setColor("main_dark",  Utilities.nudgeColor(mainColor, 0.1f, 0f, 0f));
     }
 }

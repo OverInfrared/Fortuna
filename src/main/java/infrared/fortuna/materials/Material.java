@@ -12,7 +12,7 @@ public abstract class Material
     protected String name = null;
     protected Random rng;
 
-    protected Map<String, Color> materialColors = new HashMap<>(Map.of("main", Color.white, "secondary", Color.white));
+    protected Map<String, Color> materialColors = new HashMap<>(Map.of("main", Color.pink, "secondary", Color.pink));
 
     public Material(long seed)
     {
@@ -28,7 +28,7 @@ public abstract class Material
     public Color getSecondaryColor() { return getColor("secondary"); }
 
     public void setColor(String name, Color color) { materialColors.put(name, color); }
-    public Color getColor(String name) { return materialColors.getOrDefault(name, Color.WHITE); }
+    public Color getColor(String name) { return materialColors.getOrDefault(name, Color.pink); }
 
     public ColorRGBA getMainColorRGBA() { return new ColorRGBA(getMainColor().getRGB()); }
 

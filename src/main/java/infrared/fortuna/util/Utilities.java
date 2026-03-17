@@ -121,6 +121,40 @@ public class Utilities
                 alpha);
     }
 
+    public static Color brightenColorByFactorWithCap(Color color, float factor, int cap) {
+        int r = color.getRed();
+        int g = color.getGreen();
+        int b = color.getBlue();
+        int alpha = color.getAlpha();
+
+        int floor = (int)(1.0 / (1.0 - factor));
+
+        if (r == 0 && g == 0 && b == 0) {
+            int v = Math.min(floor, cap);
+            return new Color(v, v, v, alpha);
+        }
+
+        if (r > 0 && r < floor) r = floor;
+        if (g > 0 && g < floor) g = floor;
+        if (b > 0 && b < floor) b = floor;
+
+        r = Math.min((int)(r / factor), cap);
+        g = Math.min((int)(g / factor), cap);
+        b = Math.min((int)(b / factor), cap);
+
+        int max = Math.max(r, Math.max(g, b));
+        int min = Math.min(r, Math.min(g, b));
+
+        int minChannelDifference = 4;
+        if (max - min < minChannelDifference) {
+            if (r == min) r = Math.max(0, r - minChannelDifference);
+            else if (g == min) g = Math.max(0, g - minChannelDifference);
+            else b = Math.max(0, b - minChannelDifference);
+        }
+
+        return new Color(r, g, b, alpha);
+    }
+
     public static Color nudgeColor(Color color, float hueShift, float satShift, float brightShift)
     {
         float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
