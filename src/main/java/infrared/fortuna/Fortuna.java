@@ -1,6 +1,8 @@
 package infrared.fortuna;
 
 import infrared.fortuna.blocks.ModBlocks;
+import infrared.fortuna.config.FortunaConfig;
+import infrared.fortuna.config.FortunaConfigModel;
 import infrared.fortuna.worldgen.LootTableReplacer;
 import infrared.fortuna.items.ModItems;
 import infrared.fortuna.materials.Material;
@@ -26,14 +28,13 @@ public class Fortuna implements ModInitializer
 
 	public static boolean disableVanillaOreVeins = true;
 
+	public static final FortunaConfig CONFIG = FortunaConfig.createAndLoad();
+
 	@Override
 	public void onInitialize()
 	{
-		// cool seed 3325432789787890912L / 547584395473L
-		long seed = 1906548695489752389L;
-
 		LOGGER.info("Starting generation for Overworld");
-		initializeOverworld(seed);
+		initializeOverworld(CONFIG.seed());
 
 		LOGGER.info("Initializing CreativeMoveTab");
 		ModItems.initializeCreativeModeTab();
