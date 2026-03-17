@@ -10,7 +10,7 @@ public enum MaterialOreNugget
 
     MaterialOreNugget(String texture)
     {
-        this.texture = texture;
+        this.texture = "nuggets/" + texture;
     }
 
     public String getTexture()

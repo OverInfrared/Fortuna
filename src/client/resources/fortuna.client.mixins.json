@@ -3,7 +3,8 @@
 	"package": "infrared.fortuna.mixin.client",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"PackRepositoryMixin"
+		"PackRepositoryMixin",
+		"ItemModelGeneratorMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

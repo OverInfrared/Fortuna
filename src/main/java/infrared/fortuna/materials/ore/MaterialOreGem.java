@@ -13,7 +13,7 @@ public enum MaterialOreGem
 
     MaterialOreGem(String texture)
     {
-        this.texture = texture;
+        this.texture = "gems/" + texture;
     }
 
     public String getTexture()

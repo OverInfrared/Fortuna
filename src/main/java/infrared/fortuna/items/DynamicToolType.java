@@ -64,13 +64,13 @@ public enum DynamicToolType
 
     public String getName()                { return name; }
     public TagKey<Block> getMineableTag()  { return mineableTag; }
-    public String getHiltTexture()         { return hiltTexture; }
+    public String getHiltTexture()         { return "tools/" + hiltTexture; }
     public String[] getRecipePattern()     { return recipePattern; }
 
     public static int getVariantCount() { return DynamicToolType.Pickaxe.materialVariants.length - 1; }
 
     public String getMaterialTexture(int variant)
     {
-        return materialVariants[variant % getVariantCount()];
+        return "tools/" + materialVariants[variant % getVariantCount()];
     }
 }

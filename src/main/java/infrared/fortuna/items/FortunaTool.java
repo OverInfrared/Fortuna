@@ -40,12 +40,23 @@ public class FortunaTool extends FortunaItem implements IFortunaRecipe
         super(dynamicProperties, applyToolProperties(properties, dynamicToolType, dynamicProperties.material().getToolMaterial()));
         this.dynamicToolType = dynamicToolType;
 
-        OreMaterial material = dynamicProperties.material();
-
         addRequiredTexture(dynamicToolType.getHiltTexture());
-        addRequiredTexture(dynamicToolType.getMaterialTexture(dynamicProperties.material().getToolVariant()));
         addRequiredTint(Color.white.getRGB());
-        addRequiredTint(material.getMainColor().getRGB());
+
+        Color color = dynamicProperties.material().getMainColor();
+        Color whiteColor = dynamicProperties.material().getColor("main_white");
+        Color lightColor = dynamicProperties.material().getColor("main_light");
+        Color darkColor = dynamicProperties.material().getColor("main_dark");
+
+        String variantToolTexture = dynamicToolType.getMaterialTexture(dynamicProperties.material().getToolVariant());
+        addRequiredTexture(variantToolTexture + "_neutral");
+        addRequiredTexture(variantToolTexture + "_light");
+        addRequiredTexture(variantToolTexture + "_white");
+        addRequiredTexture(variantToolTexture + "_dark");
+        addRequiredTint(color.getRGB());
+        addRequiredTint(lightColor.getRGB());
+        addRequiredTint(whiteColor.getRGB());
+        addRequiredTint(darkColor.getRGB());
     }
 
     public DynamicToolType getToolType()

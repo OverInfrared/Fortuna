@@ -26,29 +26,41 @@ public class RawItem extends FortunaItem implements IFortunaRecipe
         OreMaterial material = dynamicProperties.material();
         MaterialOreRaw rawOre = material.getMaterialType();
 
-        if (rawOre.isOxidizable())
-        {
-            addRequiredTexture(rawOre.getTexture() + "_base");
-            addRequiredTint(material.getMainColor().getRGB());
-            addRequiredTexture(rawOre.getTexture() + "_oxidized");
-            addRequiredTint(material.getSecondaryColor().getRGB());
-            addRequiredTexture(rawOre.getTexture() + "_transition");
-            addRequiredTint(material.getTransitionColor(0.5f, 0.5f, 1f).getRGB());
-            return;
-        }
-
         Color color = dynamicProperties.material().getMainColor();
         Color whiteColor = dynamicProperties.material().getColor("main_white");
         Color lightColor = dynamicProperties.material().getColor("main_light");
 
-        addRequiredTexture(rawOre.getTexture() + "_neutral");
-        addRequiredTexture(rawOre.getTexture() + "_light");
-        addRequiredTexture(rawOre.getTexture() + "_white");
-        addRequiredTexture(rawOre.getTexture() + "_dark");
+        String textureMain = rawOre.getTexture() + (rawOre.isOxidizable() ? "_base" : "");
+
+        addRequiredTexture(textureMain + "_neutral");
+        addRequiredTexture(textureMain + "_light");
+        addRequiredTexture(textureMain + "_white");
+        addRequiredTexture(textureMain + "_dark");
         addRequiredTint(color.getRGB());
         addRequiredTint(lightColor.getRGB());
         addRequiredTint(whiteColor.getRGB());
         addRequiredTint(color.getRGB());
+
+        if (rawOre.isOxidizable())
+        {
+            Color secondary = material.getSecondaryColor();
+            Color whiteSecondary = dynamicProperties.material().getColor("secondary_white");
+            Color lightSecondary = dynamicProperties.material().getColor("secondary_light");
+
+            String textureOxidized = rawOre.getTexture() + "_oxidized";
+
+            addRequiredTexture(textureOxidized + "_neutral");
+            addRequiredTexture(textureOxidized + "_light");
+            addRequiredTexture(textureOxidized + "_white");
+            addRequiredTexture(textureOxidized + "_dark");
+            addRequiredTint(secondary.getRGB());
+            addRequiredTint(lightSecondary.getRGB());
+            addRequiredTint(whiteSecondary.getRGB());
+            addRequiredTint(secondary.getRGB());
+
+            addRequiredTexture(rawOre.getTexture() + "_transition");
+            addRequiredTint(material.getTransitionColor(0.5f, 0.5f, 1f).getRGB());
+        }
     }
 
     @Override

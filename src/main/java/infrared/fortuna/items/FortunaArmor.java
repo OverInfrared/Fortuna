@@ -12,6 +12,7 @@ import infrared.fortuna.recipes.IFortunaRecipe;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.world.item.Item;
 
+import java.awt.*;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -28,10 +29,19 @@ public class FortunaArmor extends FortunaItem implements IFortunaRecipe, IFortun
         );
         this.armorType = armorType;
 
-        OreMaterial material = dynamicProperties.material();
+        Color color = dynamicProperties.material().getMainColor();
+        Color whiteColor = dynamicProperties.material().getColor("main_white");
+        Color lightColor = dynamicProperties.material().getColor("main_light");
 
-        addRequiredTexture(armorType.getItemTexture(material.getArmorVariant()));
-        addRequiredTint(material.getMainColor().getRGB());
+        String variantArmorTexture = armorType.getItemTexture(dynamicProperties.material().getArmorVariant());
+        addRequiredTexture(variantArmorTexture + "_neutral");
+        addRequiredTexture(variantArmorTexture + "_light");
+        addRequiredTexture(variantArmorTexture + "_white");
+        addRequiredTexture(variantArmorTexture + "_dark");
+        addRequiredTint(color.getRGB());
+        addRequiredTint(lightColor.getRGB());
+        addRequiredTint(whiteColor.getRGB());
+        addRequiredTint(color.getRGB());
     }
     public DynamicArmorType getArmorType()
     {
@@ -70,25 +80,17 @@ public class FortunaArmor extends FortunaItem implements IFortunaRecipe, IFortun
     @Override
     public JsonObject getEquipmentAsset()
     {
-        int color = dynamicProperties.material().getMainColor().getRGB();
-        String texture = DynamicArmorType.getEquipmentTexture(dynamicProperties.material().getArmorVariant());
+        int colorNeutral = dynamicProperties.material().getMainColor().getRGB();
+        int colorLight = dynamicProperties.material().getColor("main_light").getRGB();
+        int colorWhite = dynamicProperties.material().getColor("main_white").getRGB();
 
-        JsonObject dyeable = new JsonObject();
-        dyeable.addProperty("color_when_undyed", color);
+        String textureBase = "%s:%s".formatted(
+                Fortuna.MOD_ID,
+                DynamicArmorType.getEquipmentTexture(dynamicProperties.material().getArmorVariant())
+        );
 
-        JsonObject humanoidLayer = new JsonObject();
-        humanoidLayer.addProperty("texture", "%s:%s".formatted(Fortuna.MOD_ID, texture));
-        humanoidLayer.add("dyeable", dyeable);
-
-        JsonArray humanoidLayers = new JsonArray();
-        humanoidLayers.add(humanoidLayer);
-
-        JsonObject leggingsLayer = new JsonObject();
-        leggingsLayer.addProperty("texture", "%s:%s".formatted(Fortuna.MOD_ID, texture));
-        leggingsLayer.add("dyeable", dyeable);
-
-        JsonArray leggingsLayers = new JsonArray();
-        leggingsLayers.add(leggingsLayer);
+        JsonArray humanoidLayers = createLayerArray(textureBase, colorNeutral, colorLight, colorWhite, colorNeutral);
+        JsonArray leggingsLayers = createLayerArray(textureBase, colorNeutral, colorLight, colorWhite, colorNeutral);
 
         JsonObject layers = new JsonObject();
         layers.add("humanoid", humanoidLayers);
@@ -98,6 +100,30 @@ public class FortunaArmor extends FortunaItem implements IFortunaRecipe, IFortun
         root.add("layers", layers);
 
         return root;
+    }
+
+    private JsonArray createLayerArray(String textureBase, int colorNeutral, int colorLight, int colorWhite, int colorDark)
+    {
+        JsonArray layers = new JsonArray();
+
+        layers.add(createLayer(textureBase + "_neutral", colorNeutral));
+        layers.add(createLayer(textureBase + "_light", colorLight));
+        layers.add(createLayer(textureBase + "_white", colorWhite));
+        layers.add(createLayer(textureBase + "_dark", colorDark));
+
+        return layers;
+    }
+
+    private JsonObject createLayer(String texture, int color)
+    {
+        JsonObject dyeable = new JsonObject();
+        dyeable.addProperty("color_when_undyed", color);
+
+        JsonObject layer = new JsonObject();
+        layer.addProperty("texture", texture);
+        layer.add("dyeable", dyeable);
+
+        return layer;
     }
 
     @Override
@@ -131,7 +157,9 @@ public class FortunaArmor extends FortunaItem implements IFortunaRecipe, IFortun
         fallbackModel.addProperty("model", "%s:item/%s".formatted(Fortuna.MOD_ID, getRegistryName()));
 
         JsonArray fallbackTints = new JsonArray();
-        fallbackTints.add(buildConstantTint(dynamicProperties.material().getMainColor().getRGB()));
+        for (Integer color : getRequiredTints())
+            fallbackTints.add(buildConstantTint(color));
+
         fallbackModel.add("tints", fallbackTints);
 
         JsonObject select = new JsonObject();

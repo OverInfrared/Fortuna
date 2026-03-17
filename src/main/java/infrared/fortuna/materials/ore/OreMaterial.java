@@ -871,6 +871,9 @@ public class OreMaterial extends Material
                     float oxidizedSaturation = Math.clamp(saturation + (rng.nextFloat() * 0.2f - 0.1f), 0.1f, 0.9f);
                     float oxidizedBrightness = Math.clamp(brightness + (rng.nextFloat() * 0.2f - 0.1f), 0.4f, 1.0f);
                     setColor("secondary", Color.getHSBColor(oxidizedHue, oxidizedSaturation, oxidizedBrightness));
+                    setColor("secondary_white", Utilities.brightenColorByFactor(getSecondaryColor(), 0.75f));
+                    setColor("secondary_light", Utilities.brightenColorByFactor(getSecondaryColor(), 0.85f));
+                    setColor("secondary_dark",  Utilities.nudgeColor(getSecondaryColor(), 0.15f, 0f, 0f));
                 }
             }
             case Gem, Special -> {

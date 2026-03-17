@@ -18,8 +18,10 @@ public enum MaterialOreRaw
 
     public String getTexture()
     {
-        return this.texture;
+        return "raw/" + this.texture;
     }
+
+    public String getName() { return this.texture; }
 
     public boolean isOxidizable()
     {

@@ -49,7 +49,7 @@ public enum DynamicArmorType
     // e.g. "iron_helmet", "diamond_boots"
     public String getItemTexture(int variant)
     {
-        return VARIANTS[variant % getVariantCount()] + "_" + name;
+        return "armor/" + VARIANTS[variant % getVariantCount()] + "_" + name;
     }
 
     // e.g. "iron", "diamond" — used for equipment asset humanoid/humanoid_leggings textures

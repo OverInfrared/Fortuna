@@ -24,11 +24,13 @@ public class Fortuna implements ModInitializer
 
 	public static final List<Material> initializedMaterials = new ArrayList<>();
 
+	public static boolean disableVanillaOreVeins = true;
+
 	@Override
 	public void onInitialize()
 	{
-		// cool seed 3325432789787890912L
-		long seed = 547584395473L;
+		// cool seed 3325432789787890912L / 547584395473L
+		long seed = 1906548695489752389L;
 
 		LOGGER.info("Starting generation for Overworld");
 		initializeOverworld(seed);

@@ -28,7 +28,7 @@ public class RawMaterialBlock extends FortunaBlock implements IFortunaRecipe
         MaterialOreRaw oreRaw = fortunaProps.material().getMaterialType();
         boolean oxidizable = oreRaw.isOxidizable();
 
-        String blockTexture = oreRaw.getTexture() + "_block";
+        String blockTexture = oreRaw.getName() + "_block";
 
         addRequiredTexture("particle", oxidizable ? blockTexture + "_base" : blockTexture);
         addOverlayTexture("barrier", blockTexture, 0);
