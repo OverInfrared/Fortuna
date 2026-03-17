@@ -564,6 +564,7 @@ public class OreMaterial extends Material
     {
         boolean largerVeins = switch (miningLevel)
         {
+            case Stone -> rng.nextFloat() < 0.9f;
             case Copper -> rng.nextFloat() < 0.7f;
             case Iron -> rng.nextFloat() < 0.2f;
             default -> false;
@@ -636,7 +637,7 @@ public class OreMaterial extends Material
         int idealHeight = oreRange.min() + (int)(rangeSize * idealBias);
 
         int minSpread = rangeSize / 6;
-        int maxSpread = rangeSize / 3;
+        int maxSpread = rangeSize / (miningLevel == MiningLevel.Stone ? 1 : 3);
         int spread = minSpread + rng.nextInt(maxSpread - minSpread + 1);
 
         int bottomEnd = idealHeight - spread;
@@ -721,7 +722,7 @@ public class OreMaterial extends Material
     {
         float density = switch (miningLevel)
         {
-            case Stone     -> 0.11f + rng.nextFloat() * 0.15f;
+            case Stone     -> 0.10f + rng.nextFloat() * 0.15f;
             case Copper    -> 0.10f + rng.nextFloat() * 0.15f;  // 0.10 - 0.25
             case Iron      -> 0.08f + rng.nextFloat() * 0.12f;  // 0.08 - 0.20
             case Diamond   -> 0.03f + rng.nextFloat() * 0.05f;  // 0.03 - 0.08
@@ -844,7 +845,7 @@ public class OreMaterial extends Material
 
         Utilities.WeightedRandom<Integer> patternRNG = new Utilities.WeightedRandom<Integer>(rng.nextLong());
         if (materialType == MaterialType.Fuel)
-            patternRNG.add(3, 0).add(3, 3).add(3, 4);
+            patternRNG.add(1, 0).add(2, 3).add(5, 4);
         else
             patternRNG.add(10, 0).add(1, 1).add(10, 2).add(3, 3).add(3, 4);
 
@@ -918,7 +919,7 @@ public class OreMaterial extends Material
                     setColor("secondary_dark",  Utilities.nudgeColor(getSecondaryColor(), 0.15f, 0f, 0f));
                 }
             }
-            case Gem, Special, Fuel -> {
+            case Gem, Special -> {
                 float hue = getHue();
                 float saturation = rng.nextFloat() < 0.2f
                         ? 0.05f + rng.nextFloat() * 0.2f
@@ -926,6 +927,12 @@ public class OreMaterial extends Material
                 float brightness = rng.nextFloat() < 0.2f
                         ? 0.85f + rng.nextFloat() * 0.15f
                         : 0.6f + rng.nextFloat() * 0.4f;
+                setColor("main", Color.getHSBColor(hue, saturation, brightness));
+            }
+            case Fuel -> {
+                float hue = getHue();
+                float saturation = 0.4f + rng.nextFloat() * 0.5f;
+                float brightness = 0.35f + rng.nextFloat() * 0.15f;
                 setColor("main", Color.getHSBColor(hue, saturation, brightness));
             }
         }

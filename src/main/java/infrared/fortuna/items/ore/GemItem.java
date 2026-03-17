@@ -15,16 +15,16 @@ public class GemItem extends FortunaItem
         super(dynamicProperties, properties);
 
         Color color = dynamicProperties.material().getMainColor();
-        Color whiteColor = dynamicProperties.material().getColor("main_white");
-        Color lightColor = dynamicProperties.material().getColor("main_light");
-        Color darkColor = dynamicProperties.material().getColor("main_dark");
-
         if (dynamicProperties.material().getType() == MaterialType.Fuel)
         {
             addRequiredTexture(dynamicProperties.material().getFuel().getTexture());
             addRequiredTint(color.getRGB());
             return;
         }
+
+        Color whiteColor = dynamicProperties.material().getColor("main_white");
+        Color lightColor = dynamicProperties.material().getColor("main_light");
+        Color darkColor = dynamicProperties.material().getColor("main_dark");
 
         addRequiredTexture(dynamicProperties.material().getGem().getTexture() + "_neutral");
         addRequiredTint(color.getRGB());

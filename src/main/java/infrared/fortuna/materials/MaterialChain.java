@@ -56,7 +56,7 @@ public class MaterialChain
 
         // Fuels
         WeightedRandom<Integer> fuelsRNG = new WeightedRandom<Integer>(chainRNG.nextLong())
-                .add(10, 1).add(50, 2).add(30, 3).add(3, 4).add(1, 5);
+                .add(50, 1).add(25, 2).add(6, 3).add(2, 4).add(1, 5);
 
         int fuelCount = fuelsRNG.next();
         List<OreMaterial> materials = new ArrayList<>();

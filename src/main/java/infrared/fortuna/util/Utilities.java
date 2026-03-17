@@ -121,6 +121,22 @@ public class Utilities
                 alpha);
     }
 
+    public static Color darkenColorByFactor(Color color, float factor) {
+        factor = Math.max(0f, Math.min(factor, 1f)); // clamp 0–1
+
+        int r = color.getRed();
+        int g = color.getGreen();
+        int b = color.getBlue();
+        int alpha = color.getAlpha();
+
+        return new Color(
+                Math.max((int)(r * factor), 0),
+                Math.max((int)(g * factor), 0),
+                Math.max((int)(b * factor), 0),
+                alpha
+        );
+    }
+
     public static Color brightenColorByFactorWithCap(Color color, float factor, int cap) {
         int r = color.getRed();
         int g = color.getGreen();

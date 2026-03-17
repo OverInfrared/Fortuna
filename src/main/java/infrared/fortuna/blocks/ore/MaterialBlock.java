@@ -1,6 +1,7 @@
 package infrared.fortuna.blocks.ore;
 
 import com.google.gson.JsonObject;
+import infrared.fortuna.materials.MaterialType;
 import infrared.fortuna.util.Utilities;
 import infrared.fortuna.blocks.FortunaBlock;
 import infrared.fortuna.recipes.FortunaRecipeProvider;
@@ -36,10 +37,17 @@ public class MaterialBlock extends FortunaBlock implements IFortunaRecipe
         MaterialOreBlock block = material.getMaterialBlock();
         String blockTexture = block.getTexture();
         String aloneName = blockTexture.replace("_block", "");
+        addRequiredTexture("particle", blockTexture);
+
+        if (material.getType() == MaterialType.Fuel)
+        {
+            addOverlayTexture("overlay0", blockTexture, 0);
+            addRequiredTint(dynamicProperties.material().getMainColor().getRGB());
+            return;
+        }
 
         if (weatherState == null)
         {
-            addRequiredTexture("particle", blockTexture);
             addOverlayTexture("overlay0", blockTexture + "_neutral", 0);
             addOverlayTexture("overlay1", blockTexture + "_light", 1);
             addOverlayTexture("overlay2", blockTexture + "_white", 2);
