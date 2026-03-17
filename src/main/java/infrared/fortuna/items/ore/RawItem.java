@@ -11,6 +11,7 @@ import infrared.fortuna.materials.ore.OreMaterial;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.world.item.Item;
 
+import java.awt.*;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,16 +26,29 @@ public class RawItem extends FortunaItem implements IFortunaRecipe
         OreMaterial material = dynamicProperties.material();
         MaterialOreRaw rawOre = material.getMaterialType();
 
-        addRequiredTexture(rawOre.isOxidizable() ? rawOre.getTexture() + "_base" : rawOre.getTexture());
-        addRequiredTint(material.getMainColor().getRGB());
-
         if (rawOre.isOxidizable())
         {
+            addRequiredTexture(rawOre.getTexture() + "_base");
+            addRequiredTint(material.getMainColor().getRGB());
             addRequiredTexture(rawOre.getTexture() + "_oxidized");
             addRequiredTint(material.getSecondaryColor().getRGB());
             addRequiredTexture(rawOre.getTexture() + "_transition");
             addRequiredTint(material.getTransitionColor(0.5f, 0.5f, 1f).getRGB());
+            return;
         }
+
+        Color color = dynamicProperties.material().getMainColor();
+        Color whiteColor = dynamicProperties.material().getColor("main_white");
+        Color lightColor = dynamicProperties.material().getColor("main_light");
+
+        addRequiredTexture(rawOre.getTexture() + "_neutral");
+        addRequiredTexture(rawOre.getTexture() + "_light");
+        addRequiredTexture(rawOre.getTexture() + "_white");
+        addRequiredTexture(rawOre.getTexture() + "_dark");
+        addRequiredTint(color.getRGB());
+        addRequiredTint(lightColor.getRGB());
+        addRequiredTint(whiteColor.getRGB());
+        addRequiredTint(color.getRGB());
     }
 
     @Override

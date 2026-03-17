@@ -21,7 +21,7 @@ public class MaterialBlock extends FortunaBlock implements IFortunaRecipe
 
     public MaterialBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties)
     {
-        this(dynamicProperties, properties, WeatherState.UNAFFECTED);
+        this(dynamicProperties, properties, null);
     }
 
     public MaterialBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, WeatherState weatherState)
@@ -37,11 +37,20 @@ public class MaterialBlock extends FortunaBlock implements IFortunaRecipe
         String blockTexture = block.getTexture();
         String aloneName = blockTexture.replace("_block", "");
 
-        if (weatherState == null || weatherState == WeatherState.UNAFFECTED) {
+        if (weatherState == null)
+        {
             addRequiredTexture("particle", blockTexture);
-            addOverlayTexture("overlay", blockTexture, 0);
-            addRequiredTint(material.getMainColor().getRGB());
-        } else {
+            addOverlayTexture("overlay0", blockTexture + "_neutral", 0);
+            addOverlayTexture("overlay1", blockTexture + "_light", 1);
+            addOverlayTexture("overlay2", blockTexture + "_white", 2);
+            addOverlayTexture("overlay3", blockTexture + "_dark", 3);
+            addRequiredTint(dynamicProperties.material().getMainColor().getRGB());
+            addRequiredTint(dynamicProperties.material().getColor("main_light").getRGB());
+            addRequiredTint(dynamicProperties.material().getColor("main_white").getRGB());
+            addRequiredTint(dynamicProperties.material().getMainColor().getRGB());
+        }
+        else
+        {
             // Delegate to WeatheringMaterialBlock's logic by reusing the same switch
             setupWeatheredTextures(blockTexture, aloneName, weatherState);
         }
@@ -50,6 +59,11 @@ public class MaterialBlock extends FortunaBlock implements IFortunaRecipe
     private void setupWeatheredTextures(String blockTexture, String aloneName, WeatherState weatherState)
     {
         switch (weatherState) {
+            case UNAFFECTED -> {
+                addRequiredTexture("particle", blockTexture);
+                addOverlayTexture("overlay", blockTexture, 0);
+                addRequiredTint(dynamicProperties.material().getMainColor().getRGB());
+            }
             case EXPOSED -> {
                 addRequiredTexture("particle", blockTexture);
                 addOverlayTexture("overlay", blockTexture, 0);

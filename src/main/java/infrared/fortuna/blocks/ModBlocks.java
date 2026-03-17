@@ -127,11 +127,22 @@ public class ModBlocks
 
             registerBlock(new FortunaDoorBlock(doorDynamicProperties, doorProperties, BlockSetType.IRON));
         }
+
+        if (material.hasTrapdoor())
+        {
+            String             tdRegistryName = "%s_trapdoor".formatted(name);
+            ResourceKey<Block> tdKey          = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, tdRegistryName));
+
+            DynamicProperties<Block, OreMaterial> tdDynamicProperties = new DynamicProperties<>(tdRegistryName, Component.literal("%s Trapdoor".formatted(Utilities.capitalize(name))), tdKey, material);
+            Properties                            tdProperties        = BlockBehaviour.Properties.of().strength(material.getMaterialMineTime(), material.getMaterialHardness()).requiresCorrectToolForDrops().noOcclusion().pushReaction(PushReaction.DESTROY);
+
+            registerBlock(new FortunaTrapDoorBlock(tdDynamicProperties, tdProperties, BlockSetType.IRON));
+        }
     }
 
     private static IFortunaBlock createMaterialBlock(OreMaterial material)
     {
-        return createMaterialBlock(material, false, "", WeatheringCopper.WeatherState.UNAFFECTED);
+        return createMaterialBlock(material, false, "", null);
     }
 
     private static IFortunaBlock createMaterialBlock(OreMaterial material, boolean oxidizable, String prefix, WeatheringCopper.WeatherState weatherState)

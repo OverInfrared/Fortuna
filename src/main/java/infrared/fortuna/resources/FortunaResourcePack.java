@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.blocks.FortunaDoorBlock;
+import infrared.fortuna.blocks.FortunaTrapDoorBlock;
 import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.blocks.ModBlocks;
 import infrared.fortuna.items.*;
@@ -162,6 +163,12 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
                 for (String suffix : FortunaDoorBlock.DOOR_MODELS)
                     emitResource(resourceOutput, prefix, "models/block/" + block.getRegistryName() + "_" + suffix + ".json");
             }
+
+            if (block instanceof FortunaTrapDoorBlock)
+            {
+                for (String suffix : FortunaTrapDoorBlock.TRAPDOOR_MODELS)
+                    emitResource(resourceOutput, prefix, "models/block/" + block.getRegistryName() + "_" + suffix + ".json");
+            }
         }
 
         Set<String> emittedPalettes = new HashSet<>();
@@ -248,6 +255,15 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
                     {
                         if (name.equals(doorBlock.getRegistryName() + "_" + suffix))
                             return doorBlock.getDoorModelString(suffix);
+                    }
+                }
+
+                if (block instanceof FortunaTrapDoorBlock trapdoorBlock)
+                {
+                    for (String suffix : FortunaTrapDoorBlock.TRAPDOOR_MODELS)
+                    {
+                        if (name.equals(trapdoorBlock.getRegistryName() + "_" + suffix))
+                            return trapdoorBlock.getTrapdoorModelString(suffix);
                     }
                 }
             }
