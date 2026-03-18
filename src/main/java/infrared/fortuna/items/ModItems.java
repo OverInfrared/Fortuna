@@ -12,6 +12,7 @@ import infrared.fortuna.items.ore.IngotItem;
 import infrared.fortuna.items.ore.RawItem;
 import infrared.fortuna.materials.ore.OreMaterial;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
+import net.fabricmc.fabric.api.registry.FuelRegistryEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -33,6 +34,11 @@ public class ModItems
     private static final Map<String, Item> registeredItems = new LinkedHashMap<>();
 
     public static void registerItem(FortunaItem item) {
+        if (item.dynamicProperties.material().isFuel())
+            FuelRegistryEvents.BUILD.register(((builder, context) -> {
+                builder.add(item, item.dynamicProperties.material().getBurnTime());
+            }));
+
         Registry.register(BuiltInRegistries.ITEM, item.getResourceKey(), item);
         registeredItems.put(item.getRegistryName(),  item);
     }
@@ -41,6 +47,11 @@ public class ModItems
     {
         ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, block.getRegistryName()));
         FortunaBlockItem blockItem = new FortunaBlockItem((Block) block, block.getDisplayName(), new Item.Properties().setId(itemKey).useBlockDescriptionPrefix());
+        if (block.getDynamicProperties().material().isFuel())
+            FuelRegistryEvents.BUILD.register(((builder, context) -> {
+                builder.add(blockItem, block.getDynamicProperties().material().getBurnTime() * 10);
+            }));
+
         Registry.register(BuiltInRegistries.ITEM, itemKey, blockItem);
         registeredItems.put(block.getRegistryName(), blockItem);
     }

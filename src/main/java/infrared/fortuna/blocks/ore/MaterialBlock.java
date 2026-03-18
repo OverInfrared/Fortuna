@@ -101,7 +101,7 @@ public class MaterialBlock extends FortunaBlock implements IFortunaRecipe
     @Override
     public Map<String, JsonObject> getRecipes(HolderLookup.Provider registries)
     {
-        if (weatherState != WeatherState.UNAFFECTED)
+        if (weatherState != WeatherState.UNAFFECTED && weatherState != null)
             return new HashMap<>();
 
         FortunaRecipeProvider helper = new FortunaRecipeProvider(registries);
@@ -129,7 +129,7 @@ public class MaterialBlock extends FortunaBlock implements IFortunaRecipe
     @Override
     public Set<String> getRecipeNames()
     {
-        if (weatherState != WeatherState.UNAFFECTED)
+        if (weatherState != WeatherState.UNAFFECTED && weatherState != null)
             return Collections.emptySet();
 
         Set<String> recipes = new HashSet<>();

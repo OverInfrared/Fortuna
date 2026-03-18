@@ -9,6 +9,7 @@ import infrared.fortuna.materials.MaterialType;
 import infrared.fortuna.materials.ore.MaterialOreBase;
 import infrared.fortuna.materials.ore.MaterialOreOverlay;
 import infrared.fortuna.materials.ore.OreMaterial;
+import net.fabricmc.fabric.api.registry.FuelRegistryEvents;
 import net.fabricmc.fabric.api.registry.OxidizableBlocksRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;

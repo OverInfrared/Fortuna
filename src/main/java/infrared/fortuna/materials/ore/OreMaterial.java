@@ -76,6 +76,10 @@ public class OreMaterial extends Material
     private boolean hasBars     = false;
     private boolean hasChain    = false;
 
+    // === Fuel ===
+    private boolean isFuel = false;
+    private int burnTime = 1600;
+
     // =========================================================================
     // Constructors
     // =========================================================================
@@ -154,6 +158,9 @@ public class OreMaterial extends Material
         createConfiguredFeatures();
         choosePlacedFeatures();
 
+        isFuel = true;
+        burnTime = 800 + rng.nextInt(1600);
+
         generateOreColors();
     }
 
@@ -197,6 +204,9 @@ public class OreMaterial extends Material
     public boolean hasTrapdoor() { return hasTrapdoor; }
     public boolean hasBars()     { return hasBars; }
     public boolean hasChain()    { return hasChain; }
+
+    public boolean isFuel()  { return isFuel; }
+    public int getBurnTime() { return burnTime; }
 
     // =========================================================================
     // Registry name helpers
@@ -680,7 +690,8 @@ public class OreMaterial extends Material
             float extendedDensityScale = 0.3f + rng.nextFloat() * 0.3f; // 30-60% of primary density
             FeatureProbability extendedProbability = chooseFeatureProbability((int)(extendedRange * extendedDensityScale));
 
-            IConfiguredFeature extendedFeature = configuredFeatures.get(OreFeatureType.Small);
+            OreFeatureType featureType = materialType == MaterialType.Fuel ? OreFeatureType.Medium : OreFeatureType.Small;
+            IConfiguredFeature extendedFeature = configuredFeatures.get(featureType);
 
             OrePlacedFeature extended = new OrePlacedFeature(
                     (extendedBottom + extendedTop) / 2, extendedTop, extendedBottom,
@@ -906,6 +917,9 @@ public class OreMaterial extends Material
                     case 1 -> 0.6f + Math.max(rng.nextFloat() * 0.5f, 0.4f);
                     default -> 0.4f + (float) Math.pow(rng.nextFloat(), 1.5f) * 0.8f;
                 };
+
+                saturation = Math.clamp(saturation, 0f, 1f);
+                brightness = Math.clamp(brightness, 0f, 1f);
 
                 setColor("main", Color.getHSBColor(hue, saturation, brightness));
                 if (oreOverlay == MaterialOreOverlay.Copper) {
