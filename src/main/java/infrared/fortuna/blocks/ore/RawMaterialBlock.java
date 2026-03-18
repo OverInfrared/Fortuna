@@ -12,10 +12,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class RawMaterialBlock extends FortunaBlock implements IFortunaRecipe
 {
@@ -75,5 +72,11 @@ public class RawMaterialBlock extends FortunaBlock implements IFortunaRecipe
             getRegistryName(),
             getRegistryName() + "_unpack"
         );
+    }
+
+    @Override
+    public List<String> getRequiredItemTextures()
+    {
+        return List.of();
     }
 }

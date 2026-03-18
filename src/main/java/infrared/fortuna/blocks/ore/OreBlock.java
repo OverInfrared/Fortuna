@@ -29,6 +29,7 @@ import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -88,6 +89,12 @@ public class OreBlock extends FortunaBlock implements IFortunaRecipe
         if (bl && xpRange.getMaxValue() != 0) {
             this.tryDropExperience(serverLevel, blockPos, itemStack, xpRange);
         }
+    }
+
+    @Override
+    public List<String> getRequiredItemTextures()
+    {
+        return List.of();
     }
 
     @Override

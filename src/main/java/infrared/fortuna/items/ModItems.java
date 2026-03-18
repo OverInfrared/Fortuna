@@ -46,7 +46,7 @@ public class ModItems
     public static void registerBlock(IFortunaBlock block)
     {
         ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, block.getRegistryName()));
-        FortunaBlockItem blockItem = new FortunaBlockItem((Block) block, block.getDisplayName(), new Item.Properties().setId(itemKey).useBlockDescriptionPrefix());
+        FortunaBlockItem blockItem = new FortunaBlockItem(block, block.getDisplayName(), new Item.Properties().setId(itemKey).useBlockDescriptionPrefix());
         if (block.getDynamicProperties().material().isFuel())
             FuelRegistryEvents.BUILD.register(((builder, context) -> {
                 builder.add(blockItem, block.getDynamicProperties().material().getBurnTime() * 10);
@@ -54,6 +54,11 @@ public class ModItems
 
         Registry.register(BuiltInRegistries.ITEM, itemKey, blockItem);
         registeredItems.put(block.getRegistryName(), blockItem);
+    }
+
+    public static void registerFlatBlock(IFortunaBlock block)
+    {
+
     }
 
     public static void registerDoorBlock(IFortunaBlock block)

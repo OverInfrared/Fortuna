@@ -42,6 +42,12 @@ public class FortunaTrapDoorBlock extends TrapDoorBlock implements IFortunaBlock
     public List<Pair<String, String>> getRequiredTextures() { return requiredTextures; }
 
     @Override
+    public List<String> getRequiredItemTextures()
+    {
+        return List.of();
+    }
+
+    @Override
     public List<RequiredElement> getRequiredElements() { return requiredElements; }
 
     @Override
@@ -119,7 +125,8 @@ public class FortunaTrapDoorBlock extends TrapDoorBlock implements IFortunaBlock
         return blockstate.toString();
     }
 
-    public String getTrapdoorModelString(String modelSuffix)
+    @Override
+    public JsonObject generateModel(String modelSuffix)
     {
         JsonObject textures = new JsonObject();
         textures.addProperty("texture", "%s:block/trapdoor".formatted(Fortuna.MOD_ID));
@@ -128,7 +135,7 @@ public class FortunaTrapDoorBlock extends TrapDoorBlock implements IFortunaBlock
         model.addProperty("parent", "%s:block/tinted_template_trapdoor_%s".formatted(Fortuna.MOD_ID, modelSuffix));
         model.add("textures", textures);
 
-        return model.toString();
+        return model;
     }
 
     @Override

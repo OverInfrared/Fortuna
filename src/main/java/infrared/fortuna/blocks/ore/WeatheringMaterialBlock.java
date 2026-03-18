@@ -147,4 +147,10 @@ public class WeatheringMaterialBlock extends FortunaBlock implements WeatheringC
 
         return recipes;
     }
+
+    @Override
+    public List<String> getRequiredItemTextures()
+    {
+        return List.of();
+    }
 }

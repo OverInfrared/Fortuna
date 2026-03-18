@@ -44,6 +44,12 @@ public class FortunaDoorBlock extends DoorBlock implements IFortunaBlock, IFortu
     public List<Pair<String, String>> getRequiredTextures() { return requiredTextures; }
 
     @Override
+    public List<String> getRequiredItemTextures()
+    {
+        return List.of();
+    }
+
+    @Override
     public List<RequiredElement> getRequiredElements() { return requiredElements; }
 
     @Override
@@ -144,17 +150,18 @@ public class FortunaDoorBlock extends DoorBlock implements IFortunaBlock, IFortu
         return blockstate.toString();
     }
 
-    public String getDoorModelString(String modelSuffix)
+    @Override
+    public JsonObject generateModel(String suffix)
     {
         JsonObject textures = new JsonObject();
         textures.addProperty("top", "%s:block/door_top".formatted(Fortuna.MOD_ID));
         textures.addProperty("bottom", "%s:block/door_bottom".formatted(Fortuna.MOD_ID));
 
         JsonObject model = new JsonObject();
-        model.addProperty("parent", "%s:block/tinted_door_%s".formatted(Fortuna.MOD_ID, modelSuffix));
+        model.addProperty("parent", "%s:block/tinted_door_%s".formatted(Fortuna.MOD_ID, suffix));
         model.add("textures", textures);
 
-        return model.toString();
+        return model;
     }
 
     @Override

@@ -140,4 +140,10 @@ public class MaterialBlock extends FortunaBlock implements IFortunaRecipe
 
         return recipes;
     }
+
+    @Override
+    public List<String> getRequiredItemTextures()
+    {
+        return List.of();
+    }
 }

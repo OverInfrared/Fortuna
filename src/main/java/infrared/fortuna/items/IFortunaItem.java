@@ -40,11 +40,16 @@ public interface IFortunaItem
 
     default String getModelString()
     {
+        return getModelString("item");
+    }
+
+    default String getModelString(String location)
+    {
         JsonObject textures = new JsonObject();
         List<String> requiredTextures = getRequiredTextures();
         for (int i = 0; i < requiredTextures.size(); i++)
         {
-            textures.addProperty("layer" + i, "%s:item/%s".formatted(Fortuna.MOD_ID, requiredTextures.get(i)));
+            textures.addProperty("layer" + i, "%s:%s/%s".formatted(Fortuna.MOD_ID, location, requiredTextures.get(i)));
         }
 
         JsonObject model = new JsonObject();

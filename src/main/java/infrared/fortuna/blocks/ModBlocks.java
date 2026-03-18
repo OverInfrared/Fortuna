@@ -139,6 +139,17 @@ public class ModBlocks
 
             registerBlock(new FortunaTrapDoorBlock(tdDynamicProperties, tdProperties, BlockSetType.IRON));
         }
+
+        if (material.hasBars())
+        {
+            String             barsRegistryName = "%s_bars".formatted(name);
+            ResourceKey<Block> barsKey          = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, barsRegistryName));
+
+            DynamicProperties<Block, OreMaterial> barsDynamicProperties = new DynamicProperties<>(barsRegistryName, Component.literal("%s Bars".formatted(Utilities.capitalize(name))), barsKey, material);
+            Properties                            barsProperties        = BlockBehaviour.Properties.of().strength(material.getMaterialMineTime(), material.getMaterialHardness()).requiresCorrectToolForDrops().noOcclusion();
+
+            registerBlock(new FortunaBarsBlock(barsDynamicProperties, barsProperties));
+        }
     }
 
     private static IFortunaBlock createMaterialBlock(OreMaterial material)

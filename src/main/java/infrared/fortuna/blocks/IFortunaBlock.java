@@ -32,6 +32,7 @@ public interface IFortunaBlock
 
     // Abstract getters — implementing class provides these from its fields
     List<Pair<String, String>> getRequiredTextures();
+    List<String> getRequiredItemTextures();
     List<RequiredElement> getRequiredElements();
     List<Integer> getRequiredTints();
     DynamicProperties<Block, OreMaterial> getDynamicProperties();
@@ -61,6 +62,11 @@ public interface IFortunaBlock
         getRequiredTextures().add(Pair.of(label, texture));
     }
 
+    default void addRequiredItemTexture(String texture)
+    {
+        getRequiredItemTextures().add(texture);
+    }
+
     default void addBaseTextures(String texture)
     {
         addRequiredTexture("particle", texture);
@@ -84,8 +90,14 @@ public interface IFortunaBlock
         return generateBlockState().toString();
     }
 
-    default String getModelString() {
-        return generateModel().toString();
+    default String getModelString()
+    {
+        return getModelString("");
+    }
+
+    default String getModelString(String suffix)
+    {
+        return generateModel(suffix).toString();
     }
 
     default String getItemString() {
@@ -105,7 +117,7 @@ public interface IFortunaBlock
         return blockstate;
     }
 
-    default JsonObject generateModel()
+    default JsonObject generateModel(String suffix)
     {
         JsonObject textures = new JsonObject();
         for (Pair<String, String> texture : getRequiredTextures())

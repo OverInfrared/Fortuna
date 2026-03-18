@@ -109,6 +109,17 @@ public class FortunaRecipeProvider extends RecipeProvider
         return encodeRecipe(recipe);
     }
 
+    public JsonObject shapedBars(ItemLike bars, ItemLike material)
+    {
+        ShapedRecipe recipe = new ShapedRecipe("", CraftingBookCategory.BUILDING,
+                ShapedRecipePattern.of(
+                        Map.of('X', Ingredient.of(material)),
+                        "XXX", "XXX"
+                ),
+                bars.asItem().getDefaultInstance().copyWithCount(16));
+        return encodeRecipe(recipe);
+    }
+
     private JsonObject encodeRecipe(Recipe<?> recipe)
     {
         return Recipe.CODEC
