@@ -1,6 +1,6 @@
 package infrared.fortuna.materials.ore;
 
-public enum MaterialOreDrops
+public enum OreDrops
 {
     Single,
     Copper,

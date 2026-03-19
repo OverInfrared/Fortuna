@@ -1,6 +1,6 @@
 package infrared.fortuna.materials.ore;
 
-public enum MaterialOreRaw
+public enum OreRaw
 {
     Copper("raw_copper", true),
     Gold("raw_gold", false),
@@ -10,7 +10,7 @@ public enum MaterialOreRaw
 
     private final boolean oxidizable;
 
-    MaterialOreRaw(String texture, boolean oxidizeable)
+    OreRaw(String texture, boolean oxidizeable)
     {
         this.texture = texture;
         this.oxidizable = oxidizeable;

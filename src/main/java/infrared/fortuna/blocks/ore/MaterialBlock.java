@@ -7,7 +7,7 @@ import infrared.fortuna.blocks.FortunaBlock;
 import infrared.fortuna.recipes.FortunaRecipeProvider;
 import infrared.fortuna.recipes.IFortunaRecipe;
 import infrared.fortuna.DynamicProperties;
-import infrared.fortuna.materials.ore.MaterialOreBlock;
+import infrared.fortuna.materials.ore.OreBlock;
 import infrared.fortuna.materials.ore.OreMaterial;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.world.item.Item;
@@ -34,7 +34,7 @@ public class MaterialBlock extends FortunaBlock implements IFortunaRecipe
 
         requiredMiningLevel = material.getMiningLevel();
 
-        MaterialOreBlock block = material.getMaterialBlock();
+        OreBlock block = material.getMaterialBlock();
         String blockTexture = block.getTexture();
         String aloneName = blockTexture.replace("_block", "");
         addRequiredTexture("particle", blockTexture);

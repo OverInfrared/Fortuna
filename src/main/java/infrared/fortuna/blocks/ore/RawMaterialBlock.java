@@ -6,7 +6,7 @@ import infrared.fortuna.blocks.FortunaBlock;
 import infrared.fortuna.recipes.FortunaRecipeProvider;
 import infrared.fortuna.recipes.IFortunaRecipe;
 import infrared.fortuna.DynamicProperties;
-import infrared.fortuna.materials.ore.MaterialOreRaw;
+import infrared.fortuna.materials.ore.OreRaw;
 import infrared.fortuna.materials.ore.OreMaterial;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.world.item.Item;
@@ -22,7 +22,7 @@ public class RawMaterialBlock extends FortunaBlock implements IFortunaRecipe
 
         this.requiredMiningLevel = fortunaProps.material().getMiningLevel();
 
-        MaterialOreRaw oreRaw = fortunaProps.material().getMaterialType();
+        OreRaw oreRaw = fortunaProps.material().getMaterialType();
         boolean oxidizable = oreRaw.isOxidizable();
 
         String blockTexture = oreRaw.getName() + "_block";

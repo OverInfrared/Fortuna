@@ -1,6 +1,6 @@
 package infrared.fortuna.materials.ore;
 
-public enum MaterialOreFuel
+public enum OreFuel
 {
     Coal("coal"),
     Charcoal("charcoal"),
@@ -9,7 +9,7 @@ public enum MaterialOreFuel
 
     private final String texture;
 
-    MaterialOreFuel(String texture)
+    OreFuel(String texture)
     {
         this.texture = "fuels/" + texture;
     }

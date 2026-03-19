@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.blocks.ModBlocks;
+import infrared.fortuna.blocks.ore.IBarsBlock;
 import infrared.fortuna.equipment.IFortunaEquipment;
 import infrared.fortuna.items.FortunaArmor;
 import infrared.fortuna.items.FortunaItem;
@@ -102,7 +103,7 @@ public class FortunaDataPack implements PackResources, ModPackResources
         String prefix = path.substring(0, path.lastIndexOf('/') + 1);
         String entry = path.substring(path.lastIndexOf('/') + 1);
 
-        String json = resolveResource(prefix, entry);
+        String json = resolveResource(prefix, entry, id.getNamespace());
         if (json == null) return null;
 
         byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
@@ -129,6 +130,7 @@ public class FortunaDataPack implements PackResources, ModPackResources
             emitData(resourceOutput, prefix, "tags/block/needs_diamond_tool.json", namespace);
             emitData(resourceOutput, prefix, "tags/item/trimmable_armor.json", namespace);
             emitData(resourceOutput, prefix, "tags/item/trim_materials.json", namespace);
+            emitData(resourceOutput, prefix, "tags/block/bars.json", namespace);
         }
 
         if (!namespace.equals(Fortuna.MOD_ID))
@@ -136,6 +138,16 @@ public class FortunaDataPack implements PackResources, ModPackResources
 
         Map<String, IFortunaBlock> blocks = ModBlocks.getRegisteredBlocks();
         Map<String, Item>          items  = ModItems.getRegisteredItem();
+
+        if (prefix.startsWith("tags/item"))
+            for (Material material : Fortuna.initializedMaterials.values())
+            {
+                if (material instanceof OreMaterial oreMaterial)
+                {
+                    if (oreMaterial.getRepairItemTag() != null)
+                        emitData(resourceOutput, prefix, "tags/item/" + oreMaterial.getRepairItemTag().location().getPath(), namespace);
+                }
+            }
 
         if (prefix.contains("loot_table"))
             for (IFortunaBlock block : blocks.values())
@@ -156,18 +168,18 @@ public class FortunaDataPack implements PackResources, ModPackResources
         }
 
         if (prefix.contains("trim_material"))
-            for (Material mat : Fortuna.initializedMaterials)
+            for (Material mat : Fortuna.initializedMaterials.values())
                 if (mat instanceof OreMaterial oreMat && oreMat.isTrimable())
                     emitData(resourceOutput, prefix, "trim_material/" + oreMat.getName() + ".json", namespace);
 
         if (prefix.contains("worldgen/configured_feature"))
-            for (Material mat : Fortuna.initializedMaterials)
+            for (Material mat : Fortuna.initializedMaterials.values())
                 if (mat instanceof OreMaterial oreMat)
                     for (OreFeatureType type : oreMat.getConfiguredFeatures().keySet())
                         emitData(resourceOutput, prefix, "worldgen/configured_feature/%s_ore_%s.json".formatted(oreMat.getName(), type.getName()), namespace);
 
         if (prefix.contains("worldgen/placed_feature"))
-            for (Material mat : Fortuna.initializedMaterials)
+            for (Material mat : Fortuna.initializedMaterials.values())
                 if (mat instanceof OreMaterial oreMat)
                     for (int i = 0; i < oreMat.getPlacedFeatures().size(); i++)
                         emitData(resourceOutput, prefix, "worldgen/placed_feature/%s_ore_%d.json".formatted(oreMat.getName(), i), namespace);
@@ -199,11 +211,11 @@ public class FortunaDataPack implements PackResources, ModPackResources
         resourceOutput.accept(id, () -> Objects.requireNonNull(getResource(PackType.SERVER_DATA, id)).get());
     }
 
-    private @Nullable String resolveResource(String prefix, String entry)
+    private @Nullable String resolveResource(String prefix, String entry, String namespace)
     {
         String path = prefix + entry;
 
-        if (prefix.startsWith("tags/block/"))
+        if (namespace.equals("minecraft") && prefix.startsWith("tags/block/"))
             return switch (path)
             {
                 case "tags/block/mineable/pickaxe.json"   -> generateToolTag(BlockTags.MINEABLE_WITH_PICKAXE);
@@ -212,8 +224,26 @@ public class FortunaDataPack implements PackResources, ModPackResources
                 case "tags/block/needs_stone_tool.json"   -> generateMiningLevelTag(MiningLevel.Iron);
                 case "tags/block/needs_iron_tool.json"    -> generateMiningLevelTag(MiningLevel.Diamond);
                 case "tags/block/needs_diamond_tool.json" -> generateMiningLevelTag(MiningLevel.Netherite);
+                case "tags/block/bars.json"               -> generateBarsTag();
                 default -> null;
             };
+
+        if (namespace.equals("minecraft") && prefix.startsWith("tags/item/"))
+            return switch (path)
+            {
+                case "tags/item/trimmable_armor.json" -> generateTrimmableArmorTag();
+                case "tags/item/trim_materials.json"  -> generateTrimMaterialsTag();
+                default -> null;
+            };
+
+        if (!namespace.equals(Fortuna.MOD_ID))
+            return null;
+
+//        if (prefix.startsWith("tags/item/"))
+//        {
+//            if (entry.contains("repair"))
+//
+//        }
 
         if (prefix.startsWith("loot_table/blocks"))
         {
@@ -228,14 +258,6 @@ public class FortunaDataPack implements PackResources, ModPackResources
             String recipeName = entry.replace(".json", "");
             return resolveRecipe(recipeName);
         }
-
-        if (prefix.startsWith("tags/item/"))
-            return switch (path)
-            {
-                case "tags/item/trimmable_armor.json" -> generateTrimmableArmorTag();
-                case "tags/item/trim_materials.json"  -> generateTrimMaterialsTag();
-                default -> null;
-            };
 
         if (prefix.startsWith("trim_material/"))
         {
@@ -323,6 +345,20 @@ public class FortunaDataPack implements PackResources, ModPackResources
         return tag.toString();
     }
 
+    private String generateBarsTag()
+    {
+        JsonArray values = new JsonArray();
+
+        for (IFortunaBlock block : ModBlocks.getRegisteredBlocks().values())
+            if (block instanceof IBarsBlock)
+                values.add("%s:%s".formatted(Fortuna.MOD_ID, block.getRegistryName()));
+
+        JsonObject tag = new JsonObject();
+        tag.addProperty("replace", false);
+        tag.add("values", values);
+        return tag.toString();
+    }
+
     private String generateTrimmableArmorTag()
     {
         JsonArray values = new JsonArray();
@@ -341,7 +377,7 @@ public class FortunaDataPack implements PackResources, ModPackResources
     private String generateTrimMaterialsTag()
     {
         JsonArray values = new JsonArray();
-        for (Material mat : Fortuna.initializedMaterials)
+        for (Material mat : Fortuna.initializedMaterials.values())
         {
             if (mat instanceof OreMaterial oreMat)
             {
@@ -358,7 +394,7 @@ public class FortunaDataPack implements PackResources, ModPackResources
 
     private @Nullable String resolveConfiguredFeature(String featureName)
     {
-        for (Material mat : Fortuna.initializedMaterials)
+        for (Material mat : Fortuna.initializedMaterials.values())
         {
             if (!(mat instanceof OreMaterial oreMat))
                 continue;
@@ -375,7 +411,7 @@ public class FortunaDataPack implements PackResources, ModPackResources
 
     private @Nullable String resolvePlacedFeature(String featureName)
     {
-        for (Material mat : Fortuna.initializedMaterials)
+        for (Material mat : Fortuna.initializedMaterials.values())
         {
             if (!(mat instanceof OreMaterial oreMat))
                 continue;

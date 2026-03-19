@@ -1,6 +1,6 @@
 package infrared.fortuna.materials.ore;
 
-public enum MaterialOreIngot
+public enum OreIngot
 {
     Copper("copper_ingot"),
     Iron("iron_ingot"),
@@ -10,7 +10,7 @@ public enum MaterialOreIngot
 
     private final String texture;
 
-    MaterialOreIngot(String texture)
+    OreIngot(String texture)
     {
         this.texture = "ingots/" + texture;
     }

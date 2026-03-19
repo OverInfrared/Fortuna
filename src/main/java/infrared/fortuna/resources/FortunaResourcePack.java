@@ -4,6 +4,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.blocks.*;
+import infrared.fortuna.blocks.ore.BarsBlock;
+import infrared.fortuna.blocks.ore.IBarsBlock;
 import infrared.fortuna.items.*;
 import infrared.fortuna.equipment.IFortunaEquipment;
 import infrared.fortuna.materials.Material;
@@ -26,7 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
 
-import static infrared.fortuna.Fortuna.findMaterial;
+import static infrared.fortuna.Fortuna.getMaterial;
 
 public class FortunaResourcePack extends AbstractPackResources implements RepositorySource
 {
@@ -100,7 +102,7 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
         if (ns.equals(Fortuna.MOD_ID) && path.startsWith("textures/trims/color_palettes/") && path.endsWith(".png"))
         {
             String name = path.substring("textures/trims/color_palettes/".length(), path.length() - ".png".length());
-            OreMaterial material = findMaterial(name);
+            Material material = getMaterial(name);
             if (material == null) return null;
 
             byte[] png = PaletteGenerator.generateTrimPalette(material.getMainColor());
@@ -154,7 +156,6 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
 
             if (block instanceof FortunaDoorBlock)
             {
-                // models/item not models/items
                 emitResource(resourceOutput, prefix, "models/item/" + block.getRegistryName() + ".json");
 
                 for (String suffix : FortunaDoorBlock.DOOR_MODELS)
@@ -167,9 +168,9 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
                     emitResource(resourceOutput, prefix, "models/block/" + block.getRegistryName() + "_" + suffix + ".json");
             }
 
-            if (block instanceof FortunaBarsBlock)
+            if (block instanceof IBarsBlock)
             {
-                for (String suffix : FortunaBarsBlock.BARS_MODELS)
+                for (String suffix : BarsBlock.BARS_MODELS)
                     emitResource(resourceOutput, prefix, "models/block/" + block.getRegistryName() + "_" + suffix + ".json");
             }
         }
@@ -202,8 +203,8 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
                 for (String trim : vanillaTrimMaterials)
                     emitResource(resourceOutput, prefix, "models/item/" + armor.getRegistryName() + "_" + trim + "_trim.json");
 
-                for (infrared.fortuna.materials.Material mat : Fortuna.initializedMaterials)
-                    if (mat instanceof OreMaterial oreMat)
+                for (Material material : Fortuna.initializedMaterials.values())
+                    if (material instanceof OreMaterial oreMat)
                         emitResource(resourceOutput, prefix, "models/item/" + armor.getRegistryName() + "_" + oreMat.getName() + "_trim.json");
             }
         }
@@ -249,6 +250,9 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
 
         if (prefix.startsWith("models/block/"))
         {
+            if (name.contains("bars"))
+                Fortuna.LOGGER.info("BARS");
+
             for (IFortunaBlock block : ModBlocks.getRegisteredBlocks().values())
             {
                 String baseName = block.getRegistryName() + "_";
@@ -292,16 +296,6 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
         return null;
     }
 
-    private String separateBlockRegistryName(String variantName)
-    {
-        int index = variantName.indexOf("door_");
-        if (index != -1)
-            return variantName.substring(0, index + "door_".length() - 1); // remove the '_' before "door"
-
-
-        return variantName;
-    }
-
     private String generateLang()
     {
         JsonObject lang = new JsonObject();
@@ -332,13 +326,10 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
         }
 
         // Try dynamic trims
-        for (Material mat : Fortuna.initializedMaterials)
+        for (Material material : Fortuna.initializedMaterials.values())
         {
-            if (mat instanceof Material material)
-            {
-                String result = tryResolveTrim(name, material.getName());
-                if (result != null) return result;
-            }
+            String result = tryResolveTrim(name, material.getName());
+            if (result != null) return result;
         }
 
         return null;
@@ -382,7 +373,7 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     private String generateArmorTrimsAtlas()
     {
         JsonObject permutations = new JsonObject();
-        for (infrared.fortuna.materials.Material mat : Fortuna.initializedMaterials)
+        for (Material mat : Fortuna.initializedMaterials.values())
             if (mat instanceof OreMaterial oreMat && oreMat.hasArmor())
                 permutations.addProperty(oreMat.getName(), "%s:trims/color_palettes/%s".formatted(Fortuna.MOD_ID, oreMat.getName()));
 
@@ -412,7 +403,7 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     private String generateItemsAtlas()
     {
         JsonObject permutations = new JsonObject();
-        for (infrared.fortuna.materials.Material mat : Fortuna.initializedMaterials)
+        for (infrared.fortuna.materials.Material mat : Fortuna.initializedMaterials.values())
             if (mat instanceof OreMaterial oreMat && oreMat.hasArmor())
                 permutations.addProperty(oreMat.getName(), "%s:trims/color_palettes/%s".formatted(Fortuna.MOD_ID, oreMat.getName()));
 

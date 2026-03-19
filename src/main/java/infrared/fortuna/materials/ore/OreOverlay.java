@@ -1,6 +1,6 @@
 package infrared.fortuna.materials.ore;
 
-public enum MaterialOreOverlay
+public enum OreOverlay
 {
     Iron("overlay/ore_iron", "overlay/ore_iron_border"),
     Copper("overlay/ore_copper_base", "overlay/ore_copper_oxidized", "overlay/ore_copper_transition", "overlay/ore_copper_border"),
@@ -18,7 +18,7 @@ public enum MaterialOreOverlay
     private final String borderTop;
     private final String borderBottom;
 
-    MaterialOreOverlay(String texture, String border)
+    OreOverlay(String texture, String border)
     {
         this.texture = texture;
         this.secondary = "";
@@ -27,7 +27,7 @@ public enum MaterialOreOverlay
         this.borderTop = border + "_top";
     }
 
-    MaterialOreOverlay(String texture, String secondary, String tertiary, String border)
+    OreOverlay(String texture, String secondary, String tertiary, String border)
     {
         this.texture = texture;
         this.secondary = secondary;
@@ -36,7 +36,7 @@ public enum MaterialOreOverlay
         this.borderTop = border + "_top";
     }
 
-    MaterialOreOverlay(String texture, String secondary, String border)
+    OreOverlay(String texture, String secondary, String border)
     {
         this.texture = texture;
         this.secondary = secondary;

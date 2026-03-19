@@ -7,8 +7,8 @@ import infrared.fortuna.util.Utilities;
 import infrared.fortuna.blocks.FallingFortunaBlock;
 import infrared.fortuna.blocks.FortunaBlockLootProvider;
 import infrared.fortuna.DynamicProperties;
-import infrared.fortuna.materials.ore.MaterialOreBase;
-import infrared.fortuna.materials.ore.MaterialOreOverlay;
+import infrared.fortuna.materials.ore.OreBase;
+import infrared.fortuna.materials.ore.OreOverlay;
 import infrared.fortuna.materials.ore.OreMaterial;
 import infrared.fortuna.recipes.FortunaRecipeProvider;
 import infrared.fortuna.recipes.IFortunaRecipe;
@@ -38,12 +38,12 @@ public class FallingOreBlock extends FallingFortunaBlock implements IFortunaReci
         this(dynamicProperties, properties, dynamicProperties.material().getBase());
     }
 
-    public FallingOreBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, MaterialOreBase base)
+    public FallingOreBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, OreBase base)
     {
         this(dynamicProperties, properties, base, dynamicProperties.material().getXpRange());
     }
 
-    public FallingOreBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, MaterialOreBase base, IntProvider xpRange)
+    public FallingOreBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, OreBase base, IntProvider xpRange)
     {
         super(dynamicProperties, properties);
 
@@ -55,25 +55,25 @@ public class FallingOreBlock extends FallingFortunaBlock implements IFortunaReci
 
         addBaseTextures(base.getTexture());
 
-        MaterialOreOverlay materialOreOverlay = material.getOverlay();
-        addOverlayTexture("borderbottom", materialOreOverlay.getBorderBottom(), 0);
-        addOverlayTexture("bordertop", materialOreOverlay.getBorderTop(), 1);
+        OreOverlay oreOverlay = material.getOverlay();
+        addOverlayTexture("borderbottom", oreOverlay.getBorderBottom(), 0);
+        addOverlayTexture("bordertop", oreOverlay.getBorderTop(), 1);
         addRequiredTint(base.getBottomBorderColor().getRGB());
         addRequiredTint(base.getBorderColor().getRGB());
 
-        addOverlayTexture("overlay", materialOreOverlay.getTexture(), 2);
+        addOverlayTexture("overlay", oreOverlay.getTexture(), 2);
         addRequiredTint(material.getMainColor().getRGB());
 
-        if (materialOreOverlay.hasSecondary() && materialOreOverlay.hasTertiary())
+        if (oreOverlay.hasSecondary() && oreOverlay.hasTertiary())
         {
-            addOverlayTexture("overlayoxidized", materialOreOverlay.getSecondary(), 3);
-            addOverlayTexture("overlaytransition", materialOreOverlay.getTertiary(), 4);
+            addOverlayTexture("overlayoxidized", oreOverlay.getSecondary(), 3);
+            addOverlayTexture("overlaytransition", oreOverlay.getTertiary(), 4);
             addRequiredTint(material.getSecondaryColor().getRGB());
             addRequiredTint(material.getTransitionColor(0.5f, 0.5f, 1f).getRGB());
         }
-        else if (materialOreOverlay.hasSecondary())
+        else if (oreOverlay.hasSecondary())
         {
-            addOverlayTexture("overlaytransition", materialOreOverlay.getSecondary(), 3);
+            addOverlayTexture("overlaytransition", oreOverlay.getSecondary(), 3);
             Color color = Utilities.lerpColor(material.getMainColor(), base.getBottomBorderColor(), 0.2f);
             float[] hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), null);
             color = Color.getHSBColor(hsb[0], hsb[1] * 0.2f, 1f);

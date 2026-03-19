@@ -1,6 +1,6 @@
 package infrared.fortuna.materials.ore;
 
-public enum MaterialOreNugget
+public enum OreNugget
 {
     Iron("iron_nugget"),
     Gold("gold_nugget"),
@@ -8,7 +8,7 @@ public enum MaterialOreNugget
 
     private final String texture;
 
-    MaterialOreNugget(String texture)
+    OreNugget(String texture)
     {
         this.texture = "nuggets/" + texture;
     }

@@ -34,16 +34,17 @@ public class OreMaterial extends Material
     private final MaterialType materialType;
 
     // === Ore appearance ===
-    private MaterialOreBase oreBase       = MaterialOreBase.Stone;
-    private MaterialOreOverlay oreOverlay = MaterialOreOverlay.Iron;
+    private OreBase oreBase       = OreBase.Stone;
+    private OreOverlay oreOverlay = OreOverlay.Iron;
 
     // === Item/block textures ===
-    private MaterialOreIngot oreIngot      = MaterialOreIngot.Iron;
-    private MaterialOreRaw oreRaw          = MaterialOreRaw.Iron;
-    private MaterialOreGem oreGem          = MaterialOreGem.Diamond;
-    private MaterialOreNugget oreNugget    = MaterialOreNugget.Iron;
-    private MaterialOreBlock materialBlock = MaterialOreBlock.Iron;
-    private MaterialOreFuel oreFuel        = MaterialOreFuel.Coal;
+    private OreIngot oreIngot      = OreIngot.Iron;
+    private OreRaw oreRaw          = OreRaw.Iron;
+    private OreGem oreGem          = OreGem.Diamond;
+    private OreNugget oreNugget    = OreNugget.Iron;
+    private OreBars oreBars        = OreBars.Iron;
+    private OreBlock materialBlock = OreBlock.Iron;
+    private OreFuel oreFuel        = OreFuel.Coal;
 
     // === Block properties ===
     private float materialMineTime;
@@ -51,7 +52,10 @@ public class OreMaterial extends Material
 
     // === Drop properties ===
     private IntProvider xpRange;
-    private MaterialOreDrops drops;
+    private OreDrops drops;
+
+    // === Material Tags ===
+    private TagKey<Item> repairItemTag = null;
 
     // === Tool properties ===
     private boolean makeTools = false;
@@ -101,10 +105,17 @@ public class OreMaterial extends Material
         oreBase = chooseOreBase();
         oreOverlay = chooseOreOverlay();
 
-        oreIngot = chooseOreIngot();
-        oreRaw = chooseOreRaw();
-        oreGem = chooseOreGem();
-        oreNugget = chooseOreNugget();
+        if (materialType == MaterialType.Ingot)
+        {
+            oreIngot = chooseType(OreIngot.class);
+            oreRaw = chooseOreRaw();
+            oreNugget = chooseType(OreNugget.class);
+            oreBars = chooseOreBars();
+        }
+        else
+        {
+            oreGem = chooseOreGem();
+        }
         materialBlock = chooseOreBlock();
 
         materialMineTime = chooseMiningTime();
@@ -114,6 +125,8 @@ public class OreMaterial extends Material
         int maxXp = minXp + 1 + rng.nextInt(4);
         xpRange = UniformInt.of(minXp, maxXp);
         drops = chooseDropCountType();
+
+        repairItemTag = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, "%s_repair_items".formatted(name)));
 
         makeTools = true;
         toolMaterial = chooseToolMaterial();
@@ -143,7 +156,7 @@ public class OreMaterial extends Material
         oreBase = chooseOreBase();
         oreOverlay = chooseOreOverlay();
 
-        oreFuel = chooseOreFuel();
+        oreFuel = chooseType(OreFuel.class);
         materialBlock = chooseOreBlock();
 
         materialMineTime = chooseMiningTime();
@@ -171,20 +184,23 @@ public class OreMaterial extends Material
     public MiningLevel getMiningLevel() { return miningLevel; }
     public MaterialType getType()       { return materialType; }
 
-    public MaterialOreBase getBase()           { return oreBase; }
-    public MaterialOreOverlay getOverlay()     { return oreOverlay; }
-    public MaterialOreIngot getIngot()         { return oreIngot; }
-    public MaterialOreNugget getNugget()       { return oreNugget; }
-    public MaterialOreRaw getMaterialType()    { return oreRaw; }
-    public MaterialOreGem getGem()             { return oreGem; }
-    public MaterialOreFuel getFuel()           { return oreFuel; }
-    public MaterialOreBlock getMaterialBlock() { return materialBlock; }
+    public OreBase getBase()           { return oreBase; }
+    public OreOverlay getOverlay()     { return oreOverlay; }
+    public OreIngot getIngot()         { return oreIngot; }
+    public OreNugget getNugget()       { return oreNugget; }
+    public OreRaw getMaterialType()    { return oreRaw; }
+    public OreGem getGem()             { return oreGem; }
+    public OreBars getBars()           { return oreBars; }
+    public OreFuel getFuel()           { return oreFuel; }
+    public OreBlock getMaterialBlock() { return materialBlock; }
 
     public float getMaterialMineTime() { return materialMineTime; }
     public float getMaterialHardness() { return materialHardness; }
 
     public IntProvider getXpRange()       { return xpRange; }
-    public MaterialOreDrops getDropType() { return drops; }
+    public OreDrops getDropType() { return drops; }
+
+    public TagKey<Item> getRepairItemTag() { return repairItemTag; }
 
     public boolean hasTools()             { return makeTools; }
     public ToolMaterial getToolMaterial() { return toolMaterial; }
@@ -226,168 +242,164 @@ public class OreMaterial extends Material
     // Material generation
     // =========================================================================
 
-    private MaterialOreBase chooseOreBase()
+    private OreBase chooseOreBase()
     {
-        Utilities.WeightedRandom<MaterialOreBase> baseRandom = new Utilities.WeightedRandom<MaterialOreBase>(rng.nextLong());
+        Utilities.WeightedRandom<OreBase> baseRandom = new Utilities.WeightedRandom<OreBase>(rng.nextLong());
 
         switch (miningLevel)
         {
             case Stone ->
             {
-                baseRandom.add(94, MaterialOreBase.Stone)
-                        .add(1, MaterialOreBase.Andesite)
-                        .add(1, MaterialOreBase.Diorite)
-                        .add(1, MaterialOreBase.Granite)
-                        .add(1, MaterialOreBase.Tuff)
-                        .add(1, MaterialOreBase.Sand)
-                        .add(1, MaterialOreBase.Gravel);
+                baseRandom.add(94, OreBase.Stone)
+                        .add(1, OreBase.Andesite)
+                        .add(1, OreBase.Diorite)
+                        .add(1, OreBase.Granite)
+                        .add(1, OreBase.Tuff)
+                        .add(1, OreBase.Sand)
+                        .add(1, OreBase.Gravel);
             }
             case Copper ->
             {
-                baseRandom.add(40, MaterialOreBase.Stone)
-                        .add(12, MaterialOreBase.Andesite)
-                        .add(12, MaterialOreBase.Diorite)
-                        .add(12, MaterialOreBase.Granite)
-                        .add(2, MaterialOreBase.Tuff)
-                        .add(12, MaterialOreBase.Sand)
-                        .add(10, MaterialOreBase.Gravel);
+                baseRandom.add(40, OreBase.Stone)
+                        .add(12, OreBase.Andesite)
+                        .add(12, OreBase.Diorite)
+                        .add(12, OreBase.Granite)
+                        .add(2, OreBase.Tuff)
+                        .add(12, OreBase.Sand)
+                        .add(10, OreBase.Gravel);
             }
             case Iron ->
             {
-                baseRandom.add(55, MaterialOreBase.Stone)
-                        .add(8, MaterialOreBase.Andesite)
-                        .add(8, MaterialOreBase.Diorite)
-                        .add(8, MaterialOreBase.Granite)
-                        .add(6, MaterialOreBase.Tuff)
-                        .add(8, MaterialOreBase.Sand)
-                        .add(7, MaterialOreBase.Gravel);
+                baseRandom.add(55, OreBase.Stone)
+                        .add(8, OreBase.Andesite)
+                        .add(8, OreBase.Diorite)
+                        .add(8, OreBase.Granite)
+                        .add(6, OreBase.Tuff)
+                        .add(8, OreBase.Sand)
+                        .add(7, OreBase.Gravel);
             }
             case Diamond ->
             {
-                baseRandom.add(60, MaterialOreBase.Stone)
-                        .add(5, MaterialOreBase.Andesite)
-                        .add(5, MaterialOreBase.Diorite)
-                        .add(5, MaterialOreBase.Granite)
-                        .add(12, MaterialOreBase.Tuff)
-                        .add(3, MaterialOreBase.Sand)
-                        .add(10, MaterialOreBase.Gravel);
+                baseRandom.add(60, OreBase.Stone)
+                        .add(5, OreBase.Andesite)
+                        .add(5, OreBase.Diorite)
+                        .add(5, OreBase.Granite)
+                        .add(12, OreBase.Tuff)
+                        .add(3, OreBase.Sand)
+                        .add(10, OreBase.Gravel);
             }
             case Netherite ->
             {
-                baseRandom.add(50, MaterialOreBase.Stone)
-                        .add(3, MaterialOreBase.Andesite)
-                        .add(3, MaterialOreBase.Diorite)
-                        .add(3, MaterialOreBase.Granite)
-                        .add(25, MaterialOreBase.Tuff)
-                        .add(1, MaterialOreBase.Sand)
-                        .add(15, MaterialOreBase.Gravel);
+                baseRandom.add(50, OreBase.Stone)
+                        .add(3, OreBase.Andesite)
+                        .add(3, OreBase.Diorite)
+                        .add(3, OreBase.Granite)
+                        .add(25, OreBase.Tuff)
+                        .add(1, OreBase.Sand)
+                        .add(15, OreBase.Gravel);
             }
         }
 
         return baseRandom.next();
     }
 
-    private MaterialOreOverlay chooseOreOverlay()
+    private OreOverlay chooseOreOverlay()
     {
-        Utilities.WeightedRandom<MaterialOreOverlay> overlayRandom = new Utilities.WeightedRandom<MaterialOreOverlay>(rng.nextLong())
-                .add(8, MaterialOreOverlay.Iron).add(8, MaterialOreOverlay.Diamond).add(8, MaterialOreOverlay.Coal)
-                .add(8, MaterialOreOverlay.Redstone).add(8, MaterialOreOverlay.Emerald).add(8, MaterialOreOverlay.Gold).add(8, MaterialOreOverlay.Lapis);
+        Utilities.WeightedRandom<OreOverlay> overlayRandom = new Utilities.WeightedRandom<OreOverlay>(rng.nextLong())
+                .add(8, OreOverlay.Iron).add(8, OreOverlay.Diamond).add(8, OreOverlay.Coal)
+                .add(8, OreOverlay.Redstone).add(8, OreOverlay.Emerald).add(8, OreOverlay.Gold).add(8, OreOverlay.Lapis);
 
         if (materialType == MaterialType.Ingot)
-            overlayRandom.add(20, MaterialOreOverlay.Copper);
+            overlayRandom.add(20, OreOverlay.Copper);
 
         if (materialType == MaterialType.Fuel)
-            overlayRandom.add(40, MaterialOreOverlay.Coal);
+            overlayRandom.add(40, OreOverlay.Coal);
 
         return overlayRandom.next();
     }
 
-    private MaterialOreIngot chooseOreIngot()
+    private <T extends Enum<T>> T chooseType(Class<T> enumClass)
     {
-        MaterialOreIngot[] values = MaterialOreIngot.values();
+        T[] values = enumClass.getEnumConstants();
         return values[rng.nextInt(values.length)];
     }
 
-    private MaterialOreRaw chooseOreRaw()
+    private OreRaw chooseOreRaw()
     {
         if (oreOverlay == null)
-            return MaterialOreRaw.Iron;
+            return OreRaw.Iron;
 
-        if (oreOverlay == MaterialOreOverlay.Copper)
-            return MaterialOreRaw.Copper;
+        if (oreOverlay == OreOverlay.Copper)
+            return OreRaw.Copper;
 
-        MaterialOreRaw[] values = new MaterialOreRaw[] { MaterialOreRaw.Iron, MaterialOreRaw.Gold };
+        OreRaw[] values = new OreRaw[] { OreRaw.Iron, OreRaw.Gold };
         return values[rng.nextInt(values.length)];
     }
 
-    private MaterialOreGem chooseOreGem()
+    private OreBars chooseOreBars()
     {
-        Utilities.WeightedRandom<MaterialOreGem> gemRNG = new Utilities.WeightedRandom<MaterialOreGem>(rng.nextLong())
-                .add(10, MaterialOreGem.Diamond).add(10, MaterialOreGem.Emerald).add(8, MaterialOreGem.Lapis)
-                .add(7, MaterialOreGem.Resin).add(4, MaterialOreGem.Prismarine).add(4, MaterialOreGem.Amethyst);
+        if (oreOverlay == OreOverlay.Copper)
+            return OreBars.Copper;
+
+        return OreBars.Iron;
+    }
+
+    private OreGem chooseOreGem()
+    {
+        Utilities.WeightedRandom<OreGem> gemRNG = new Utilities.WeightedRandom<OreGem>(rng.nextLong())
+                .add(10, OreGem.Diamond).add(10, OreGem.Emerald).add(8, OreGem.Lapis)
+                .add(7, OreGem.Resin).add(4, OreGem.Prismarine).add(4, OreGem.Amethyst);
 
         return gemRNG.next();
     }
 
-    private MaterialOreFuel chooseOreFuel()
-    {
-        MaterialOreFuel[] values = MaterialOreFuel.values();
-        return values[rng.nextInt(values.length)];
-    }
-
-    private MaterialOreNugget chooseOreNugget()
-    {
-        MaterialOreNugget[] values = MaterialOreNugget.values();
-        return values[rng.nextInt(values.length)];
-    }
-
-    private MaterialOreBlock chooseOreBlock()
+    private OreBlock chooseOreBlock()
     {
         return switch (materialType)
         {
             case Ingot -> {
-                if (oreOverlay == MaterialOreOverlay.Copper)
-                    yield MaterialOreBlock.Copper;
+                if (oreOverlay == OreOverlay.Copper)
+                    yield OreBlock.Copper;
 
-                MaterialOreBlock[] values = new MaterialOreBlock[] { MaterialOreBlock.Iron, MaterialOreBlock.Gold, MaterialOreBlock.Netherite };
+                OreBlock[] values = new OreBlock[] { OreBlock.Iron, OreBlock.Gold, OreBlock.Netherite };
                 yield values[rng.nextInt(values.length)];
             }
             case Gem -> {
-                MaterialOreBlock[] values = new MaterialOreBlock[] { MaterialOreBlock.Amethyst, MaterialOreBlock.Diamond, MaterialOreBlock.Amethyst, MaterialOreBlock.Emerald, MaterialOreBlock.Lapis, };
+                OreBlock[] values = new OreBlock[] { OreBlock.Amethyst, OreBlock.Diamond, OreBlock.Amethyst, OreBlock.Emerald, OreBlock.Lapis, };
                 yield values[rng.nextInt(values.length)];
             }
             case Special -> {
-                MaterialOreBlock[] values = new MaterialOreBlock[] { MaterialOreBlock.Gold, MaterialOreBlock.Netherite, MaterialOreBlock.Amethyst,
-                        MaterialOreBlock.Diamond, MaterialOreBlock.Amethyst, MaterialOreBlock.Emerald, MaterialOreBlock.Lapis, };
+                OreBlock[] values = new OreBlock[] { OreBlock.Gold, OreBlock.Netherite, OreBlock.Amethyst,
+                        OreBlock.Diamond, OreBlock.Amethyst, OreBlock.Emerald, OreBlock.Lapis, };
                 yield values[rng.nextInt(values.length)];
             }
             case Fuel -> {
-                MaterialOreBlock[] values = new MaterialOreBlock[] { MaterialOreBlock.Coal, MaterialOreBlock.Coal, MaterialOreBlock.Resin };
+                OreBlock[] values = new OreBlock[] { OreBlock.Coal, OreBlock.Coal, OreBlock.Resin };
                 yield values[rng.nextInt(values.length)];
             }
             case null, default -> {
-                yield MaterialOreBlock.Lapis;
+                yield OreBlock.Lapis;
             }
         };
     }
 
-    private MaterialOreDrops chooseDropCountType()
+    private OreDrops chooseDropCountType()
     {
         return switch (materialType)
         {
             case Ingot -> {
-                Utilities.WeightedRandom<MaterialOreDrops> dropRNG = new Utilities.WeightedRandom<MaterialOreDrops>(rng.nextLong())
-                        .add(90, MaterialOreDrops.Single).add(10, MaterialOreDrops.Copper);
+                Utilities.WeightedRandom<OreDrops> dropRNG = new Utilities.WeightedRandom<OreDrops>(rng.nextLong())
+                        .add(90, OreDrops.Single).add(10, OreDrops.Copper);
 
                 yield dropRNG.next();
             }
             case Gem -> {
-                Utilities.WeightedRandom<MaterialOreDrops> dropRNG = new Utilities.WeightedRandom<MaterialOreDrops>(rng.nextLong())
-                        .add(90, MaterialOreDrops.Single).add(7, MaterialOreDrops.Lapis).add(7, MaterialOreDrops.Redstone);
+                Utilities.WeightedRandom<OreDrops> dropRNG = new Utilities.WeightedRandom<OreDrops>(rng.nextLong())
+                        .add(90, OreDrops.Single).add(7, OreDrops.Lapis).add(7, OreDrops.Redstone);
 
                 yield dropRNG.next();
             }
-            default -> MaterialOreDrops.Single;
+            default -> OreDrops.Single;
         };
     }
 
@@ -468,17 +480,7 @@ public class OreMaterial extends Material
             case null, default -> BlockTags.INCORRECT_FOR_WOODEN_TOOL;
         };
 
-        // TODO: generate a custom repair item tag once item tags are dynamic
-        TagKey<Item> repairItems = switch (miningLevel)
-        {
-            case Copper   -> ItemTags.STONE_TOOL_MATERIALS;
-            case Iron     -> ItemTags.IRON_TOOL_MATERIALS;
-            case Diamond  -> ItemTags.DIAMOND_TOOL_MATERIALS;
-            case Netherite -> ItemTags.NETHERITE_TOOL_MATERIALS;
-            case null, default -> ItemTags.WOODEN_TOOL_MATERIALS;
-        };
-
-        return new ToolMaterial(incorrectBlocks, baseDurability, baseSpeed, baseAttackDamage, baseEnchantment, repairItems);
+        return new ToolMaterial(incorrectBlocks, baseDurability, baseSpeed, baseAttackDamage, baseEnchantment, repairItemTag);
     }
 
     // =========================================================================
@@ -539,16 +541,6 @@ public class OreMaterial extends Material
             case null, default -> 0.0f;
         };
 
-        // TODO: generate a custom repair item tag once item tags are dynamic
-        TagKey<Item> repairItems = switch (miningLevel)
-        {
-            case Copper    -> ItemTags.REPAIRS_COPPER_ARMOR;
-            case Iron      -> ItemTags.REPAIRS_IRON_ARMOR;
-            case Diamond   -> ItemTags.REPAIRS_DIAMOND_ARMOR;
-            case Netherite -> ItemTags.REPAIRS_NETHERITE_ARMOR;
-            case null, default -> ItemTags.WOODEN_TOOL_MATERIALS;
-        };
-
         ResourceKey<EquipmentAsset> armorAssetKey = ResourceKey.create(
                 EquipmentAssets.ROOT_ID,
                 Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, name)
@@ -561,7 +553,7 @@ public class OreMaterial extends Material
                 SoundEvents.ARMOR_EQUIP_IRON,
                 toughness,
                 knockbackResistance,
-                repairItems,
+                repairItemTag,
                 armorAssetKey
         );
     }
@@ -591,7 +583,7 @@ public class OreMaterial extends Material
             case Diamond       -> 0.3f;
             case Netherite     -> 0.5f;
         };
-        float discardChance = Math.clamp(base + (rng.nextFloat() - 0.5f) * 0.8f, 0.05f, 0.95f);
+        float discardChance = Math.clamp(base + (rng.nextFloat() - 0.5f) * 0.8f, 0.0f, 1f);
 
         // Medium features is like the base feature, loot at iron_ore feature or diamond_ore_medium
         OreConfiguredFeature mediumFeature = new OreConfiguredFeature(baseVeinSize, discardChance, name, oreBase, OreFeatureType.Medium.getName());
@@ -922,7 +914,7 @@ public class OreMaterial extends Material
                 brightness = Math.clamp(brightness, 0f, 1f);
 
                 setColor("main", Color.getHSBColor(hue, saturation, brightness));
-                if (oreOverlay == MaterialOreOverlay.Copper) {
+                if (oreOverlay == OreOverlay.Copper) {
                     float oxidizedShift = 0.4f + rng.nextFloat() * 0.2f;
                     float oxidizedHue = (hue + oxidizedShift) % 1.0f;
                     float oxidizedSaturation = Math.clamp(saturation + (rng.nextFloat() * 0.2f - 0.1f), 0.1f, 0.9f);
@@ -955,5 +947,6 @@ public class OreMaterial extends Material
         setColor("main_white", Utilities.brightenColorByFactor(mainColor, 0.75f));
         setColor("main_light", Utilities.brightenColorByFactor(mainColor, 0.85f));
         setColor("main_dark",  Utilities.nudgeColor(mainColor, 0.1f, 0f, 0f));
+        setColor("main_shift0",  Utilities.nudgeColor(mainColor, 0.03f, 0f, 0f));
     }
 }

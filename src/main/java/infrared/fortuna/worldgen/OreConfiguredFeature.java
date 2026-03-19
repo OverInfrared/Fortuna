@@ -3,7 +3,7 @@ package infrared.fortuna.worldgen;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
-import infrared.fortuna.materials.ore.MaterialOreBase;
+import infrared.fortuna.materials.ore.OreBase;
 
 public class OreConfiguredFeature implements IConfiguredFeature
 {
@@ -11,11 +11,11 @@ public class OreConfiguredFeature implements IConfiguredFeature
     private final float discardChance;
 
     private final String materialName;
-    private final MaterialOreBase materialBase;
+    private final OreBase materialBase;
 
     private final String identifier;
 
-    public OreConfiguredFeature(int veinSize, float discardChance, String materialName, MaterialOreBase base, String identifier)
+    public OreConfiguredFeature(int veinSize, float discardChance, String materialName, OreBase base, String identifier)
     {
         this.size = veinSize;
         this.discardChance = discardChance;
@@ -33,7 +33,7 @@ public class OreConfiguredFeature implements IConfiguredFeature
 
         JsonArray targets = new JsonArray();
 
-        if (materialBase == MaterialOreBase.Stone)
+        if (materialBase == OreBase.Stone)
         {
             targets.add(buildTagTarget("minecraft:stone_ore_replaceables", oreName));
 

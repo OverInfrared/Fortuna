@@ -6,7 +6,7 @@ import net.minecraft.world.level.block.Block;
 
 import java.awt.*;
 
-public enum MaterialOreBase
+public enum OreBase
 {
     Stone     ("bases/stone",      "stone",      new Color(110, 110, 110), new Color(150, 150, 150), BlockTags.MINEABLE_WITH_PICKAXE),
     Diorite   ("bases/diorite",    "diorite",    new Color(139, 139, 139), new Color(233, 233, 233), BlockTags.MINEABLE_WITH_PICKAXE),
@@ -24,7 +24,7 @@ public enum MaterialOreBase
     private final Color bottomBorderColor;
     private final TagKey<Block> requiredTool;
 
-    MaterialOreBase(String texture, String blockId, Color borderColor, Color bottomBorderColor, TagKey<Block> requiredTool)
+    OreBase(String texture, String blockId, Color borderColor, Color bottomBorderColor, TagKey<Block> requiredTool)
     {
         this.texture = texture;
         this.blockId = blockId;

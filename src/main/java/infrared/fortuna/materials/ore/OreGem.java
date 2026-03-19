@@ -1,6 +1,6 @@
 package infrared.fortuna.materials.ore;
 
-public enum MaterialOreGem
+public enum OreGem
 {
     Diamond("diamond"),
     Lapis("lapis_lazuli"),
@@ -11,7 +11,7 @@ public enum MaterialOreGem
 
     private final String texture;
 
-    MaterialOreGem(String texture)
+    OreGem(String texture)
     {
         this.texture = "gems/" + texture;
     }

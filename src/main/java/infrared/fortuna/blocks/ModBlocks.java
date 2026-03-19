@@ -6,10 +6,9 @@ import infrared.fortuna.blocks.ore.*;
 import infrared.fortuna.items.ModItems;
 import infrared.fortuna.DynamicProperties;
 import infrared.fortuna.materials.MaterialType;
-import infrared.fortuna.materials.ore.MaterialOreBase;
-import infrared.fortuna.materials.ore.MaterialOreOverlay;
+import infrared.fortuna.materials.ore.OreBase;
+import infrared.fortuna.materials.ore.OreOverlay;
 import infrared.fortuna.materials.ore.OreMaterial;
-import net.fabricmc.fabric.api.registry.FuelRegistryEvents;
 import net.fabricmc.fabric.api.registry.OxidizableBlocksRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -90,16 +89,16 @@ public class ModBlocks
         DynamicProperties<Block, OreMaterial> oreDynamicProperties = new DynamicProperties<>(oreRegistryName, Component.literal("%s Ore".formatted(Utilities.capitalize(name))), oreKey, material);
         Properties                            oreProperties        = BlockBehaviour.Properties.of().strength(material.getMaterialMineTime(), material.getMaterialHardness()).requiresCorrectToolForDrops();
 
-        MaterialOreBase base = material.getBase();
+        OreBase base = material.getBase();
 
         // Create regular static or falling ore block.
-        if (base == MaterialOreBase.Sand || base == MaterialOreBase.Gravel)
+        if (base == OreBase.Sand || base == OreBase.Gravel)
             registerBlock(new FallingOreBlock(oreDynamicProperties, oreProperties));
         else
             registerBlock(new OreBlock(oreDynamicProperties, oreProperties));
 
         // If stone then make a corresponding deepslate ore.
-        if (base == MaterialOreBase.Stone)
+        if (base == OreBase.Stone)
         {
             String             dsRegistryName = "deepslate_%s_ore".formatted(name);
             ResourceKey<Block> dsOreKey       = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, dsRegistryName));
@@ -107,49 +106,16 @@ public class ModBlocks
             DynamicProperties<Block, OreMaterial> dsDynamicProperties = new DynamicProperties<>(dsRegistryName, Component.literal("Deepslate %s Ore".formatted(Utilities.capitalize(name))), dsOreKey, material);
             Properties                            dsOreProperties     = BlockBehaviour.Properties.of().strength(material.getMaterialMineTime() + 1.5f, material.getMaterialHardness()).requiresCorrectToolForDrops().sound(SoundType.DEEPSLATE);
 
-            registerBlock(new OreBlock(dsDynamicProperties, dsOreProperties, MaterialOreBase.Deepslate));
+            registerBlock(new OreBlock(dsDynamicProperties, dsOreProperties, OreBase.Deepslate));
         }
 
-        MaterialOreOverlay overlay = material.getOverlay();
+        OreOverlay overlay = material.getOverlay();
 
         // The main material block
-        if (overlay == MaterialOreOverlay.Copper)
+        if (overlay == OreOverlay.Copper)
             registerBlocks(createWeatheredBlocks(material));
         else
-            registerBlock(createMaterialBlock(material));
-
-        if (material.hasDoor())
-        {
-            String             doorRegistryName = "%s_door".formatted(name);
-            ResourceKey<Block> doorKey          = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, doorRegistryName));
-
-            DynamicProperties<Block, OreMaterial> doorDynamicProperties = new DynamicProperties<>(doorRegistryName, Component.literal("%s Door".formatted(Utilities.capitalize(name))), doorKey, material);
-            Properties                            doorProperties        = BlockBehaviour.Properties.of().strength(material.getMaterialMineTime(), material.getMaterialHardness()).requiresCorrectToolForDrops().noOcclusion().pushReaction(PushReaction.DESTROY);
-
-            registerBlock(new FortunaDoorBlock(doorDynamicProperties, doorProperties, BlockSetType.IRON));
-        }
-
-        if (material.hasTrapdoor())
-        {
-            String             tdRegistryName = "%s_trapdoor".formatted(name);
-            ResourceKey<Block> tdKey          = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, tdRegistryName));
-
-            DynamicProperties<Block, OreMaterial> tdDynamicProperties = new DynamicProperties<>(tdRegistryName, Component.literal("%s Trapdoor".formatted(Utilities.capitalize(name))), tdKey, material);
-            Properties                            tdProperties        = BlockBehaviour.Properties.of().strength(material.getMaterialMineTime(), material.getMaterialHardness()).requiresCorrectToolForDrops().noOcclusion().pushReaction(PushReaction.DESTROY);
-
-            registerBlock(new FortunaTrapDoorBlock(tdDynamicProperties, tdProperties, BlockSetType.IRON));
-        }
-
-        if (material.hasBars())
-        {
-            String             barsRegistryName = "%s_bars".formatted(name);
-            ResourceKey<Block> barsKey          = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, barsRegistryName));
-
-            DynamicProperties<Block, OreMaterial> barsDynamicProperties = new DynamicProperties<>(barsRegistryName, Component.literal("%s Bars".formatted(Utilities.capitalize(name))), barsKey, material);
-            Properties                            barsProperties        = BlockBehaviour.Properties.of().strength(material.getMaterialMineTime(), material.getMaterialHardness()).requiresCorrectToolForDrops().noOcclusion();
-
-            registerBlock(new FortunaBarsBlock(barsDynamicProperties, barsProperties));
-        }
+            registerBlocks(createMaterialBlocks(material));
     }
 
     private static IFortunaBlock createMaterialBlock(OreMaterial material)
@@ -181,11 +147,80 @@ public class ModBlocks
             return new MaterialBlock(blockDynamicProperties, blockProperties, weatherState);
     }
 
+    private static IFortunaBlock createBarsBlock(OreMaterial material, boolean oxidizable, String prefix, WeatheringCopper.WeatherState weatherState)
+    {
+        String blockRegistryName = "%s%s_bars".formatted(prefix, material.getName());
+        ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, blockRegistryName));
+
+        String displayPrefix = Arrays.stream(prefix.split("_"))
+                .filter(s -> !s.isEmpty())
+                .map(Utilities::capitalize)
+                .collect(Collectors.joining(" "));
+
+        if (!displayPrefix.isEmpty())
+            displayPrefix += " ";
+
+        Component displayName = Component.literal("%s%s Bars".formatted(displayPrefix, Utilities.capitalize(material.getName())));
+
+        DynamicProperties<Block, OreMaterial> blockDynamicProperties = new DynamicProperties<>(blockRegistryName, displayName, blockKey, material);
+        BlockBehaviour.Properties blockProperties = BlockBehaviour.Properties.of().strength(material.getMaterialMineTime(), material.getMaterialHardness()).sound(SoundType.METAL).requiresCorrectToolForDrops().noOcclusion();
+
+        if (oxidizable)
+            return new WeatheringBarsBlock(blockDynamicProperties, blockProperties, weatherState);
+        else
+            return new BarsBlock(blockDynamicProperties, blockProperties, weatherState);
+    }
+
+    private static List<IFortunaBlock> createMaterialBlocks(OreMaterial material)
+    {
+        String name = material.getName();
+        List<IFortunaBlock> materialBlocks = new ArrayList<>();
+
+        materialBlocks.add(createMaterialBlock(material));
+
+        if (material.hasDoor())
+        {
+            String             doorRegistryName = "%s_door".formatted(name);
+            ResourceKey<Block> doorKey          = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, doorRegistryName));
+
+            DynamicProperties<Block, OreMaterial> doorDynamicProperties = new DynamicProperties<>(doorRegistryName, Component.literal("%s Door".formatted(Utilities.capitalize(name))), doorKey, material);
+            Properties                            doorProperties        = BlockBehaviour.Properties.of().strength(material.getMaterialMineTime(), material.getMaterialHardness()).requiresCorrectToolForDrops().noOcclusion().pushReaction(PushReaction.DESTROY);
+
+            materialBlocks.add(new FortunaDoorBlock(doorDynamicProperties, doorProperties, BlockSetType.IRON));
+        }
+
+        if (material.hasTrapdoor())
+        {
+            String             tdRegistryName = "%s_trapdoor".formatted(name);
+            ResourceKey<Block> tdKey          = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, tdRegistryName));
+
+            DynamicProperties<Block, OreMaterial> tdDynamicProperties = new DynamicProperties<>(tdRegistryName, Component.literal("%s Trapdoor".formatted(Utilities.capitalize(name))), tdKey, material);
+            Properties                            tdProperties        = BlockBehaviour.Properties.of().strength(material.getMaterialMineTime(), material.getMaterialHardness()).requiresCorrectToolForDrops().noOcclusion().pushReaction(PushReaction.DESTROY);
+
+            materialBlocks.add(new FortunaTrapDoorBlock(tdDynamicProperties, tdProperties, BlockSetType.IRON));
+        }
+
+        if (material.hasBars())
+        {
+            String             barsRegistryName = "%s_bars".formatted(name);
+            ResourceKey<Block> barsKey          = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, barsRegistryName));
+
+            DynamicProperties<Block, OreMaterial> barsDynamicProperties = new DynamicProperties<>(barsRegistryName, Component.literal("%s Bars".formatted(Utilities.capitalize(name))), barsKey, material);
+            Properties                            barsProperties        = BlockBehaviour.Properties.of().strength(material.getMaterialMineTime(), material.getMaterialHardness()).requiresCorrectToolForDrops().noOcclusion();
+
+            materialBlocks.add(new BarsBlock(barsDynamicProperties, barsProperties));
+        }
+
+        return materialBlocks;
+    }
+
     private static List<IFortunaBlock> createWeatheredBlocks(OreMaterial material)
     {
-        // Register 4 weathering variants
+        List<IFortunaBlock> allBlocks = new ArrayList<>();
+
         String[] prefixes = {"", "exposed_", "weathered_", "oxidized_"};
         String[] waxedPrefixes = {"waxed_", "waxed_exposed_", "waxed_weathered_", "waxed_oxidized_"};
+
         WeatheringCopper.WeatherState[] states = {
                 WeatheringCopper.WeatherState.UNAFFECTED,
                 WeatheringCopper.WeatherState.EXPOSED,
@@ -193,12 +228,16 @@ public class ModBlocks
                 WeatheringCopper.WeatherState.OXIDIZED
         };
 
-        IFortunaBlock[] weatheringBlocks = new WeatheringMaterialBlock[4];
-        IFortunaBlock[] waxedBlocks      = new MaterialBlock[4];
+        IFortunaBlock[] weatheringBlocks = new IFortunaBlock[4];
+        IFortunaBlock[] waxedBlocks = new IFortunaBlock[4];
+
         for (int i = 0; i < 4; i++)
         {
-            weatheringBlocks[i] = createMaterialBlock(material, true,  prefixes[i],      states[i]);
-            waxedBlocks[i]      = createMaterialBlock(material, false, waxedPrefixes[i], states[i]);
+            weatheringBlocks[i] = createMaterialBlock(material, true, prefixes[i], states[i]);
+            waxedBlocks[i] = createMaterialBlock(material, false, waxedPrefixes[i], states[i]);
+
+            allBlocks.add(weatheringBlocks[i]);
+            allBlocks.add(waxedBlocks[i]);
         }
 
         OxidizableBlocksRegistry.registerOxidizableBlockPair((Block) weatheringBlocks[0], (Block) weatheringBlocks[1]);
@@ -210,8 +249,31 @@ public class ModBlocks
         OxidizableBlocksRegistry.registerWaxableBlockPair((Block) weatheringBlocks[2], (Block) waxedBlocks[2]);
         OxidizableBlocksRegistry.registerWaxableBlockPair((Block) weatheringBlocks[3], (Block) waxedBlocks[3]);
 
-        return Stream.concat(Arrays.stream(weatheringBlocks), Arrays.stream(waxedBlocks))
-                .collect(Collectors.toList());
+        if (material.hasBars())
+        {
+            IFortunaBlock[] weatheringBars = new IFortunaBlock[4];
+            IFortunaBlock[] waxedBars = new IFortunaBlock[4];
+
+            for (int i = 0; i < 4; i++)
+            {
+                weatheringBars[i] = createBarsBlock(material, true, prefixes[i], states[i]);
+                waxedBars[i] = createBarsBlock(material, false, waxedPrefixes[i], states[i]);
+
+                allBlocks.add(weatheringBars[i]);
+                allBlocks.add(waxedBars[i]);
+            }
+
+            OxidizableBlocksRegistry.registerOxidizableBlockPair((Block) weatheringBars[0], (Block) weatheringBars[1]);
+            OxidizableBlocksRegistry.registerOxidizableBlockPair((Block) weatheringBars[1], (Block) weatheringBars[2]);
+            OxidizableBlocksRegistry.registerOxidizableBlockPair((Block) weatheringBars[2], (Block) weatheringBars[3]);
+
+            OxidizableBlocksRegistry.registerWaxableBlockPair((Block) weatheringBars[0], (Block) waxedBars[0]);
+            OxidizableBlocksRegistry.registerWaxableBlockPair((Block) weatheringBars[1], (Block) waxedBars[1]);
+            OxidizableBlocksRegistry.registerWaxableBlockPair((Block) weatheringBars[2], (Block) waxedBars[2]);
+            OxidizableBlocksRegistry.registerWaxableBlockPair((Block) weatheringBars[3], (Block) waxedBars[3]);
+        }
+
+        return allBlocks;
     }
 
     public static Map<String, IFortunaBlock> getRegisteredBlocks()

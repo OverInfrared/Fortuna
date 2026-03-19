@@ -2,7 +2,6 @@ package infrared.fortuna;
 
 import infrared.fortuna.blocks.ModBlocks;
 import infrared.fortuna.config.FortunaConfig;
-import infrared.fortuna.config.FortunaConfigModel;
 import infrared.fortuna.worldgen.LootTableReplacer;
 import infrared.fortuna.items.ModItems;
 import infrared.fortuna.materials.Material;
@@ -16,15 +15,16 @@ import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Fortuna implements ModInitializer
 {
 	public static final String MOD_ID = "fortuna";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	public static final List<Material> initializedMaterials = new ArrayList<>();
+	public static final Map<String, Material> initializedMaterials = new HashMap<>();
 
 	public static boolean disableVanillaOreVeins = true;
 
@@ -57,7 +57,7 @@ public class Fortuna implements ModInitializer
 				ModItems.initializeOreMaterial(material);
 				ModBlocks.initializeOreMaterial(material);
 
-				initializedMaterials.add(material);
+				initializedMaterials.put(material.getName(), material);
 			}
 		}
 
@@ -67,11 +67,11 @@ public class Fortuna implements ModInitializer
 		LootTableReplacer.register();
 	}
 
-	public static OreMaterial findMaterial(String name)
+	public static Material getMaterial(String name)
 	{
-		for (Material mat : initializedMaterials)
-			if (mat instanceof OreMaterial oreMat && oreMat.getName().equals(name))
-				return oreMat;
+		if (initializedMaterials.containsKey(name))
+			return initializedMaterials.get(name);
+
 		return null;
 	}
 }

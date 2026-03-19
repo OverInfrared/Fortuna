@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import infrared.fortuna.util.Utilities;
 import infrared.fortuna.blocks.FortunaBlock;
 import infrared.fortuna.DynamicProperties;
-import infrared.fortuna.materials.ore.MaterialOreBlock;
+import infrared.fortuna.materials.ore.OreBlock;
 import infrared.fortuna.materials.ore.OreMaterial;
 import infrared.fortuna.recipes.FortunaRecipeProvider;
 import infrared.fortuna.recipes.IFortunaRecipe;
@@ -32,7 +32,7 @@ public class WeatheringMaterialBlock extends FortunaBlock implements WeatheringC
 
         this.requiredMiningLevel = material.getMiningLevel();
 
-        MaterialOreBlock block = material.getMaterialBlock();
+        OreBlock block = material.getMaterialBlock();
         String blockTexture = block.getTexture();
 
         switch (weatherState)

@@ -6,7 +6,7 @@ import infrared.fortuna.items.FortunaItem;
 import infrared.fortuna.recipes.FortunaRecipeProvider;
 import infrared.fortuna.recipes.IFortunaRecipe;
 import infrared.fortuna.DynamicProperties;
-import infrared.fortuna.materials.ore.MaterialOreRaw;
+import infrared.fortuna.materials.ore.OreRaw;
 import infrared.fortuna.materials.ore.OreMaterial;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.world.item.Item;
@@ -24,7 +24,7 @@ public class RawItem extends FortunaItem implements IFortunaRecipe
         super(dynamicProperties, properties);
 
         OreMaterial material = dynamicProperties.material();
-        MaterialOreRaw rawOre = material.getMaterialType();
+        OreRaw rawOre = material.getMaterialType();
 
         Color color = dynamicProperties.material().getMainColor();
         Color whiteColor = dynamicProperties.material().getColor("main_white");
