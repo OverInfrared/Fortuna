@@ -4,9 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.blocks.*;
-import infrared.fortuna.blocks.ore.BarsBlock;
-import infrared.fortuna.blocks.ore.IBarsBlock;
-import infrared.fortuna.blocks.ore.IDoorBlock;
+import infrared.fortuna.blocks.ore.*;
 import infrared.fortuna.equipment.IFortunaEquipment;
 import infrared.fortuna.items.*;
 import infrared.fortuna.materials.Material;
@@ -256,11 +254,11 @@ public class DynamicResourceBuilder
         {
             String name = block.getRegistryName();
 
-            // Blockstates — all blocks
+            // Blockstates
             reg.register(Fortuna.MOD_ID, "blockstates/" + name + ".json",
                     block::getBlockStateString);
 
-            // Item model — all blocks
+            // Item model
             reg.register(Fortuna.MOD_ID, "items/" + name + ".json",
                     block::getItemString);
 
@@ -274,10 +272,9 @@ public class DynamicResourceBuilder
                     reg.register(Fortuna.MOD_ID, "models/block/" + name + "_" + suffix + ".json",
                             () -> block.getModelString(suffix));
             }
-            else if (block instanceof FortunaTrapDoorBlock)
+            else if (block instanceof ITrapDoorBlock)
             {
-                // 3 trapdoor variant models
-                for (String suffix : FortunaTrapDoorBlock.TRAPDOOR_MODELS)
+                for (String suffix : ITrapDoorBlock.TRAPDOOR_MODELS)
                     reg.register(Fortuna.MOD_ID, "models/block/" + name + "_" + suffix + ".json",
                             () -> block.getModelString(suffix));
             }
@@ -292,7 +289,7 @@ public class DynamicResourceBuilder
             }
             else
             {
-                // Regular blocks — single block model
+                // Regular blocks
                 reg.register(Fortuna.MOD_ID, "models/block/" + name + ".json",
                         block::getModelString);
             }

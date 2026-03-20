@@ -4,12 +4,99 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.blocks.IFortunaBlock;
+import infrared.fortuna.materials.Material;
+import net.minecraft.world.level.block.WeatheringCopper;
 
 import java.util.Arrays;
-import java.util.List;
 
 public interface IDoorBlock extends IFortunaBlock
 {
+    default void setupTextures(String doorTexture, WeatheringCopper.WeatherState weatherState)
+    {
+        String topTexture = doorTexture + "_top";
+        String bottomTexture = doorTexture + "_bottom";
+
+        addRequiredTexture("particle", topTexture);
+
+        Material material = getDynamicProperties().material();
+
+        // Overlay is always present
+        addOverlayTexture("overlay_top", topTexture + "_overlay", -1);
+        addOverlayTexture("overlay_bottom", bottomTexture + "_overlay", -1);
+
+        if (weatherState == null || weatherState == WeatheringCopper.WeatherState.UNAFFECTED)
+        {
+            addLayeredPair("top", "bottom", topTexture, bottomTexture, "", true);
+        }
+        else if (weatherState == WeatheringCopper.WeatherState.EXPOSED)
+        {
+            addOverlayTexture("top", "exposed_" + topTexture + "_neutral", 0);
+            addOverlayTexture("bottom", "exposed_" + bottomTexture + "_neutral", 0);
+            addOverlayTexture("top_white", "exposed_" + topTexture + "_white", 1);
+            addOverlayTexture("bottom_white", "exposed_" + bottomTexture + "_white", 1);
+            addOverlayTexture("top_light", "exposed_" + topTexture + "_light", 2);
+            addOverlayTexture("bottom_light", "exposed_" + bottomTexture + "_light", 2);
+            addOverlayTexture("top_oxidized", "exposed_" + topTexture + "_oxidized", 3);
+            addOverlayTexture("bottom_oxidized", "exposed_" + bottomTexture + "_oxidized", 3);
+            addOverlayTexture("top_transition", "exposed_" + topTexture + "_transition", 4);
+            addOverlayTexture("bottom_transition", "exposed_" + bottomTexture + "_transition", 4);
+            addRequiredTint(material.getColor("transition_base").getRGB());
+            addRequiredTint(material.getColor("transition_base_white").getRGB());
+            addRequiredTint(material.getColor("transition_base_light").getRGB());
+            addRequiredTint(material.getColor("transition_weathered").getRGB());
+            addRequiredTint(material.getColor("transition_exposed").getRGB());
+        }
+        else if (weatherState == WeatheringCopper.WeatherState.WEATHERED)
+        {
+            addOverlayTexture("top", "weathered_" + topTexture + "_base", 0);
+            addOverlayTexture("bottom", "weathered_" + bottomTexture + "_base", 0);
+            addOverlayTexture("top_oxidized", "weathered_" + topTexture + "_oxidized", 1);
+            addOverlayTexture("bottom_oxidized", "weathered_" + bottomTexture + "_oxidized", 1);
+            addOverlayTexture("top_transition", "weathered_" + topTexture + "_transition", 2);
+            addOverlayTexture("bottom_transition", "weathered_" + bottomTexture + "_transition", 2);
+            addRequiredTint(material.getColor("transition_base").getRGB());
+            addRequiredTint(material.getColor("transition_weathered").getRGB());
+            addRequiredTint(material.getColor("transition_exposed").getRGB());
+        }
+        else if (weatherState == WeatheringCopper.WeatherState.OXIDIZED)
+        {
+            addOverlayTexture("top", "oxidized_" + topTexture, 0);
+            addOverlayTexture("bottom", "oxidized_" + bottomTexture, 0);
+            addRequiredTint(material.getSecondaryColor().getRGB());
+        }
+    }
+
+    default void addLayeredPair(String topKey, String bottomKey, String topTexture, String bottomTexture, String prefix, boolean addTints)
+    {
+        Material material = getDynamicProperties().material();
+
+        addOverlayTexture(topKey, prefix + topTexture + "_neutral", 0);
+        addOverlayTexture(bottomKey, prefix + bottomTexture + "_neutral", 0);
+        addOverlayTexture(topKey + "_white", prefix + topTexture + "_white", 1);
+        addOverlayTexture(bottomKey + "_white", prefix + bottomTexture + "_white", 1);
+        addOverlayTexture(topKey + "_light", prefix + topTexture + "_light", 2);
+        addOverlayTexture(bottomKey + "_light", prefix + bottomTexture + "_light", 2);
+        addOverlayTexture(topKey + "_dark", prefix + topTexture + "_dark", 3);
+        addOverlayTexture(bottomKey + "_dark", prefix + bottomTexture + "_dark", 3);
+
+        if (addTints)
+        {
+            if (prefix.isEmpty())
+            {
+                addRequiredTint(material.getMainColor().getRGB());
+                addRequiredTint(material.getColor("main_white").getRGB());
+                addRequiredTint(material.getColor("main_light").getRGB());
+                addRequiredTint(material.getColor("main_dark").getRGB());
+            }
+            else
+            {
+                addRequiredTint(material.getColor("transition_base").getRGB());
+                addRequiredTint(material.getColor("transition_base_white").getRGB());
+                addRequiredTint(material.getColor("transition_base_light").getRGB());
+            }
+        }
+    }
+
     String[] DOOR_MODELS = {
             "bottom_left", "bottom_left_open",
             "bottom_right", "bottom_right_open",
@@ -207,18 +294,82 @@ public interface IDoorBlock extends IFortunaBlock
 
     // UV and rotation data matching the tinted_door static models exactly
 
+    private int[] getDoorNorthUV(String suffix)
+    {
+        return switch (suffix)
+        {
+            case "bottom_left"       -> new int[]{3, 0, 0, 16};
+            case "bottom_left_open"  -> new int[]{0, 0, 3, 16};
+            case "bottom_right"      -> new int[]{3, 0, 0, 16};
+            case "bottom_right_open" -> new int[]{3, 0, 0, 16};
+            case "top_left"          -> new int[]{3, 0, 0, 16};
+            case "top_left_open"     -> new int[]{0, 0, 3, 16};
+            case "top_right"         -> new int[]{3, 0, 0, 16};
+            case "top_right_open"    -> new int[]{3, 0, 0, 16};
+            default -> new int[]{0, 0, 3, 16};
+        };
+    }
+
+    private int[] getDoorSouthUV(String suffix)
+    {
+        return switch (suffix)
+        {
+            case "bottom_left"       -> new int[]{0, 0, 3, 16};
+            case "bottom_left_open"  -> new int[]{0, 0, 3, 16};
+            case "bottom_right"      -> new int[]{0, 0, 3, 16};
+            case "bottom_right_open" -> new int[]{3, 0, 0, 16};
+            case "top_left"          -> new int[]{0, 0, 3, 16};
+            case "top_left_open"     -> new int[]{0, 0, 3, 16};
+            case "top_right"         -> new int[]{0, 0, 3, 16};
+            case "top_right_open"    -> new int[]{3, 0, 0, 16};
+            default -> new int[]{0, 0, 3, 16};
+        };
+    }
+
+    private int[] getDoorWestUV(String suffix)
+    {
+        return switch (suffix)
+        {
+            case "bottom_left"       -> new int[]{0, 0, 16, 16};
+            case "bottom_left_open"  -> new int[]{16, 0, 0, 16};
+            case "bottom_right"      -> new int[]{16, 0, 0, 16};
+            case "bottom_right_open" -> new int[]{0, 0, 16, 16};
+            case "top_left"          -> new int[]{0, 0, 16, 16};
+            case "top_left_open"     -> new int[]{16, 0, 0, 16};
+            case "top_right"         -> new int[]{16, 0, 0, 16};
+            case "top_right_open"    -> new int[]{0, 0, 16, 16};
+            default -> new int[]{0, 0, 16, 16};
+        };
+    }
+
+    private int[] getDoorEastUV(String suffix)
+    {
+        return switch (suffix)
+        {
+            case "bottom_left"       -> new int[]{16, 0, 0, 16};
+            case "bottom_left_open"  -> new int[]{0, 0, 16, 16};
+            case "bottom_right"      -> new int[]{0, 0, 16, 16};
+            case "bottom_right_open" -> new int[]{16, 0, 0, 16};
+            case "top_left"          -> new int[]{16, 0, 0, 16};
+            case "top_left_open"     -> new int[]{0, 0, 16, 16};
+            case "top_right"         -> new int[]{0, 0, 16, 16};
+            case "top_right_open"    -> new int[]{16, 0, 0, 16};
+            default -> new int[]{16, 0, 0, 16};
+        };
+    }
+
     private int[] getDoorTopBottomUV(String suffix)
     {
         return switch (suffix)
         {
-            case "bottom_left"       -> new int[]{16, 13,  0, 16};
-            case "bottom_left_open"  -> new int[]{ 0, 16, 16, 13};
-            case "bottom_right"      -> new int[]{ 0, 13, 16, 16};
-            case "bottom_right_open" -> new int[]{16, 16,  0, 13};
-            case "top_left"          -> new int[]{ 0,  3, 16,  0};
-            case "top_left_open"     -> new int[]{ 0,  3, 16,  0};
-            case "top_right"         -> new int[]{ 0,  0, 16,  3};
-            case "top_right_open"    -> new int[]{ 0,  0, 16,  3};
+            case "bottom_left"       -> new int[]{16, 13, 0, 16};
+            case "bottom_left_open"  -> new int[]{0, 16, 16, 13};
+            case "bottom_right"      -> new int[]{0, 13, 16, 16};
+            case "bottom_right_open" -> new int[]{16, 16, 0, 13};
+            case "top_left"          -> new int[]{0, 3, 16, 0};
+            case "top_left_open"     -> new int[]{0, 3, 16, 0};
+            case "top_right"         -> new int[]{0, 0, 16, 3};
+            case "top_right_open"    -> new int[]{0, 0, 16, 3};
             default -> new int[]{0, 0, 16, 16};
         };
     }
@@ -236,56 +387,6 @@ public interface IDoorBlock extends IFortunaBlock
             case "top_right"         -> 270;
             case "top_right_open"    -> 90;
             default -> 0;
-        };
-    }
-
-    private int[] getDoorNorthUV(String suffix)
-    {
-        return switch (suffix)
-        {
-            case "bottom_left", "bottom_right", "top_left", "top_right"
-                    -> new int[]{3, 0, 0, 16};
-            case "bottom_left_open", "top_left_open"
-                    -> new int[]{0, 0, 3, 16};
-            case "bottom_right_open", "top_right_open"
-                    -> new int[]{3, 0, 0, 16};
-            default -> new int[]{0, 0, 3, 16};
-        };
-    }
-
-    private int[] getDoorSouthUV(String suffix)
-    {
-        return switch (suffix)
-        {
-            case "bottom_left", "bottom_right", "top_left", "top_right"
-                    -> new int[]{0, 0, 3, 16};
-            case "bottom_left_open", "top_left_open"
-                    -> new int[]{0, 0, 3, 16};
-            case "bottom_right_open", "top_right_open"
-                    -> new int[]{3, 0, 0, 16};
-            default -> new int[]{0, 0, 3, 16};
-        };
-    }
-
-    private int[] getDoorWestUV(String suffix)
-    {
-        return switch (suffix)
-        {
-            case "bottom_left_open", "bottom_right_open",
-                 "top_left_open", "top_right_open"
-                    -> new int[]{16, 0, 0, 16};
-            default -> new int[]{0, 0, 16, 16};
-        };
-    }
-
-    private int[] getDoorEastUV(String suffix)
-    {
-        return switch (suffix)
-        {
-            case "bottom_left_open", "bottom_right_open",
-                 "top_left_open", "top_right_open"
-                    -> new int[]{0, 0, 16, 16};
-            default -> new int[]{16, 0, 0, 16};
         };
     }
 

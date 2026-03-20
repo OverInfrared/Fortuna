@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
 import infrared.fortuna.DynamicProperties;
 import infrared.fortuna.materials.ore.MiningLevel;
-import infrared.fortuna.materials.ore.OreDoor;
 import infrared.fortuna.materials.ore.OreMaterial;
 import infrared.fortuna.recipes.FortunaRecipeProvider;
 import infrared.fortuna.recipes.IFortunaRecipe;
@@ -41,34 +40,9 @@ public class FortunaDoorBlock extends DoorBlock implements IDoorBlock, IFortunaR
         this.dynamicProperties = dynamicProperties;
         this.requiredMiningLevel = dynamicProperties.material().getMiningLevel();
         this.weatherState = weatherState;
+        this.doorTexture = dynamicProperties.material().getDoor().getTexture();
 
-        OreMaterial material = dynamicProperties.material();
-        doorTexture = material.getDoor().getTexture();
-        addRequiredTexture("particle", doorTexture + "_top");
-        String topTexture = doorTexture + "_top";
-        String bottomTexture = doorTexture + "_bottom";
-
-        if (weatherState == null)
-        {
-            addOverlayTexture("overlay_top", topTexture + "_overlay", -1);
-            addOverlayTexture("overlay_bottom", bottomTexture + "_overlay", -1);
-            addOverlayTexture("top", topTexture + "_neutral", 0);
-            addOverlayTexture("bottom", bottomTexture + "_neutral", 0);
-            addOverlayTexture("top_white", topTexture + "_white", 1);
-            addOverlayTexture("bottom_white", bottomTexture + "_white", 1);
-            addOverlayTexture("top_light", topTexture + "_light", 2);
-            addOverlayTexture("bottom_light", bottomTexture + "_light", 2);
-            addOverlayTexture("top_dark", topTexture + "_dark", 3);
-            addOverlayTexture("bottom_dark", bottomTexture + "_dark", 3);
-            addRequiredTint(material.getMainColor().getRGB());
-            addRequiredTint(material.getColor("main_white").getRGB());
-            addRequiredTint(material.getColor("main_light").getRGB());
-            addRequiredTint(material.getMainColor().getRGB());
-        }
-        else
-        {
-            setupWeatheredTextures(topTexture, bottomTexture, weatherState);
-        }
+        setupTextures(doorTexture, weatherState);
     }
 
     private void setupWeatheredTextures(String topTexture, String bottomTexture, WeatheringCopper.WeatherState weatherState)

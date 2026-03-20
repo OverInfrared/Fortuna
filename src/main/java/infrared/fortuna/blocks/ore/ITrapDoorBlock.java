@@ -1,93 +1,18 @@
-package infrared.fortuna.blocks;
+package infrared.fortuna.blocks.ore;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
-import infrared.fortuna.DynamicProperties;
 import infrared.fortuna.Fortuna;
-import infrared.fortuna.util.Utilities;
-import infrared.fortuna.materials.ore.MiningLevel;
-import infrared.fortuna.materials.ore.OreMaterial;
-import infrared.fortuna.recipes.FortunaRecipeProvider;
-import infrared.fortuna.recipes.IFortunaRecipe;
+import infrared.fortuna.blocks.IFortunaBlock;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.TrapDoorBlock;
-import net.minecraft.world.level.block.state.properties.BlockSetType;
 
-import java.util.*;
-
-public class FortunaTrapDoorBlock extends TrapDoorBlock implements IFortunaBlock, IFortunaRecipe
+public interface ITrapDoorBlock extends IFortunaBlock
 {
-    protected final DynamicProperties<Block, OreMaterial> dynamicProperties;
-    protected MiningLevel requiredMiningLevel;
+    String[] TRAPDOOR_MODELS = { "bottom", "top", "open" };
 
-    private final List<Pair<String, String>> requiredTextures = new ArrayList<>();
-    private final List<RequiredElement> requiredElements = new ArrayList<>();
-    private final List<Integer> requiredTints = new ArrayList<>();
-
-    public FortunaTrapDoorBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, BlockSetType blockSetType)
+    default String getBlockStateString()
     {
-        super(blockSetType, properties.setId(dynamicProperties.resourceKey()));
-        this.dynamicProperties = dynamicProperties;
-        this.requiredMiningLevel = dynamicProperties.material().getMiningLevel();
-
-        addRequiredTexture("particle", "trapdoor");
-        addOverlayTexture("texture", "trapdoor", 0);
-        addRequiredTint(dynamicProperties.material().getMainColor().getRGB());
-    }
-
-    @Override
-    public List<Pair<String, String>> getRequiredTextures() { return requiredTextures; }
-
-    @Override
-    public List<String> getRequiredItemTextures()
-    {
-        return List.of();
-    }
-
-    @Override
-    public List<RequiredElement> getRequiredElements() { return requiredElements; }
-
-    @Override
-    public List<Integer> getRequiredTints() { return requiredTints; }
-
-    @Override
-    public DynamicProperties<Block, OreMaterial> getDynamicProperties() { return dynamicProperties; }
-
-    @Override
-    public MiningLevel getMiningLevel() { return requiredMiningLevel; }
-
-    @Override
-    public Map<String, JsonObject> getRecipes(HolderLookup.Provider registries)
-    {
-        FortunaRecipeProvider helper = new FortunaRecipeProvider(registries);
-
-        Item ingot = Utilities.findItem(dynamicProperties.material().getRefinedRegistryName());
-        if (ingot == null)
-            return new HashMap<>();
-
-        Map<String, JsonObject> recipes = new LinkedHashMap<>();
-
-        recipes.put(getRegistryName(),
-                helper.shapedTrapdoor(this.asItem(), ingot));
-
-        return recipes;
-    }
-
-    @Override
-    public Set<String> getRecipeNames()
-    {
-        return Set.of(getRegistryName());
-    }
-
-    public static final String[] TRAPDOOR_MODELS = { "bottom", "top", "open" };
-
-    @Override
-    public String getBlockStateString()
-    {
-        String name = dynamicProperties.registryName();
+        String name = getDynamicProperties().registryName();
         String[] facings = {"east", "south", "west", "north"};
         int[] openRotations = {90, 180, 270, 0};
 
@@ -125,8 +50,7 @@ public class FortunaTrapDoorBlock extends TrapDoorBlock implements IFortunaBlock
         return blockstate.toString();
     }
 
-    @Override
-    public JsonObject generateModel(String modelSuffix)
+    default JsonObject generateModel(String modelSuffix)
     {
         JsonObject textures = new JsonObject();
         textures.addProperty("texture", "%s:block/trapdoor".formatted(Fortuna.MOD_ID));
@@ -138,8 +62,7 @@ public class FortunaTrapDoorBlock extends TrapDoorBlock implements IFortunaBlock
         return model;
     }
 
-    @Override
-    public JsonObject generateItemModel()
+    default JsonObject generateItemModel()
     {
         JsonObject model = new JsonObject();
         model.addProperty("type", "minecraft:model");
@@ -155,8 +78,7 @@ public class FortunaTrapDoorBlock extends TrapDoorBlock implements IFortunaBlock
         return itemModel;
     }
 
-    @Override
-    public JsonObject getLoot(HolderLookup.Provider registries)
+    default JsonObject getLoot(HolderLookup.Provider registries)
     {
         String blockName = "%s:%s".formatted(Fortuna.MOD_ID, getRegistryName());
 
