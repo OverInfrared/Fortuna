@@ -2,6 +2,7 @@ package infrared.fortuna;
 
 import infrared.fortuna.blocks.ModBlocks;
 import infrared.fortuna.config.FortunaConfig;
+import infrared.fortuna.resources.DynamicResourceBuilder;
 import infrared.fortuna.worldgen.LootTableReplacer;
 import infrared.fortuna.items.ModItems;
 import infrared.fortuna.materials.Material;
@@ -15,6 +16,7 @@ import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +26,7 @@ public class Fortuna implements ModInitializer
 	public static final String MOD_ID = "fortuna";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	public static final Map<String, Material> initializedMaterials = new HashMap<>();
+	public static final List<Material> initializedMaterials = new ArrayList<>();
 
 	public static boolean disableVanillaOreVeins = true;
 
@@ -38,6 +40,9 @@ public class Fortuna implements ModInitializer
 
 		LOGGER.info("Initializing CreativeMoveTab");
 		ModItems.initializeCreativeModeTab();
+
+		DynamicResourceBuilder.buildServerResources();
+		DynamicResourceBuilder.buildClientResources();
 	}
 
 	private void initializeOverworld(long seed)
@@ -57,7 +62,7 @@ public class Fortuna implements ModInitializer
 				ModItems.initializeOreMaterial(material);
 				ModBlocks.initializeOreMaterial(material);
 
-				initializedMaterials.put(material.getName(), material);
+				initializedMaterials.add(material);
 			}
 		}
 
@@ -69,8 +74,9 @@ public class Fortuna implements ModInitializer
 
 	public static Material getMaterial(String name)
 	{
-		if (initializedMaterials.containsKey(name))
-			return initializedMaterials.get(name);
+		for (Material material : initializedMaterials)
+			if (material.getName() == name)
+				return material;
 
 		return null;
 	}

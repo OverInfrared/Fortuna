@@ -1,6 +1,6 @@
 package infrared.fortuna.mixin;
 
-import infrared.fortuna.data.FortunaDataPack;
+import infrared.fortuna.resources.FortunaDataPack;
 import net.fabricmc.fabric.api.resource.v1.pack.ModPackResources;
 import net.fabricmc.fabric.impl.resource.pack.ModPackResourcesUtil;
 import net.fabricmc.loader.api.FabricLoader;

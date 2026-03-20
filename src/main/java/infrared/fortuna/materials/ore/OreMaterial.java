@@ -43,6 +43,7 @@ public class OreMaterial extends Material
     private OreGem oreGem          = OreGem.Diamond;
     private OreNugget oreNugget    = OreNugget.Iron;
     private OreBars oreBars        = OreBars.Iron;
+    private OreDoor oreDoors       = OreDoor.Iron;
     private OreBlock materialBlock = OreBlock.Iron;
     private OreFuel oreFuel        = OreFuel.Coal;
 
@@ -111,6 +112,7 @@ public class OreMaterial extends Material
             oreRaw = chooseOreRaw();
             oreNugget = chooseType(OreNugget.class);
             oreBars = chooseOreBars();
+            oreDoors = chooseOreDoor();
         }
         else
         {
@@ -191,6 +193,7 @@ public class OreMaterial extends Material
     public OreRaw getMaterialType()    { return oreRaw; }
     public OreGem getGem()             { return oreGem; }
     public OreBars getBars()           { return oreBars; }
+    public OreDoor getDoor()           { return oreDoors; }
     public OreFuel getFuel()           { return oreFuel; }
     public OreBlock getMaterialBlock() { return materialBlock; }
 
@@ -342,6 +345,14 @@ public class OreMaterial extends Material
             return OreBars.Copper;
 
         return OreBars.Iron;
+    }
+
+    private OreDoor chooseOreDoor()
+    {
+        if (oreOverlay == OreOverlay.Copper)
+            return OreDoor.Copper;
+
+        return OreDoor.Iron;
     }
 
     private OreGem chooseOreGem()
@@ -573,8 +584,8 @@ public class OreMaterial extends Material
         };
 
         int baseVeinSize = largerVeins ?
-                7 + rng.nextInt(9) :
-                3 + rng.nextInt( 9);
+                8 + rng.nextInt(12) :
+                4 + rng.nextInt( 8);
 
         float base = switch (miningLevel)
         {
@@ -591,7 +602,7 @@ public class OreMaterial extends Material
 
         int smallVeinSize = largerVeins ?
                 baseVeinSize / 2 :
-                Math.max(baseVeinSize - (1 + rng.nextInt(5)), 1);
+                Math.max(baseVeinSize - (2 + rng.nextInt(4)), 2);
 
         OreConfiguredFeature smallFeature = new OreConfiguredFeature(smallVeinSize, discardChance, name, oreBase, OreFeatureType.Small.getName());
         configuredFeatures.put(OreFeatureType.Small, smallFeature);
@@ -737,8 +748,7 @@ public class OreMaterial extends Material
         {
             case Tuff                       -> 4.0f;
             case Diorite, Andesite, Granite -> 2.5f;
-            case Sand                       -> 3.0f;
-            case Gravel                     -> 2.0f;
+            case Sand, Gravel               -> 3.0f;
             default                         -> 1.0f;
         };
 
@@ -923,6 +933,12 @@ public class OreMaterial extends Material
                     setColor("secondary_white", Utilities.brightenColorByFactor(getSecondaryColor(), 0.75f));
                     setColor("secondary_light", Utilities.brightenColorByFactor(getSecondaryColor(), 0.85f));
                     setColor("secondary_dark",  Utilities.nudgeColor(getSecondaryColor(), 0.15f, 0f, 0f));
+
+                    setColor("transition_base", getTransitionColor(0.2f, 0.5f, 1f));
+                    setColor("transition_base_white", Utilities.brightenColorByFactor(getColor("transition_base"), 0.75f));
+                    setColor("transition_base_light", Utilities.brightenColorByFactor(getColor("transition_base"), 0.85f));
+                    setColor("transition_exposed", getTransitionColor(0.5f, 0.5f, 1f));
+                    setColor("transition_weathered", getTransitionColor(0.8f, 0.5f, 1f));
                 }
             }
             case Gem, Special -> {

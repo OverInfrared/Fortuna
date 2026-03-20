@@ -82,6 +82,20 @@ public interface IFortunaBlock
         getRequiredElements().add(new RequiredElement(key, ElementType.OVERLAY, tintIndex));
     }
 
+    default String getItemModelString()
+    {
+        JsonObject textures = new JsonObject();
+        List<String> itemTextures = getRequiredItemTextures();
+        for (int i = 0; i < itemTextures.size(); i++)
+            textures.addProperty("layer" + i, "%s:item/%s".formatted(Fortuna.MOD_ID, itemTextures.get(i)));
+
+        JsonObject model = new JsonObject();
+        model.addProperty("parent", "minecraft:item/generated");
+        model.add("textures", textures);
+
+        return model.toString();
+    }
+
     default void addRequiredTint(int color) {
         getRequiredTints().add(color);
     }

@@ -28,7 +28,6 @@ import net.minecraft.world.level.material.PushReaction;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ModBlocks
 {
@@ -37,7 +36,7 @@ public class ModBlocks
 
     private static void registerBlock(IFortunaBlock fortunaBlock)
     {
-        if (fortunaBlock instanceof FortunaDoorBlock)
+        if (fortunaBlock instanceof IDoorBlock)
             ModItems.registerDoorBlock(fortunaBlock);
         else
             ModItems.registerBlock(fortunaBlock);
@@ -171,6 +170,34 @@ public class ModBlocks
             return new BarsBlock(blockDynamicProperties, blockProperties, weatherState);
     }
 
+    private static IFortunaBlock createDoorBlock(OreMaterial material, boolean weathering, String prefix, WeatheringCopper.WeatherState state)
+    {
+        String registryName = "%s%s_door".formatted(prefix, material.getName());
+        ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, registryName));
+
+        String displayPrefix = Arrays.stream(prefix.split("_"))
+                .filter(s -> !s.isEmpty())
+                .map(Utilities::capitalize)
+                .collect(Collectors.joining(" "));
+
+        if (!displayPrefix.isEmpty())
+            displayPrefix += " ";
+
+        String displayName = "%s%s Door".formatted(displayPrefix, Utilities.capitalize(material.getName()));
+
+        DynamicProperties<Block, OreMaterial> dynamicProperties = new DynamicProperties<>(registryName, Component.literal(displayName), key, material);
+        Properties properties = BlockBehaviour.Properties.of()
+                .strength(material.getMaterialMineTime(), material.getMaterialHardness())
+                .requiresCorrectToolForDrops()
+                .noOcclusion()
+                .pushReaction(PushReaction.DESTROY);
+
+        if (weathering)
+            return new WeatheringDoorBlock(dynamicProperties, properties, BlockSetType.IRON, state);
+        else
+            return new FortunaDoorBlock(dynamicProperties, properties, BlockSetType.IRON, state);
+    }
+
     private static List<IFortunaBlock> createMaterialBlocks(OreMaterial material)
     {
         String name = material.getName();
@@ -214,6 +241,21 @@ public class ModBlocks
         return materialBlocks;
     }
 
+    private static void registerWeatheringSet(List<IFortunaBlock> allBlocks, IFortunaBlock[] weathering, IFortunaBlock[] waxed)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            allBlocks.add(weathering[i]);
+            allBlocks.add(waxed[i]);
+        }
+
+        for (int i = 0; i < 3; i++)
+            OxidizableBlocksRegistry.registerOxidizableBlockPair((Block) weathering[i], (Block) weathering[i + 1]);
+
+        for (int i = 0; i < 4; i++)
+            OxidizableBlocksRegistry.registerWaxableBlockPair((Block) weathering[i], (Block) waxed[i]);
+    }
+
     private static List<IFortunaBlock> createWeatheredBlocks(OreMaterial material)
     {
         List<IFortunaBlock> allBlocks = new ArrayList<>();
@@ -228,49 +270,40 @@ public class ModBlocks
                 WeatheringCopper.WeatherState.OXIDIZED
         };
 
+        // Material blocks
         IFortunaBlock[] weatheringBlocks = new IFortunaBlock[4];
         IFortunaBlock[] waxedBlocks = new IFortunaBlock[4];
-
         for (int i = 0; i < 4; i++)
         {
             weatheringBlocks[i] = createMaterialBlock(material, true, prefixes[i], states[i]);
             waxedBlocks[i] = createMaterialBlock(material, false, waxedPrefixes[i], states[i]);
+        }
+        registerWeatheringSet(allBlocks, weatheringBlocks, waxedBlocks);
 
-            allBlocks.add(weatheringBlocks[i]);
-            allBlocks.add(waxedBlocks[i]);
+        // Doors
+        if (material.hasDoor())
+        {
+            IFortunaBlock[] weatheringDoors = new IFortunaBlock[4];
+            IFortunaBlock[] waxedDoors = new IFortunaBlock[4];
+            for (int i = 0; i < 4; i++)
+            {
+                weatheringDoors[i] = createDoorBlock(material, true, prefixes[i], states[i]);
+                waxedDoors[i] = createDoorBlock(material, false, waxedPrefixes[i], states[i]);
+            }
+            registerWeatheringSet(allBlocks, weatheringDoors, waxedDoors);
         }
 
-        OxidizableBlocksRegistry.registerOxidizableBlockPair((Block) weatheringBlocks[0], (Block) weatheringBlocks[1]);
-        OxidizableBlocksRegistry.registerOxidizableBlockPair((Block) weatheringBlocks[1], (Block) weatheringBlocks[2]);
-        OxidizableBlocksRegistry.registerOxidizableBlockPair((Block) weatheringBlocks[2], (Block) weatheringBlocks[3]);
-
-        OxidizableBlocksRegistry.registerWaxableBlockPair((Block) weatheringBlocks[0], (Block) waxedBlocks[0]);
-        OxidizableBlocksRegistry.registerWaxableBlockPair((Block) weatheringBlocks[1], (Block) waxedBlocks[1]);
-        OxidizableBlocksRegistry.registerWaxableBlockPair((Block) weatheringBlocks[2], (Block) waxedBlocks[2]);
-        OxidizableBlocksRegistry.registerWaxableBlockPair((Block) weatheringBlocks[3], (Block) waxedBlocks[3]);
-
+        // Bars
         if (material.hasBars())
         {
             IFortunaBlock[] weatheringBars = new IFortunaBlock[4];
             IFortunaBlock[] waxedBars = new IFortunaBlock[4];
-
             for (int i = 0; i < 4; i++)
             {
                 weatheringBars[i] = createBarsBlock(material, true, prefixes[i], states[i]);
                 waxedBars[i] = createBarsBlock(material, false, waxedPrefixes[i], states[i]);
-
-                allBlocks.add(weatheringBars[i]);
-                allBlocks.add(waxedBars[i]);
             }
-
-            OxidizableBlocksRegistry.registerOxidizableBlockPair((Block) weatheringBars[0], (Block) weatheringBars[1]);
-            OxidizableBlocksRegistry.registerOxidizableBlockPair((Block) weatheringBars[1], (Block) weatheringBars[2]);
-            OxidizableBlocksRegistry.registerOxidizableBlockPair((Block) weatheringBars[2], (Block) weatheringBars[3]);
-
-            OxidizableBlocksRegistry.registerWaxableBlockPair((Block) weatheringBars[0], (Block) waxedBars[0]);
-            OxidizableBlocksRegistry.registerWaxableBlockPair((Block) weatheringBars[1], (Block) waxedBars[1]);
-            OxidizableBlocksRegistry.registerWaxableBlockPair((Block) weatheringBars[2], (Block) waxedBars[2]);
-            OxidizableBlocksRegistry.registerWaxableBlockPair((Block) weatheringBars[3], (Block) waxedBars[3]);
+            registerWeatheringSet(allBlocks, weatheringBars, waxedBars);
         }
 
         return allBlocks;

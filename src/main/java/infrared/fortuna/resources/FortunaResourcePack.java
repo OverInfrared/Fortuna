@@ -95,40 +95,24 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     {
         if (packType != PackType.CLIENT_RESOURCES) return null;
 
+        DynamicResourceRegistry reg = DynamicResourceRegistry.client();
         String ns = id.getNamespace();
         String path = id.getPath();
 
-        // Palette PNGs (fortuna namespace)
-        if (ns.equals(Fortuna.MOD_ID) && path.startsWith("textures/trims/color_palettes/") && path.endsWith(".png"))
-        {
-            String name = path.substring("textures/trims/color_palettes/".length(), path.length() - ".png".length());
-            Material material = getMaterial(name);
-            if (material == null) return null;
+        // Binary resources (PNGs)
+        byte[] binary = reg.resolveBinary(ns, path);
+        if (binary != null)
+            return () -> new ByteArrayInputStream(binary);
 
-            byte[] png = PaletteGenerator.generateTrimPalette(material.getMainColor());
-            return () -> new ByteArrayInputStream(png);
-        }
-
-        // Atlas overrides (minecraft namespace)
-        if (ns.equals("minecraft") && path.startsWith("atlases/"))
+        // JSON resources
+        String json = reg.resolve(ns, path);
+        if (json != null)
         {
-            String json = resolveMinecraftResource(path);
-            if (json == null) return null;
             byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
             return () -> new ByteArrayInputStream(bytes);
         }
 
-        // Fortuna JSON resources
-        if (!ns.equals(Fortuna.MOD_ID)) return null;
-
-        String prefix = path.substring(0, path.lastIndexOf('/') + 1);
-        String entry = path.substring(path.lastIndexOf('/') + 1);
-
-        String json = resolveResource(prefix, entry);
-        if (json == null) return null;
-
-        byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
-        return () -> new ByteArrayInputStream(bytes);
+        return null;
     }
 
     @Override
@@ -137,294 +121,16 @@ public class FortunaResourcePack extends AbstractPackResources implements Reposi
     {
         if (packType != PackType.CLIENT_RESOURCES) return;
 
-        if (namespace.equals("minecraft"))
+        DynamicResourceRegistry reg = DynamicResourceRegistry.client();
+        if (!reg.getNamespaces().contains(namespace)) return;
+
+        for (String path : reg.listPaths(namespace, prefix))
         {
-            emitMinecraftResource(resourceOutput, prefix, "atlases/armor_trims.json");
-            emitMinecraftResource(resourceOutput, prefix, "atlases/items.json");
-            return;
-        }
-
-        if (!namespace.equals(Fortuna.MOD_ID)) return;
-
-        emitResource(resourceOutput, prefix, "lang/en_us.json");
-
-        for (IFortunaBlock block : ModBlocks.getRegisteredBlocks().values())
-        {
-            emitResource(resourceOutput, prefix, "blockstates/" + block.getRegistryName() + ".json");
-            emitResource(resourceOutput, prefix, "models/block/" + block.getRegistryName() + ".json");
-            emitResource(resourceOutput, prefix, "items/" + block.getRegistryName() + ".json");
-
-            if (block instanceof FortunaDoorBlock)
-            {
-                emitResource(resourceOutput, prefix, "models/item/" + block.getRegistryName() + ".json");
-
-                for (String suffix : FortunaDoorBlock.DOOR_MODELS)
-                    emitResource(resourceOutput, prefix, "models/block/" + block.getRegistryName() + "_" + suffix + ".json");
-            }
-
-            if (block instanceof FortunaTrapDoorBlock)
-            {
-                for (String suffix : FortunaTrapDoorBlock.TRAPDOOR_MODELS)
-                    emitResource(resourceOutput, prefix, "models/block/" + block.getRegistryName() + "_" + suffix + ".json");
-            }
-
-            if (block instanceof IBarsBlock)
-            {
-                for (String suffix : BarsBlock.BARS_MODELS)
-                    emitResource(resourceOutput, prefix, "models/block/" + block.getRegistryName() + "_" + suffix + ".json");
-            }
-        }
-
-        Set<String> emittedPalettes = new HashSet<>();
-        Set<String> emittedEquipment = new HashSet<>();
-        for (Item item : ModItems.getRegisteredItem().values())
-        {
-            if (item instanceof IFortunaItem fortunaItem)
-            {
-                emitResource(resourceOutput, prefix, "models/item/" + fortunaItem.getRegistryName() + ".json");
-                emitResource(resourceOutput, prefix, "items/" + fortunaItem.getRegistryName() + ".json");
-            }
-
-            if (item instanceof IFortunaEquipment equipment)
-            {
-                String eName = equipment.getEquipmentName();
-                if (emittedEquipment.add(eName))
-                    emitResource(resourceOutput, prefix, "equipment/" + eName + ".json");
-                if (emittedPalettes.add(eName))
-                    emitResource(resourceOutput, prefix, "textures/trims/color_palettes/" + eName + ".png");
-            }
-        }
-
-        String[] vanillaTrimMaterials = { "quartz", "iron", "netherite", "redstone", "copper", "gold", "emerald", "diamond", "lapis", "amethyst", "resin" };
-        for (Item item : ModItems.getRegisteredItem().values())
-        {
-            if (item instanceof FortunaArmor armor)
-            {
-                for (String trim : vanillaTrimMaterials)
-                    emitResource(resourceOutput, prefix, "models/item/" + armor.getRegistryName() + "_" + trim + "_trim.json");
-
-                for (Material material : Fortuna.initializedMaterials.values())
-                    if (material instanceof OreMaterial oreMat)
-                        emitResource(resourceOutput, prefix, "models/item/" + armor.getRegistryName() + "_" + oreMat.getName() + "_trim.json");
-            }
+            Identifier id = Identifier.fromNamespaceAndPath(namespace, path);
+            resourceOutput.accept(id, () -> Objects.requireNonNull(getResource(PackType.CLIENT_RESOURCES, id)).get());
         }
     }
 
     @Override
     public void close() {}
-
-    private void emitResource(ResourceOutput resourceOutput, String prefix, String path)
-    {
-        if (!path.startsWith(prefix))
-            return;
-
-        Identifier id = Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, path);
-        resourceOutput.accept(id, () -> Objects.requireNonNull(getResource(PackType.CLIENT_RESOURCES, id)).get());
-    }
-
-    private void emitMinecraftResource(ResourceOutput resourceOutput, String prefix, String path)
-    {
-        if (!path.startsWith(prefix))
-            return;
-
-        Identifier id = Identifier.fromNamespaceAndPath("minecraft", path);
-        resourceOutput.accept(id, () -> Objects.requireNonNull(getResource(PackType.CLIENT_RESOURCES, id)).get());
-    }
-
-    private @Nullable String resolveResource(String prefix, String entry)
-    {
-        String name = entry.replace(".json", "");
-
-        if (prefix.startsWith("lang/"))
-        {
-            if (name.equals("en_us"))
-                return generateLang();
-            return null;
-        }
-
-        if (prefix.startsWith("blockstates/"))
-        {
-            IFortunaBlock block = ModBlocks.getRegisteredBlocks().get(name);
-            return block != null ? block.getBlockStateString() : null;
-        }
-
-        if (prefix.startsWith("models/block/"))
-        {
-            if (name.contains("bars"))
-                Fortuna.LOGGER.info("BARS");
-
-            for (IFortunaBlock block : ModBlocks.getRegisteredBlocks().values())
-            {
-                String baseName = block.getRegistryName() + "_";
-
-                if (!name.startsWith(baseName))
-                    continue;
-
-                String suffix = name.substring(baseName.length());
-                return block.getModelString(suffix);
-            }
-
-            IFortunaBlock block = ModBlocks.getRegisteredBlocks().get(name);
-            return block != null ? block.getModelString() : null;
-        }
-
-        if (prefix.startsWith("models/item/"))
-        {
-            if (name.endsWith("_trim"))
-                return resolveTrimModel(name);
-
-            Item item = ModItems.getRegisteredItem().get(name);
-            return item instanceof IFortunaItem fortunaItem ? fortunaItem.getModelString() : null;
-        }
-
-        if (prefix.startsWith("items/"))
-        {
-            IFortunaBlock block = ModBlocks.getRegisteredBlocks().get(name);
-            if (block != null) return block.getItemString();
-
-            Item item = ModItems.getRegisteredItem().get(name);
-            return item instanceof IFortunaItem fortunaItem ? fortunaItem.getItemString() : null;
-        }
-
-        if (prefix.startsWith("equipment/"))
-        {
-            Item item = ModItems.getRegisteredItem().get(name + "_boots");
-            if (item instanceof IFortunaEquipment equipment && equipment.getEquipmentName().equals(name))
-                return equipment.getEquipmentAsset().toString();
-        }
-
-        return null;
-    }
-
-    private String generateLang()
-    {
-        JsonObject lang = new JsonObject();
-
-        Set<String> emitted = new HashSet<>();
-        for (Item item : ModItems.getRegisteredItem().values())
-        {
-            if (item instanceof IFortunaEquipment equipment)
-            {
-                String key = equipment.getLangKey();
-                if (emitted.add(key))
-                    lang.addProperty(key, equipment.getLangValue());
-            }
-        }
-
-        return lang.toString();
-    }
-
-    private @Nullable String resolveTrimModel(String name)
-    {
-        String[] vanillaTrimMaterials = { "quartz", "iron", "netherite", "redstone", "copper", "gold", "emerald", "diamond", "lapis", "amethyst", "resin" };
-
-        // Try vanilla trims
-        for (String trim : vanillaTrimMaterials)
-        {
-            String result = tryResolveTrim(name, trim);
-            if (result != null) return result;
-        }
-
-        // Try dynamic trims
-        for (Material material : Fortuna.initializedMaterials.values())
-        {
-            String result = tryResolveTrim(name, material.getName());
-            if (result != null) return result;
-        }
-
-        return null;
-    }
-
-    private @Nullable String tryResolveTrim(String name, String trim)
-    {
-        String suffix = "_" + trim + "_trim";
-        if (!name.endsWith(suffix))
-            return null;
-
-        String armorName = name.substring(0, name.length() - suffix.length());
-        Item item = ModItems.getRegisteredItem().get(armorName);
-        if (!(item instanceof FortunaArmor armor))
-            return null;
-
-        DynamicArmorType armorType = armor.getArmorType();
-        String texture = armorType.getItemTexture(armor.getDynamicProperties().material().getArmorVariant());
-
-        JsonObject textures = new JsonObject();
-        textures.addProperty("layer0", "%s:item/%s".formatted(Fortuna.MOD_ID, texture));
-        textures.addProperty("layer1", "minecraft:%s_%s".formatted(armorType.getTrimPrefix(), trim));
-
-        JsonObject model = new JsonObject();
-        model.addProperty("parent", "minecraft:item/generated");
-        model.add("textures", textures);
-
-        return model.toString();
-    }
-
-    private @Nullable String resolveMinecraftResource(String path)
-    {
-        return switch (path)
-        {
-            case "atlases/armor_trims.json" -> generateArmorTrimsAtlas();
-            case "atlases/items.json" -> generateItemsAtlas();
-            default -> null;
-        };
-    }
-
-    private String generateArmorTrimsAtlas()
-    {
-        JsonObject permutations = new JsonObject();
-        for (Material mat : Fortuna.initializedMaterials.values())
-            if (mat instanceof OreMaterial oreMat && oreMat.hasArmor())
-                permutations.addProperty(oreMat.getName(), "%s:trims/color_palettes/%s".formatted(Fortuna.MOD_ID, oreMat.getName()));
-
-        String[] patterns = { "sentry", "dune", "coast", "wild", "ward", "eye", "vex", "tide", "snout", "rib", "spire", "wayfinder", "shaper", "silence", "raiser", "host", "flow", "bolt" };
-        JsonArray textures = new JsonArray();
-        for (String pattern : patterns)
-        {
-            textures.add("minecraft:trims/entity/humanoid/" + pattern);
-            textures.add("minecraft:trims/entity/humanoid_leggings/" + pattern);
-        }
-
-        JsonObject palettedPermutation = new JsonObject();
-        palettedPermutation.addProperty("type", "minecraft:paletted_permutations");
-        palettedPermutation.add("textures", textures);
-        palettedPermutation.addProperty("palette_key", "minecraft:trims/color_palettes/trim_palette");
-        palettedPermutation.add("permutations", permutations);
-
-        JsonArray sources = new JsonArray();
-        sources.add(palettedPermutation);
-
-        JsonObject atlas = new JsonObject();
-        atlas.add("sources", sources);
-
-        return atlas.toString();
-    }
-
-    private String generateItemsAtlas()
-    {
-        JsonObject permutations = new JsonObject();
-        for (infrared.fortuna.materials.Material mat : Fortuna.initializedMaterials.values())
-            if (mat instanceof OreMaterial oreMat && oreMat.hasArmor())
-                permutations.addProperty(oreMat.getName(), "%s:trims/color_palettes/%s".formatted(Fortuna.MOD_ID, oreMat.getName()));
-
-        JsonArray textures = new JsonArray();
-        textures.add("minecraft:trims/items/helmet_trim");
-        textures.add("minecraft:trims/items/chestplate_trim");
-        textures.add("minecraft:trims/items/leggings_trim");
-        textures.add("minecraft:trims/items/boots_trim");
-
-        JsonObject palettedPermutation = new JsonObject();
-        palettedPermutation.addProperty("type", "minecraft:paletted_permutations");
-        palettedPermutation.add("textures", textures);
-        palettedPermutation.addProperty("palette_key", "minecraft:trims/color_palettes/trim_palette");
-        palettedPermutation.add("permutations", permutations);
-
-        JsonArray sources = new JsonArray();
-        sources.add(palettedPermutation);
-
-        JsonObject atlas = new JsonObject();
-        atlas.add("sources", sources);
-
-        return atlas.toString();
-    }
 }
