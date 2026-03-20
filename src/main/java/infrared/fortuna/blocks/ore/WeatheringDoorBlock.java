@@ -127,6 +127,7 @@ public class WeatheringDoorBlock extends DoorBlock implements IDoorBlock, IFortu
             case EXPOSED -> List.of("exposed_" + doorTexture + "_base", "exposed_" + doorTexture + "_light", "exposed_" + doorTexture + "_white" , "exposed_" + doorTexture + "_transition", "exposed_" + doorTexture + "_oxidized", doorTexture + "_overlay");
             case WEATHERED -> List.of("weathered_" + doorTexture + "_base", "weathered_" + doorTexture + "_oxidized", "weathered_" + doorTexture + "_transition", doorTexture + "_overlay");
             case OXIDIZED -> List.of("oxidized_" + doorTexture, doorTexture + "_overlay");
+            case null -> List.of(doorTexture + "_neutral", doorTexture + "_white", doorTexture + "_light", doorTexture + "_dark");
         };
     }
 
