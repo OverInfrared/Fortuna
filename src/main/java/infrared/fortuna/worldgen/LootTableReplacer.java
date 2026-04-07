@@ -1,7 +1,7 @@
 package infrared.fortuna.worldgen;
 
 import infrared.fortuna.Fortuna;
-import infrared.fortuna.materials.ore.MiningLevel;
+import infrared.fortuna.materials.ore.enums.MiningLevel;
 import infrared.fortuna.materials.ore.OreMaterial;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.minecraft.core.registries.BuiltInRegistries;

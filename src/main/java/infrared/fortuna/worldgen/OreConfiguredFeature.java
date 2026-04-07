@@ -3,7 +3,7 @@ package infrared.fortuna.worldgen;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
-import infrared.fortuna.materials.ore.OreBase;
+import infrared.fortuna.materials.ore.enums.OreBase;
 
 public class OreConfiguredFeature implements IConfiguredFeature
 {

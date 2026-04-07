@@ -1,13 +1,10 @@
 package infrared.fortuna.blocks.ore;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
 import infrared.fortuna.DynamicProperties;
-import infrared.fortuna.Fortuna;
-import infrared.fortuna.blocks.IFortunaBlock;
 import infrared.fortuna.util.Utilities;
-import infrared.fortuna.materials.ore.MiningLevel;
+import infrared.fortuna.materials.ore.enums.MiningLevel;
 import infrared.fortuna.materials.ore.OreMaterial;
 import infrared.fortuna.recipes.FortunaRecipeProvider;
 import infrared.fortuna.recipes.IFortunaRecipe;
@@ -15,11 +12,12 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.TrapDoorBlock;
+import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.properties.BlockSetType;
 
 import java.util.*;
 
-public class FortunaTrapDoorBlock extends TrapDoorBlock implements IFortunaBlock, IFortunaRecipe
+public class FortunaTrapDoorBlock extends TrapDoorBlock implements ITrapDoorBlock, IFortunaRecipe
 {
     protected final DynamicProperties<Block, OreMaterial> dynamicProperties;
     protected MiningLevel requiredMiningLevel;
@@ -30,13 +28,16 @@ public class FortunaTrapDoorBlock extends TrapDoorBlock implements IFortunaBlock
 
     public FortunaTrapDoorBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, BlockSetType blockSetType)
     {
+        this(dynamicProperties, properties, blockSetType, null);
+    }
+
+    public FortunaTrapDoorBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, BlockSetType blockSetType, WeatheringCopper.WeatherState weatherState)
+    {
         super(blockSetType, properties.setId(dynamicProperties.resourceKey()));
         this.dynamicProperties = dynamicProperties;
         this.requiredMiningLevel = dynamicProperties.material().getMiningLevel();
 
-        addRequiredTexture("particle", "trapdoor");
-        addOverlayTexture("texture", "trapdoor", 0);
-        addRequiredTint(dynamicProperties.material().getMainColor().getRGB());
+        setupTextures(dynamicProperties.material().getTrapdoor().getTexture(), weatherState);
     }
 
     @Override

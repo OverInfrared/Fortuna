@@ -1,4 +1,4 @@
-package infrared.fortuna.materials.ore;
+package infrared.fortuna.materials.ore.enums;
 
 public enum OreRaw
 {

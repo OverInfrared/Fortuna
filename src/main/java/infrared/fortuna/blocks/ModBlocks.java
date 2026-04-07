@@ -6,8 +6,8 @@ import infrared.fortuna.blocks.ore.*;
 import infrared.fortuna.items.ModItems;
 import infrared.fortuna.DynamicProperties;
 import infrared.fortuna.materials.MaterialType;
-import infrared.fortuna.materials.ore.OreBase;
-import infrared.fortuna.materials.ore.OreOverlay;
+import infrared.fortuna.materials.ore.enums.OreBase;
+import infrared.fortuna.materials.ore.enums.OreOverlay;
 import infrared.fortuna.materials.ore.OreMaterial;
 import net.fabricmc.fabric.api.registry.OxidizableBlocksRegistry;
 import net.minecraft.core.Registry;
@@ -198,6 +198,34 @@ public class ModBlocks
             return new FortunaDoorBlock(dynamicProperties, properties, BlockSetType.IRON, state);
     }
 
+    private static IFortunaBlock createTrapdoorBlock(OreMaterial material, boolean weathering, String prefix, WeatheringCopper.WeatherState state)
+    {
+        String registryName = "%s%s_trapdoor".formatted(prefix, material.getName());
+        ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, registryName));
+
+        String displayPrefix = Arrays.stream(prefix.split("_"))
+                .filter(s -> !s.isEmpty())
+                .map(Utilities::capitalize)
+                .collect(Collectors.joining(" "));
+
+        if (!displayPrefix.isEmpty())
+            displayPrefix += " ";
+
+        String displayName = "%s%s Trapdoor".formatted(displayPrefix, Utilities.capitalize(material.getName()));
+
+        DynamicProperties<Block, OreMaterial> dynamicProperties = new DynamicProperties<>(registryName, Component.literal(displayName), key, material);
+        Properties properties = BlockBehaviour.Properties.of()
+                .strength(material.getMaterialMineTime(), material.getMaterialHardness())
+                .requiresCorrectToolForDrops()
+                .noOcclusion()
+                .pushReaction(PushReaction.DESTROY);
+
+        if (weathering)
+            return new WeatheringTrapDoorBlock(dynamicProperties, properties, BlockSetType.IRON, state);
+        else
+            return new FortunaTrapDoorBlock(dynamicProperties, properties, BlockSetType.IRON, state);
+    }
+
     private static List<IFortunaBlock> createMaterialBlocks(OreMaterial material)
     {
         String name = material.getName();
@@ -217,15 +245,7 @@ public class ModBlocks
         }
 
         if (material.hasTrapdoor())
-        {
-            String             tdRegistryName = "%s_trapdoor".formatted(name);
-            ResourceKey<Block> tdKey          = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Fortuna.MOD_ID, tdRegistryName));
-
-            DynamicProperties<Block, OreMaterial> tdDynamicProperties = new DynamicProperties<>(tdRegistryName, Component.literal("%s Trapdoor".formatted(Utilities.capitalize(name))), tdKey, material);
-            Properties                            tdProperties        = BlockBehaviour.Properties.of().strength(material.getMaterialMineTime(), material.getMaterialHardness()).requiresCorrectToolForDrops().noOcclusion().pushReaction(PushReaction.DESTROY);
-
-            materialBlocks.add(new FortunaTrapDoorBlock(tdDynamicProperties, tdProperties, BlockSetType.IRON));
-        }
+            materialBlocks.add(createTrapdoorBlock(material, false, "", null));
 
         if (material.hasBars())
         {
@@ -304,6 +324,19 @@ public class ModBlocks
                 waxedBars[i] = createBarsBlock(material, false, waxedPrefixes[i], states[i]);
             }
             registerWeatheringSet(allBlocks, weatheringBars, waxedBars);
+        }
+
+        // Trapdoors
+        if (material.hasTrapdoor())
+        {
+            IFortunaBlock[] weatheringTrapdoors = new IFortunaBlock[4];
+            IFortunaBlock[] waxedTrapdoors = new IFortunaBlock[4];
+            for (int i = 0; i < 4; i++)
+            {
+                weatheringTrapdoors[i] = createTrapdoorBlock(material, true, prefixes[i], states[i]);
+                waxedTrapdoors[i] = createTrapdoorBlock(material, false, waxedPrefixes[i], states[i]);
+            }
+            registerWeatheringSet(allBlocks, weatheringTrapdoors, waxedTrapdoors);
         }
 
         return allBlocks;

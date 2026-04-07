@@ -1,20 +1,7 @@
 package infrared.fortuna.resources;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import infrared.fortuna.Fortuna;
-import infrared.fortuna.blocks.IFortunaBlock;
-import infrared.fortuna.blocks.ModBlocks;
-import infrared.fortuna.blocks.ore.IBarsBlock;
-import infrared.fortuna.equipment.IFortunaEquipment;
-import infrared.fortuna.items.FortunaArmor;
-import infrared.fortuna.items.FortunaItem;
-import infrared.fortuna.items.ModItems;
-import infrared.fortuna.materials.Material;
-import infrared.fortuna.materials.ore.OreMaterial;
-import infrared.fortuna.recipes.IFortunaRecipe;
-import infrared.fortuna.materials.ore.MiningLevel;
-import infrared.fortuna.worldgen.OreFeatureType;
 import net.fabricmc.fabric.api.resource.v1.pack.ModPackResources;
 import net.fabricmc.fabric.impl.resource.pack.ModResourcePackCreator;
 import net.fabricmc.loader.api.FabricLoader;
@@ -26,10 +13,6 @@ import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.metadata.MetadataSectionType;
 import net.minecraft.server.packs.repository.KnownPack;
 import net.minecraft.server.packs.resources.IoSupplier;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.TagKey;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 

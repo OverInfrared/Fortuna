@@ -2,6 +2,7 @@ package infrared.fortuna.materials.ore;
 
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.materials.Material;
+import infrared.fortuna.materials.ore.enums.*;
 import infrared.fortuna.util.Utilities;
 import infrared.fortuna.materials.MaterialType;
 import infrared.fortuna.items.DynamicToolType;
@@ -11,7 +12,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.valueproviders.IntProvider;
 import net.minecraft.util.valueproviders.UniformInt;
@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// TODO split this class into seperate OreMaterial children classes that hold their objects
+
 public class OreMaterial extends Material
 {
     // === Core ===
@@ -38,14 +40,15 @@ public class OreMaterial extends Material
     private OreOverlay oreOverlay = OreOverlay.Iron;
 
     // === Item/block textures ===
-    private OreIngot oreIngot      = OreIngot.Iron;
-    private OreRaw oreRaw          = OreRaw.Iron;
-    private OreGem oreGem          = OreGem.Diamond;
-    private OreNugget oreNugget    = OreNugget.Iron;
-    private OreBars oreBars        = OreBars.Iron;
-    private OreDoor oreDoors       = OreDoor.Iron;
-    private OreBlock materialBlock = OreBlock.Iron;
-    private OreFuel oreFuel        = OreFuel.Coal;
+    private OreIngot oreIngot       = OreIngot.Iron;
+    private OreRaw oreRaw           = OreRaw.Iron;
+    private OreGem oreGem           = OreGem.Diamond;
+    private OreNugget oreNugget     = OreNugget.Iron;
+    private OreBars oreBars         = OreBars.Iron;
+    private OreDoor oreDoors        = OreDoor.Iron;
+    private OreTrapdoor oreTrapdoor = OreTrapdoor.Iron;
+    private OreBlock materialBlock  = OreBlock.Iron;
+    private OreFuel oreFuel         = OreFuel.Coal;
 
     // === Block properties ===
     private float materialMineTime;
@@ -113,6 +116,7 @@ public class OreMaterial extends Material
             oreNugget = chooseType(OreNugget.class);
             oreBars = chooseOreBars();
             oreDoors = chooseOreDoor();
+            oreTrapdoor = chooseOreTrapdoor();
         }
         else
         {
@@ -194,6 +198,7 @@ public class OreMaterial extends Material
     public OreGem getGem()             { return oreGem; }
     public OreBars getBars()           { return oreBars; }
     public OreDoor getDoor()           { return oreDoors; }
+    public OreTrapdoor getTrapdoor()   { return oreTrapdoor; }
     public OreFuel getFuel()           { return oreFuel; }
     public OreBlock getMaterialBlock() { return materialBlock; }
 
@@ -353,6 +358,14 @@ public class OreMaterial extends Material
             return OreDoor.Copper;
 
         return OreDoor.Iron;
+    }
+
+    private OreTrapdoor chooseOreTrapdoor()
+    {
+        if (oreOverlay == OreOverlay.Copper)
+            return OreTrapdoor.Copper;
+
+        return OreTrapdoor.Iron;
     }
 
     private OreGem chooseOreGem()

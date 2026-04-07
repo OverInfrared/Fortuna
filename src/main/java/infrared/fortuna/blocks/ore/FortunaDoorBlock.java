@@ -3,7 +3,7 @@ package infrared.fortuna.blocks.ore;
 import com.google.gson.JsonObject;
 import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
 import infrared.fortuna.DynamicProperties;
-import infrared.fortuna.materials.ore.MiningLevel;
+import infrared.fortuna.materials.ore.enums.MiningLevel;
 import infrared.fortuna.materials.ore.OreMaterial;
 import infrared.fortuna.recipes.FortunaRecipeProvider;
 import infrared.fortuna.recipes.IFortunaRecipe;
@@ -43,74 +43,6 @@ public class FortunaDoorBlock extends DoorBlock implements IDoorBlock, IFortunaR
         this.doorTexture = dynamicProperties.material().getDoor().getTexture();
 
         setupTextures(doorTexture, weatherState);
-    }
-
-    private void setupWeatheredTextures(String topTexture, String bottomTexture, WeatheringCopper.WeatherState weatherState)
-    {
-        OreMaterial material = dynamicProperties.material();
-
-        switch (weatherState)
-        {
-            case UNAFFECTED ->
-            {
-                addOverlayTexture("overlay_top", topTexture + "_overlay", -1);
-                addOverlayTexture("overlay_bottom", bottomTexture + "_overlay", -1);
-                addOverlayTexture("top", topTexture + "_neutral", 0);
-                addOverlayTexture("bottom", bottomTexture+ "_neutral", 0);
-                addOverlayTexture("top_white", topTexture + "_white", 1);
-                addOverlayTexture("bottom_white", bottomTexture+ "_white", 1);
-                addOverlayTexture("top_light", topTexture + "_light", 2);
-                addOverlayTexture("bottom_light", bottomTexture+ "_light", 2);
-                addOverlayTexture("top_dark", topTexture + "_dark", 3);
-                addOverlayTexture("bottom_dark", bottomTexture+ "_dark", 3);
-                addRequiredTint(material.getMainColor().getRGB());
-                addRequiredTint(material.getColor("main_white").getRGB());
-                addRequiredTint(material.getColor("main_light").getRGB());
-                addRequiredTint(material.getColor("main_dark").getRGB());
-            }
-            case EXPOSED ->
-            {
-                addOverlayTexture("overlay_top", topTexture + "_overlay", -1);
-                addOverlayTexture("overlay_bottom", bottomTexture + "_overlay", -1);
-                addOverlayTexture("top", "exposed_" + topTexture + "_neutral", 0);
-                addOverlayTexture("bottom", "exposed_" + bottomTexture + "_neutral", 0);
-                addOverlayTexture("top_white", "exposed_" + topTexture + "_white", 1);
-                addOverlayTexture("bottom_white", "exposed_" + bottomTexture + "_white", 1);
-                addOverlayTexture("top_light", "exposed_" + topTexture + "_light", 2);
-                addOverlayTexture("bottom_light", "exposed_" + bottomTexture + "_light", 2);
-                addOverlayTexture("top_oxidized", "exposed_" + topTexture + "_oxidized", 3);
-                addOverlayTexture("bottom_oxidized", "exposed_" + bottomTexture + "_oxidized", 3);
-                addOverlayTexture("top_transition", "exposed_" + topTexture + "_transition", 4);
-                addOverlayTexture("bottom_transition", "exposed_" + bottomTexture + "_transition", 4);
-                addRequiredTint(material.getColor("transition_base").getRGB());
-                addRequiredTint(material.getColor("transition_base_white").getRGB());
-                addRequiredTint(material.getColor("transition_base_light").getRGB());
-                addRequiredTint(material.getColor("transition_weathered").getRGB());
-                addRequiredTint(material.getColor("transition_exposed").getRGB());
-            }
-            case WEATHERED ->
-            {
-                addOverlayTexture("overlay_top", topTexture + "_overlay", -1);
-                addOverlayTexture("overlay_bottom", bottomTexture + "_overlay", -1);
-                addOverlayTexture("top", "weathered_" + topTexture + "_base", 0);
-                addOverlayTexture("bottom", "weathered_" + bottomTexture + "_base", 0);
-                addOverlayTexture("top_oxidized", "weathered_" + topTexture + "_oxidized", 1);
-                addOverlayTexture("bottom_oxidized", "weathered_" + bottomTexture + "_oxidized", 1);
-                addOverlayTexture("top_transition", "weathered_" + topTexture + "_transition", 2);
-                addOverlayTexture("bottom_transition", "weathered_" + bottomTexture + "_transition", 2);
-                addRequiredTint(material.getColor("transition_base").getRGB());
-                addRequiredTint(material.getColor("transition_weathered").getRGB());
-                addRequiredTint(material.getColor("transition_exposed").getRGB());
-            }
-            case OXIDIZED ->
-            {
-                addOverlayTexture("overlay_top", topTexture + "_overlay", -1);
-                addOverlayTexture("overlay_bottom", bottomTexture + "_overlay", -1);
-                addOverlayTexture("top", "oxidized_" + topTexture, 0);
-                addOverlayTexture("bottom", "oxidized_" + bottomTexture, 0);
-                addRequiredTint(material.getSecondaryColor().getRGB());
-            }
-        }
     }
 
     @Override

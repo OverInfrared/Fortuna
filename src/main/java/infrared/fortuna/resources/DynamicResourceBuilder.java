@@ -8,7 +8,7 @@ import infrared.fortuna.blocks.ore.*;
 import infrared.fortuna.equipment.IFortunaEquipment;
 import infrared.fortuna.items.*;
 import infrared.fortuna.materials.Material;
-import infrared.fortuna.materials.ore.MiningLevel;
+import infrared.fortuna.materials.ore.enums.MiningLevel;
 import infrared.fortuna.materials.ore.OreMaterial;
 import infrared.fortuna.recipes.IFortunaRecipe;
 import infrared.fortuna.util.PaletteGenerator;

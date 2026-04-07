@@ -6,7 +6,7 @@ import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
 import com.mojang.serialization.JsonOps;
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.DynamicProperties;
-import infrared.fortuna.materials.ore.MiningLevel;
+import infrared.fortuna.materials.ore.enums.MiningLevel;
 import infrared.fortuna.materials.ore.OreMaterial;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;

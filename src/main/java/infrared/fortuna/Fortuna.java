@@ -7,7 +7,7 @@ import infrared.fortuna.worldgen.LootTableReplacer;
 import infrared.fortuna.items.ModItems;
 import infrared.fortuna.materials.Material;
 import infrared.fortuna.materials.MaterialChain;
-import infrared.fortuna.materials.ore.MiningLevel;
+import infrared.fortuna.materials.ore.enums.MiningLevel;
 import infrared.fortuna.materials.ore.OreMaterial;
 import infrared.fortuna.worldgen.FortunaBiomeModifications;
 import infrared.fortuna.worldgen.VanillaReplacementMap;
@@ -17,9 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Fortuna implements ModInitializer
 {

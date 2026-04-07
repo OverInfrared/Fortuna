@@ -3,7 +3,7 @@ package infrared.fortuna.blocks;
 import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
 import com.mojang.serialization.MapCodec;
 import infrared.fortuna.DynamicProperties;
-import infrared.fortuna.materials.ore.MiningLevel;
+import infrared.fortuna.materials.ore.enums.MiningLevel;
 import infrared.fortuna.materials.ore.OreMaterial;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;

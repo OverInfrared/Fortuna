@@ -1,7 +1,7 @@
 package infrared.fortuna.worldgen;
 
 import infrared.fortuna.Fortuna;
-import infrared.fortuna.materials.ore.MiningLevel;
+import infrared.fortuna.materials.ore.enums.MiningLevel;
 import infrared.fortuna.materials.ore.OreMaterial;
 
 import java.util.EnumMap;

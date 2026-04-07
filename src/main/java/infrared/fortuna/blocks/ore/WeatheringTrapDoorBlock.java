@@ -14,15 +14,14 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockSetType;
 
 import java.util.*;
-import java.util.List;
 
-public class WeatheringDoorBlock extends DoorBlock implements IDoorBlock, IFortunaRecipe, WeatheringCopper
+public class WeatheringTrapDoorBlock extends TrapDoorBlock implements ITrapDoorBlock, IFortunaRecipe, WeatheringCopper
 {
     protected final DynamicProperties<Block, OreMaterial> dynamicProperties;
     protected MiningLevel requiredMiningLevel;
@@ -32,34 +31,22 @@ public class WeatheringDoorBlock extends DoorBlock implements IDoorBlock, IFortu
     private final List<Integer> requiredTints = new ArrayList<>();
 
     private final WeatherState weatherState;
-    private final String doorTexture;
 
-    public WeatheringDoorBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, BlockSetType blockSetType, WeatherState weatherState)
+    public WeatheringTrapDoorBlock(DynamicProperties<Block, OreMaterial> dynamicProperties, Properties properties, BlockSetType blockSetType, WeatherState weatherState)
     {
         super(blockSetType, properties.setId(dynamicProperties.resourceKey()));
         this.dynamicProperties = dynamicProperties;
         this.requiredMiningLevel = dynamicProperties.material().getMiningLevel();
         this.weatherState = weatherState;
-        this.doorTexture = dynamicProperties.material().getDoor().getTexture();
 
-        setupTextures(doorTexture, weatherState);
+        setupTextures(dynamicProperties.material().getTrapdoor().getTexture(), weatherState);
     }
 
     @Override
     public List<Pair<String, String>> getRequiredTextures() { return requiredTextures; }
 
     @Override
-    public List<String> getRequiredItemTextures()
-    {
-        return switch (weatherState)
-        {
-            case UNAFFECTED -> List.of(doorTexture + "_neutral", doorTexture + "_white", doorTexture + "_light", doorTexture + "_dark", doorTexture + "_overlay");
-            case EXPOSED -> List.of("exposed_" + doorTexture + "_base", "exposed_" + doorTexture + "_light", "exposed_" + doorTexture + "_white" , "exposed_" + doorTexture + "_transition", "exposed_" + doorTexture + "_oxidized", doorTexture + "_overlay");
-            case WEATHERED -> List.of("weathered_" + doorTexture + "_base", "weathered_" + doorTexture + "_oxidized", "weathered_" + doorTexture + "_transition", doorTexture + "_overlay");
-            case OXIDIZED -> List.of("oxidized_" + doorTexture, doorTexture + "_overlay");
-            case null -> List.of(doorTexture + "_neutral", doorTexture + "_white", doorTexture + "_light", doorTexture + "_dark");
-        };
-    }
+    public List<String> getRequiredItemTextures() { return List.of(); }
 
     @Override
     public List<RequiredElement> getRequiredElements() { return requiredElements; }
@@ -101,9 +88,6 @@ public class WeatheringDoorBlock extends DoorBlock implements IDoorBlock, IFortu
     }
 
     @Override
-    public JsonObject getLoot(HolderLookup.Provider registries) { return getDoorLoot(); }
-
-    @Override
     public Map<String, JsonObject> getRecipes(HolderLookup.Provider registries)
     {
         if (weatherState != WeatherState.UNAFFECTED)
@@ -116,7 +100,7 @@ public class WeatheringDoorBlock extends DoorBlock implements IDoorBlock, IFortu
             return new HashMap<>();
 
         Map<String, JsonObject> recipes = new LinkedHashMap<>();
-        recipes.put(getRegistryName(), helper.shapedDoor(this.asItem(), ingot));
+        recipes.put(getRegistryName(), helper.shapedTrapdoor(this.asItem(), ingot));
         return recipes;
     }
 

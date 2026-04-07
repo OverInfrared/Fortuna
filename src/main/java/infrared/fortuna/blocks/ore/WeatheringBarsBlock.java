@@ -6,6 +6,8 @@ import com.llamalad7.mixinextras.lib.apache.commons.tuple.Pair;
 import infrared.fortuna.DynamicProperties;
 import infrared.fortuna.Fortuna;
 import infrared.fortuna.materials.ore.*;
+import infrared.fortuna.materials.ore.enums.MiningLevel;
+import infrared.fortuna.materials.ore.enums.OreBars;
 import infrared.fortuna.recipes.FortunaRecipeProvider;
 import infrared.fortuna.recipes.IFortunaRecipe;
 import infrared.fortuna.util.Utilities;

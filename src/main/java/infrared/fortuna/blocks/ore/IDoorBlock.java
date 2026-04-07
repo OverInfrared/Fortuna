@@ -86,7 +86,7 @@ public interface IDoorBlock extends IFortunaBlock
                 addRequiredTint(material.getMainColor().getRGB());
                 addRequiredTint(material.getColor("main_white").getRGB());
                 addRequiredTint(material.getColor("main_light").getRGB());
-                addRequiredTint(material.getColor("main_dark").getRGB());
+                addRequiredTint(material.getColor("main_shift0").getRGB());
             }
             else
             {

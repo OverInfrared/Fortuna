@@ -1,4 +1,4 @@
-package infrared.fortuna.materials.ore;
+package infrared.fortuna.materials.ore.enums;
 
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
